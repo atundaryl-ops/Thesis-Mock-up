@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Car, FileText, CreditCard, AlertTriangle, Users, Settings, BarChart3, Camera, Shield, LogOut, Search, Filter, Eye, CheckCircle, XCircle, Clock, Calendar, MapPin, DollarSign, Bell, Menu, X, Upload, TrendingUp, Activity, Gavel, UserCheck, FileWarning, Printer, Loader2, Image, Download, Mail, Phone, Hash, AlertCircle, Info, Trash2, Edit, RefreshCw, Lock, Unlock, Database, WifiOff, Wifi } from 'lucide-react';
-
+import { Car, FileText, CreditCard, AlertTriangle, Users, Settings, BarChart3, Camera, Shield, LogOut, ChevronRight, Search, Filter, Eye, CheckCircle, XCircle, Clock, Calendar, MapPin, DollarSign, Bell, Menu, X, Upload, MessageSquare, TrendingUp, Activity, Gavel, UserCheck, FileWarning, Printer, Loader2, ChevronDown, Image, Download, Mail, Phone, Hash, AlertCircle, Info, Trash2, Edit, RefreshCw, Plus, Copy, ExternalLink, ChevronLeft, Send, Power, Play, Pause, Volume2, ZoomIn, RotateCcw, Save, Database } from 'lucide-react';
 // ─────────────────────────────────────────────────────────────
 // SHARED UI PRIMITIVES
 // ─────────────────────────────────────────────────────────────
