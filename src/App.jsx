@@ -204,7 +204,7 @@ const LoginScreen = ({ onLogin, userType, setUserType }) => {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1s'}}></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
       </div>
       <div className="relative bg-white/10 backdrop-blur-xl rounded-3xl p-8 w-full max-w-md border border-white/20 shadow-2xl">
         <div className="text-center mb-8">
@@ -641,8 +641,8 @@ const DriverSearchModal = ({ onClose }) => {
     setTimeout(() => {
       const found = sampleDrivers.filter(d =>
         searchType === 'plate' ? d.plate.toLowerCase().includes(searchQuery.toLowerCase())
-        : searchType === 'license' ? d.license.toLowerCase().includes(searchQuery.toLowerCase())
-        : d.name.toLowerCase().includes(searchQuery.toLowerCase())
+          : searchType === 'license' ? d.license.toLowerCase().includes(searchQuery.toLowerCase())
+            : d.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
       setResults(found);
       setSearching(false);
@@ -821,8 +821,8 @@ const ExportModal = ({ onClose, onExport, title = 'Export Data' }) => {
             <label className="text-sm font-medium text-slate-700 mb-2 block">Export Format</label>
             <div className="space-y-2">
               {[{ id: 'csv', label: 'CSV Spreadsheet', desc: 'Compatible with Excel, Google Sheets' },
-                { id: 'pdf', label: 'PDF Report', desc: 'Formatted report for printing' },
-                { id: 'json', label: 'JSON Data', desc: 'Raw data for system integration' }].map(f => (
+              { id: 'pdf', label: 'PDF Report', desc: 'Formatted report for printing' },
+              { id: 'json', label: 'JSON Data', desc: 'Raw data for system integration' }].map(f => (
                 <button key={f.id} onClick={() => setFormat(f.id)}
                   className={`w-full p-3 rounded-xl border text-left transition ${format === f.id ? 'border-violet-500 bg-violet-50' : 'hover:bg-slate-50'}`}>
                   <p className="font-medium text-sm">{f.label}</p>
@@ -1190,7 +1190,7 @@ const EnforcerDashboard = ({ onLogout }) => {
           <div><label className="text-sm font-medium text-slate-700 mb-1 block">Plate Number *</label><input type="text" placeholder="ABC 1234" className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500" /></div>
           <div><label className="text-sm font-medium text-slate-700 mb-1 block">Violation Type *</label>
             <select className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500">
-              {['Running Red Light','Illegal Parking','Over Speeding','No Helmet','Counterflow','No License','Illegal U-Turn','No Seatbelt'].map(v => <option key={v}>{v}</option>)}
+              {['Running Red Light', 'Illegal Parking', 'Over Speeding', 'No Helmet', 'Counterflow', 'No License', 'Illegal U-Turn', 'No Seatbelt'].map(v => <option key={v}>{v}</option>)}
             </select>
           </div>
           <div><label className="text-sm font-medium text-slate-700 mb-1 block">Location *</label><input type="text" placeholder="Enter location" className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500" /></div>
@@ -1423,7 +1423,7 @@ const SupervisorDashboard = ({ onLogout }) => {
                   <div key={item.type} className="flex items-center gap-3">
                     <div className="flex-1">
                       <div className="flex justify-between text-sm mb-1"><span>{item.type}</span><span className="text-slate-500">{item.percent}%</span></div>
-                      <div className="h-2 bg-slate-100 rounded-full overflow-hidden"><div className={`h-full bg-gradient-to-r ${item.color} rounded-full`} style={{width: `${item.percent}%`}}></div></div>
+                      <div className="h-2 bg-slate-100 rounded-full overflow-hidden"><div className={`h-full bg-gradient-to-r ${item.color} rounded-full`} style={{ width: `${item.percent}%` }}></div></div>
                     </div>
                   </div>
                 ))}
@@ -1433,9 +1433,9 @@ const SupervisorDashboard = ({ onLogout }) => {
               <h3 className="font-bold mb-4">Recent Activity</h3>
               <div className="space-y-4">
                 {[{ action: 'New violation recorded', detail: 'VIO-2024-008 - Running Red Light', time: '2 mins ago', icon: FileWarning, color: 'text-rose-500 bg-rose-100', section: 'violations' },
-                  { action: 'Payment received', detail: '₱2,500 from Pedro Reyes', time: '15 mins ago', icon: DollarSign, color: 'text-emerald-500 bg-emerald-100', section: null },
-                  { action: 'Dispute submitted', detail: 'DIS-2024-004 awaiting review', time: '1 hour ago', icon: Gavel, color: 'text-amber-500 bg-amber-100', section: 'disputes' },
-                  { action: 'Camera CAM-003 offline', detail: 'EDSA Northbound location', time: '2 hours ago', icon: Camera, color: 'text-slate-500 bg-slate-100', section: 'devices' }
+                { action: 'Payment received', detail: '₱2,500 from Pedro Reyes', time: '15 mins ago', icon: DollarSign, color: 'text-emerald-500 bg-emerald-100', section: null },
+                { action: 'Dispute submitted', detail: 'DIS-2024-004 awaiting review', time: '1 hour ago', icon: Gavel, color: 'text-amber-500 bg-amber-100', section: 'disputes' },
+                { action: 'Camera CAM-003 offline', detail: 'EDSA Northbound location', time: '2 hours ago', icon: Camera, color: 'text-slate-500 bg-slate-100', section: 'devices' }
                 ].map((item, i) => (
                   <div key={i} onClick={() => item.section && setActiveSection(item.section)} className="flex items-start gap-3 cursor-pointer hover:bg-slate-50 p-2 rounded-lg -mx-2 transition">
                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${item.color}`}><item.icon className="w-4 h-4" /></div>
@@ -1467,7 +1467,7 @@ const SupervisorDashboard = ({ onLogout }) => {
             <table className="w-full">
               <thead className="bg-slate-50 border-b">
                 <tr>
-                  {['ID','Type','Plate','Driver','Date','Fine','Status','Actions'].map(h => (
+                  {['ID', 'Type', 'Plate', 'Driver', 'Date', 'Fine', 'Status', 'Actions'].map(h => (
                     <th key={h} className="px-4 py-3 text-left text-sm font-medium text-slate-600">{h}</th>
                   ))}
                 </tr>
@@ -1524,214 +1524,214 @@ const SupervisorDashboard = ({ onLogout }) => {
   );
 
   // USERS: Drivers synced from LTO, Enforcers can be added manually
-const UsersContent = () => {
-  const [activeUserTab, setActiveUserTab] = useState('drivers');
-  const [showAddEnforcer, setShowAddEnforcer] = useState(false);
-  
-  const drivers = sampleUsers.filter(u => u.role === 'driver' && 
-    (u.name.toLowerCase().includes(searchQuery.toLowerCase()) || u.email.toLowerCase().includes(searchQuery.toLowerCase())));
-  const enforcers = sampleUsers.filter(u => u.role === 'enforcer' && 
-    (u.name.toLowerCase().includes(searchQuery.toLowerCase()) || u.email.toLowerCase().includes(searchQuery.toLowerCase())));
+  const UsersContent = () => {
+    const [activeUserTab, setActiveUserTab] = useState('drivers');
+    const [showAddEnforcer, setShowAddEnforcer] = useState(false);
 
-  // Add Enforcer Modal
-  const AddEnforcerModal = () => (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl animate-scale-in">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold">Add New Enforcer</h3>
-          <button onClick={() => setShowAddEnforcer(false)} className="p-2 hover:bg-slate-100 rounded-lg"><X className="w-5 h-5" /></button>
-        </div>
-        <div className="space-y-4">
-          <div>
-            <label className="text-sm font-medium mb-1 block">Full Name *</label>
-            <input type="text" placeholder="Officer Name" className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500" />
+    const drivers = sampleUsers.filter(u => u.role === 'driver' &&
+      (u.name.toLowerCase().includes(searchQuery.toLowerCase()) || u.email.toLowerCase().includes(searchQuery.toLowerCase())));
+    const enforcers = sampleUsers.filter(u => u.role === 'enforcer' &&
+      (u.name.toLowerCase().includes(searchQuery.toLowerCase()) || u.email.toLowerCase().includes(searchQuery.toLowerCase())));
+
+    // Add Enforcer Modal
+    const AddEnforcerModal = () => (
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl animate-scale-in">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold">Add New Enforcer</h3>
+            <button onClick={() => setShowAddEnforcer(false)} className="p-2 hover:bg-slate-100 rounded-lg"><X className="w-5 h-5" /></button>
           </div>
-          <div>
-            <label className="text-sm font-medium mb-1 block">Badge Number *</label>
-            <input type="text" placeholder="ENF-XXX" className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500" />
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-1 block">Full Name *</label>
+              <input type="text" placeholder="Officer Name" className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500" />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">Badge Number *</label>
+              <input type="text" placeholder="ENF-XXX" className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500" />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">Email *</label>
+              <input type="email" placeholder="officer@lto.gov.ph" className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500" />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">Phone Number *</label>
+              <input type="tel" placeholder="09XX XXX XXXX" className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500" />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">Assigned Station *</label>
+              <select className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500">
+                <option value="">Select Station</option>
+                <option value="district1">District 1</option>
+                <option value="district2">District 2</option>
+                <option value="district3">District 3</option>
+                <option value="highway">Highway Patrol</option>
+              </select>
+            </div>
           </div>
-          <div>
-            <label className="text-sm font-medium mb-1 block">Email *</label>
-            <input type="email" placeholder="officer@lto.gov.ph" className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500" />
+          <div className="flex gap-3 mt-6">
+            <button onClick={() => setShowAddEnforcer(false)} className="flex-1 py-3 border rounded-xl font-medium hover:bg-slate-50">Cancel</button>
+            <button onClick={() => { setShowAddEnforcer(false); showToast('Enforcer added successfully!', 'success'); }} className="flex-1 py-3 bg-violet-600 text-white rounded-xl font-medium hover:bg-violet-700">Add Enforcer</button>
           </div>
-          <div>
-            <label className="text-sm font-medium mb-1 block">Phone Number *</label>
-            <input type="tel" placeholder="09XX XXX XXXX" className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500" />
-          </div>
-          <div>
-            <label className="text-sm font-medium mb-1 block">Assigned Station *</label>
-            <select className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500">
-              <option value="">Select Station</option>
-              <option value="district1">District 1</option>
-              <option value="district2">District 2</option>
-              <option value="district3">District 3</option>
-              <option value="highway">Highway Patrol</option>
-            </select>
-          </div>
-        </div>
-        <div className="flex gap-3 mt-6">
-          <button onClick={() => setShowAddEnforcer(false)} className="flex-1 py-3 border rounded-xl font-medium hover:bg-slate-50">Cancel</button>
-          <button onClick={() => { setShowAddEnforcer(false); showToast('Enforcer added successfully!', 'success'); }} className="flex-1 py-3 bg-violet-600 text-white rounded-xl font-medium hover:bg-violet-700">Add Enforcer</button>
         </div>
       </div>
-    </div>
-  );
+    );
 
-  return (
-    <div className="space-y-4">
-      {showAddEnforcer && <AddEnforcerModal />}
-      
-      {/* Tab Switcher */}
-      <div className="flex justify-between items-center flex-wrap gap-3">
-        <div className="flex gap-2">
-          <button onClick={() => { setActiveUserTab('drivers'); setSearchQuery(''); }}
-            className={`px-5 py-2.5 rounded-lg text-sm font-medium transition flex items-center gap-2 ${activeUserTab === 'drivers' ? 'bg-violet-600 text-white' : 'bg-white border hover:bg-slate-50'}`}>
-            <Car className="w-4 h-4" />Drivers
-            <span className={`px-2 py-0.5 rounded-full text-xs ${activeUserTab === 'drivers' ? 'bg-white/20' : 'bg-slate-100'}`}>{sampleUsers.filter(u => u.role === 'driver').length}</span>
-          </button>
-          <button onClick={() => { setActiveUserTab('enforcers'); setSearchQuery(''); }}
-            className={`px-5 py-2.5 rounded-lg text-sm font-medium transition flex items-center gap-2 ${activeUserTab === 'enforcers' ? 'bg-violet-600 text-white' : 'bg-white border hover:bg-slate-50'}`}>
-            <Shield className="w-4 h-4" />Enforcers
-            <span className={`px-2 py-0.5 rounded-full text-xs ${activeUserTab === 'enforcers' ? 'bg-white/20' : 'bg-slate-100'}`}>{sampleUsers.filter(u => u.role === 'enforcer').length}</span>
-          </button>
-        </div>
-        
-        <div className="flex gap-2">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} 
-              placeholder={`Search ${activeUserTab}...`} 
-              className="pl-9 pr-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
-          </div>
-          
-          {/* Conditional: Add Enforcer button OR LTO sync indicator */}
-          {activeUserTab === 'enforcers' ? (
-            <button onClick={() => setShowAddEnforcer(true)} className="px-4 py-2 bg-violet-600 text-white rounded-lg text-sm hover:bg-violet-700 flex items-center gap-2">
-              <Plus className="w-4 h-4" />Add Enforcer
+    return (
+      <div className="space-y-4">
+        {showAddEnforcer && <AddEnforcerModal />}
+
+        {/* Tab Switcher */}
+        <div className="flex justify-between items-center flex-wrap gap-3">
+          <div className="flex gap-2">
+            <button onClick={() => { setActiveUserTab('drivers'); setSearchQuery(''); }}
+              className={`px-5 py-2.5 rounded-lg text-sm font-medium transition flex items-center gap-2 ${activeUserTab === 'drivers' ? 'bg-violet-600 text-white' : 'bg-white border hover:bg-slate-50'}`}>
+              <Car className="w-4 h-4" />Drivers
+              <span className={`px-2 py-0.5 rounded-full text-xs ${activeUserTab === 'drivers' ? 'bg-white/20' : 'bg-slate-100'}`}>{sampleUsers.filter(u => u.role === 'driver').length}</span>
             </button>
-          ) : (
-            <div className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-500 rounded-lg text-sm border border-dashed">
-              <Database className="w-4 h-4" /><span>Synced from LTO</span>
-            </div>
-          )}
-        </div>
-      </div>
+            <button onClick={() => { setActiveUserTab('enforcers'); setSearchQuery(''); }}
+              className={`px-5 py-2.5 rounded-lg text-sm font-medium transition flex items-center gap-2 ${activeUserTab === 'enforcers' ? 'bg-violet-600 text-white' : 'bg-white border hover:bg-slate-50'}`}>
+              <Shield className="w-4 h-4" />Enforcers
+              <span className={`px-2 py-0.5 rounded-full text-xs ${activeUserTab === 'enforcers' ? 'bg-white/20' : 'bg-slate-100'}`}>{sampleUsers.filter(u => u.role === 'enforcer').length}</span>
+            </button>
+          </div>
 
-      {/* Drivers Table */}
-      {activeUserTab === 'drivers' && (
-        loading ? (<div className="bg-white rounded-xl shadow-sm border p-6"><Skeleton className="h-64" /></div>) : (
-          <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-slate-50 border-b">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Name</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">License No.</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Email</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Vehicles</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Violations</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Status</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {drivers.map((u) => (
-                    <tr key={u.id} className="hover:bg-slate-50 transition">
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                            <span className="text-sm font-medium text-blue-600">{u.name.charAt(0)}</span>
-                          </div>
-                          <span className="text-sm font-medium">{u.name}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-sm font-mono text-slate-600">{u.license}</td>
-                      <td className="px-4 py-3 text-sm text-slate-500">{u.email}</td>
-                      <td className="px-4 py-3 text-sm text-center">{u.vehicles}</td>
-                      <td className="px-4 py-3 text-sm text-center">
-                        <span className={`font-medium ${u.violations > 2 ? 'text-rose-600' : 'text-slate-600'}`}>{u.violations}</span>
-                      </td>
-                      <td className="px-4 py-3"><StatusBadge status={u.status} /></td>
-                      <td className="px-4 py-3">
-                        <button onClick={() => { setSelectedUser(u); setShowUserDetails(true); }} className="text-violet-600 hover:underline text-sm flex items-center gap-1">
-                          <Eye className="w-4 h-4" />View
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          <div className="flex gap-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={`Search ${activeUserTab}...`}
+                className="pl-9 pr-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
             </div>
-            {drivers.length === 0 && (
-              <div className="text-center py-12">
-                <Car className="w-12 h-12 mx-auto text-slate-300 mb-3" />
-                <p className="text-slate-500">No drivers found</p>
+
+            {/* Conditional: Add Enforcer button OR LTO sync indicator */}
+            {activeUserTab === 'enforcers' ? (
+              <button onClick={() => setShowAddEnforcer(true)} className="px-4 py-2 bg-violet-600 text-white rounded-lg text-sm hover:bg-violet-700 flex items-center gap-2">
+                <Plus className="w-4 h-4" />Add Enforcer
+              </button>
+            ) : (
+              <div className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-500 rounded-lg text-sm border border-dashed">
+                <Database className="w-4 h-4" /><span>Synced from LTO</span>
               </div>
             )}
           </div>
-        )
-      )}
+        </div>
 
-      {/* Enforcers Table */}
-      {activeUserTab === 'enforcers' && (
-        loading ? (<div className="bg-white rounded-xl shadow-sm border p-6"><Skeleton className="h-64" /></div>) : (
-          <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-slate-50 border-b">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Name</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Badge No.</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Email</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Station</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Apprehensions</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Status</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {enforcers.map((u) => (
-                    <tr key={u.id} className="hover:bg-slate-50 transition">
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-                            <span className="text-sm font-medium text-orange-600">{u.name.charAt(0)}</span>
+        {/* Drivers Table */}
+        {activeUserTab === 'drivers' && (
+          loading ? (<div className="bg-white rounded-xl shadow-sm border p-6"><Skeleton className="h-64" /></div>) : (
+            <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-slate-50 border-b">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Name</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">License No.</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Email</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Vehicles</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Violations</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Status</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {drivers.map((u) => (
+                      <tr key={u.id} className="hover:bg-slate-50 transition">
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                              <span className="text-sm font-medium text-blue-600">{u.name.charAt(0)}</span>
+                            </div>
+                            <span className="text-sm font-medium">{u.name}</span>
                           </div>
-                          <span className="text-sm font-medium">{u.name}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-sm font-mono text-slate-600">{u.badge}</td>
-                      <td className="px-4 py-3 text-sm text-slate-500">{u.email}</td>
-                      <td className="px-4 py-3 text-sm">{u.station}</td>
-                      <td className="px-4 py-3 text-sm text-center font-medium text-emerald-600">{u.apprehensions}</td>
-                      <td className="px-4 py-3"><StatusBadge status={u.status} /></td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
+                        </td>
+                        <td className="px-4 py-3 text-sm font-mono text-slate-600">{u.license}</td>
+                        <td className="px-4 py-3 text-sm text-slate-500">{u.email}</td>
+                        <td className="px-4 py-3 text-sm text-center">{u.vehicles}</td>
+                        <td className="px-4 py-3 text-sm text-center">
+                          <span className={`font-medium ${u.violations > 2 ? 'text-rose-600' : 'text-slate-600'}`}>{u.violations}</span>
+                        </td>
+                        <td className="px-4 py-3"><StatusBadge status={u.status} /></td>
+                        <td className="px-4 py-3">
                           <button onClick={() => { setSelectedUser(u); setShowUserDetails(true); }} className="text-violet-600 hover:underline text-sm flex items-center gap-1">
                             <Eye className="w-4 h-4" />View
                           </button>
-                          <button onClick={() => showToast('Edit enforcer', 'info')} className="text-slate-500 hover:text-slate-700">
-                            <Edit className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            {enforcers.length === 0 && (
-              <div className="text-center py-12">
-                <Shield className="w-12 h-12 mx-auto text-slate-300 mb-3" />
-                <p className="text-slate-500">No enforcers found</p>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            )}
-          </div>
-        )
-      )}
-    </div>
-  );
-};
+              {drivers.length === 0 && (
+                <div className="text-center py-12">
+                  <Car className="w-12 h-12 mx-auto text-slate-300 mb-3" />
+                  <p className="text-slate-500">No drivers found</p>
+                </div>
+              )}
+            </div>
+          )
+        )}
+
+        {/* Enforcers Table */}
+        {activeUserTab === 'enforcers' && (
+          loading ? (<div className="bg-white rounded-xl shadow-sm border p-6"><Skeleton className="h-64" /></div>) : (
+            <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-slate-50 border-b">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Name</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Badge No.</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Email</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Station</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Apprehensions</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Status</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {enforcers.map((u) => (
+                      <tr key={u.id} className="hover:bg-slate-50 transition">
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                              <span className="text-sm font-medium text-orange-600">{u.name.charAt(0)}</span>
+                            </div>
+                            <span className="text-sm font-medium">{u.name}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-sm font-mono text-slate-600">{u.badge}</td>
+                        <td className="px-4 py-3 text-sm text-slate-500">{u.email}</td>
+                        <td className="px-4 py-3 text-sm">{u.station}</td>
+                        <td className="px-4 py-3 text-sm text-center font-medium text-emerald-600">{u.apprehensions}</td>
+                        <td className="px-4 py-3"><StatusBadge status={u.status} /></td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <button onClick={() => { setSelectedUser(u); setShowUserDetails(true); }} className="text-violet-600 hover:underline text-sm flex items-center gap-1">
+                              <Eye className="w-4 h-4" />View
+                            </button>
+                            <button onClick={() => showToast('Edit enforcer', 'info')} className="text-slate-500 hover:text-slate-700">
+                              <Edit className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {enforcers.length === 0 && (
+                <div className="text-center py-12">
+                  <Shield className="w-12 h-12 mx-auto text-slate-300 mb-3" />
+                  <p className="text-slate-500">No enforcers found</p>
+                </div>
+              )}
+            </div>
+          )
+        )}
+      </div>
+    );
+  };
 
   const DevicesContent = () => (
     <div className="space-y-4">
@@ -1763,7 +1763,6 @@ const UsersContent = () => {
   const ReportsContent = () => {
     const reports = [
       { title: 'Violations Report', desc: 'Summary of all violations by type, location, and time period', icon: FileWarning, color: 'text-rose-500', bg: 'bg-rose-100' },
-      { title: 'Revenue Report', desc: 'Fines collection summary with payment methods breakdown', icon: DollarSign, color: 'text-emerald-500', bg: 'bg-emerald-100' },
       { title: 'Enforcer Performance', desc: 'Staff activity metrics and apprehension statistics', icon: UserCheck, color: 'text-blue-500', bg: 'bg-blue-100' },
     ];
     return (
@@ -1786,26 +1785,191 @@ const UsersContent = () => {
 
   const SettingsContent = () => {
     const [saving, setSaving] = useState(false);
-    const handleSave = () => { setSaving(true); setTimeout(() => { setSaving(false); setToast({ message: 'Settings saved successfully!', type: 'success' }); }, 1500); };
+    const [selectedCamera, setSelectedCamera] = useState(null);
+    const [cameraSettings, setCameraSettings] = useState({});
+
+    // Initialize camera settings
+    useEffect(() => {
+      const initialSettings = {};
+      sampleDevices.forEach(device => {
+        initialSettings[device.id] = {
+          speedLimit: 60,
+          redLightGrace: 2,
+          confidenceScore: 85,
+          enabled: device.status === 'online'
+        };
+      });
+      setCameraSettings(initialSettings);
+    }, []);
+
+    const handleSave = () => {
+      setSaving(true);
+      setTimeout(() => {
+        setSaving(false);
+        setToast({ message: selectedCamera ? `Settings saved for ${selectedCamera}!` : 'Global settings saved!', type: 'success' });
+      }, 1500);
+    };
+
+    const handleCameraSettingChange = (cameraId, field, value) => {
+      setCameraSettings(prev => ({
+        ...prev,
+        [cameraId]: { ...prev[cameraId], [field]: value }
+      }));
+    };
+
     return (
-      <div className="space-y-6 max-w-2xl">
+      <div className="space-y-6">
         {loading ? (<><Skeleton className="h-64 rounded-xl" /><Skeleton className="h-48 rounded-xl" /></>) : (
           <>
+            {/* Camera Selection */}
             <div className="bg-white rounded-xl p-6 shadow-sm border">
-              <h3 className="font-bold mb-4">Detection Parameters</h3>
-              <div className="space-y-4">
-                <div><label className="text-sm font-medium text-slate-700 mb-1 block">Speed Limit Threshold (km/h)</label><input type="number" defaultValue={60} className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500" /></div>
-                <div><label className="text-sm font-medium text-slate-700 mb-1 block">Red Light Grace Period (seconds)</label><input type="number" defaultValue={2} className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500" /></div>
-                <div><label className="text-sm font-medium text-slate-700 mb-1 block">Minimum Confidence Score (%)</label><input type="number" defaultValue={85} className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500" /></div>
-                <button onClick={handleSave} disabled={saving} className="px-6 py-2 bg-violet-600 text-white rounded-xl hover:bg-violet-700 transition flex items-center gap-2">
-                  {saving ? <><Loader2 className="w-4 h-4 animate-spin" />Saving...</> : 'Save Changes'}
+              <h3 className="font-bold mb-4 flex items-center gap-2"><Camera className="w-5 h-5 text-violet-600" />Camera Detection Settings</h3>
+              <p className="text-sm text-slate-500 mb-4">Select a camera to configure its detection parameters, or configure global defaults.</p>
+
+              {/* Camera Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                <button
+                  onClick={() => setSelectedCamera(null)}
+                  className={`p-4 rounded-xl border-2 transition text-left ${selectedCamera === null ? 'border-violet-500 bg-violet-50' : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'}`}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <Settings className="w-5 h-5 text-violet-600" />
+                    <span className="font-semibold text-sm">Global Default</span>
+                  </div>
+                  <p className="text-xs text-slate-500">Apply to all cameras</p>
                 </button>
+
+                {sampleDevices.map((device) => (
+                  <button
+                    key={device.id}
+                    onClick={() => setSelectedCamera(device.id)}
+                    className={`p-4 rounded-xl border-2 transition text-left ${selectedCamera === device.id ? 'border-violet-500 bg-violet-50' : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'}`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Camera className={`w-5 h-5 ${device.status === 'online' ? 'text-emerald-600' : 'text-slate-400'}`} />
+                        <span className="font-semibold text-sm">{device.id}</span>
+                      </div>
+                      <span className={`w-2 h-2 rounded-full ${device.status === 'online' ? 'bg-emerald-500' : 'bg-slate-300'}`}></span>
+                    </div>
+                    <p className="text-xs text-slate-500 truncate">{device.location}</p>
+                  </button>
+                ))}
+              </div>
+
+              {/* Settings Form */}
+              <div className="bg-slate-50 rounded-xl p-5 border">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    {selectedCamera ? (
+                      <>
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${sampleDevices.find(d => d.id === selectedCamera)?.status === 'online' ? 'bg-emerald-100' : 'bg-slate-200'}`}>
+                          <Camera className={`w-5 h-5 ${sampleDevices.find(d => d.id === selectedCamera)?.status === 'online' ? 'text-emerald-600' : 'text-slate-400'}`} />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold">{selectedCamera}</h4>
+                          <p className="text-xs text-slate-500">{sampleDevices.find(d => d.id === selectedCamera)?.location}</p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="w-10 h-10 bg-violet-100 rounded-xl flex items-center justify-center">
+                          <Settings className="w-5 h-5 text-violet-600" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold">Global Default Settings</h4>
+                          <p className="text-xs text-slate-500">Applied to all cameras without custom settings</p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  {selectedCamera && (
+                    <StatusBadge status={sampleDevices.find(d => d.id === selectedCamera)?.status} />
+                  )}
+                </div>
+
+                <div className="space-y-4">
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-slate-700 mb-1 block">Speed Limit (km/h)</label>
+                      <input
+                        type="number"
+                        value={selectedCamera ? cameraSettings[selectedCamera]?.speedLimit || 60 : 60}
+                        onChange={(e) => selectedCamera && handleCameraSettingChange(selectedCamera, 'speedLimit', parseInt(e.target.value))}
+                        className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-slate-700 mb-1 block">Red Light Grace (sec)</label>
+                      <input
+                        type="number"
+                        value={selectedCamera ? cameraSettings[selectedCamera]?.redLightGrace || 2 : 2}
+                        onChange={(e) => selectedCamera && handleCameraSettingChange(selectedCamera, 'redLightGrace', parseInt(e.target.value))}
+                        className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-slate-700 mb-1 block">Confidence Score (%)</label>
+                      <input
+                        type="number"
+                        value={selectedCamera ? cameraSettings[selectedCamera]?.confidenceScore || 85 : 85}
+                        onChange={(e) => selectedCamera && handleCameraSettingChange(selectedCamera, 'confidenceScore', parseInt(e.target.value))}
+                        className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white"
+                      />
+                    </div>
+                  </div>
+
+                  {selectedCamera && (
+                    <div className="flex items-center justify-between p-3 bg-white rounded-xl border">
+                      <div className="flex items-center gap-3">
+                        <Power className={`w-5 h-5 ${cameraSettings[selectedCamera]?.enabled ? 'text-emerald-600' : 'text-slate-400'}`} />
+                        <div>
+                          <p className="text-sm font-medium">Camera Detection</p>
+                          <p className="text-xs text-slate-500">Enable or disable violation detection for this camera</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleCameraSettingChange(selectedCamera, 'enabled', !cameraSettings[selectedCamera]?.enabled)}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition ${cameraSettings[selectedCamera]?.enabled ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                      >
+                        {cameraSettings[selectedCamera]?.enabled ? 'Enabled' : 'Disabled'}
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="flex gap-3 pt-2">
+                    <button onClick={handleSave} disabled={saving} className="px-6 py-2.5 bg-violet-600 text-white rounded-xl hover:bg-violet-700 transition flex items-center gap-2">
+                      {saving ? <><Loader2 className="w-4 h-4 animate-spin" />Saving...</> : <><Save className="w-4 h-4" />Save Settings</>}
+                    </button>
+                    {selectedCamera && (
+                      <button
+                        onClick={() => {
+                          handleCameraSettingChange(selectedCamera, 'speedLimit', 60);
+                          handleCameraSettingChange(selectedCamera, 'redLightGrace', 2);
+                          handleCameraSettingChange(selectedCamera, 'confidenceScore', 85);
+                          setToast({ message: 'Reset to default values', type: 'info' });
+                        }}
+                        className="px-6 py-2.5 border rounded-xl hover:bg-white transition flex items-center gap-2"
+                      >
+                        <RotateCcw className="w-4 h-4" />Reset to Default
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="bg-white rounded-xl p-6 shadow-sm border">
-              <h3 className="font-bold mb-4">Notification Settings</h3>
+
+            {/* Notification Settings */}
+            <div className="bg-white rounded-xl p-6 shadow-sm border max-w-2xl">
+              <h3 className="font-bold mb-4 flex items-center gap-2"><Bell className="w-5 h-5 text-violet-600" />Notification Settings</h3>
               <div className="space-y-3">
-                {[{ label: 'Email notifications for new disputes', checked: true }, { label: 'SMS alerts for device offline', checked: true }, { label: 'Daily summary reports', checked: false }, { label: 'Payment confirmation alerts', checked: true }].map((setting) => (
+                {[
+                  { label: 'Email notifications for new disputes', checked: true },
+                  { label: 'SMS alerts for device offline', checked: true },
+                  { label: 'Daily summary reports', checked: false },
+                  { label: 'Payment confirmation alerts', checked: true },
+                  { label: 'Real-time violation alerts', checked: true }
+                ].map((setting) => (
                   <label key={setting.label} className="flex items-center gap-3 cursor-pointer hover:bg-slate-50 p-2 rounded-lg -mx-2 transition">
                     <input type="checkbox" defaultChecked={setting.checked} className="w-5 h-5 rounded border-slate-300 text-violet-600 focus:ring-violet-500" />
                     <span className="text-sm">{setting.label}</span>
@@ -1813,13 +1977,20 @@ const UsersContent = () => {
                 ))}
               </div>
             </div>
-            <div className="bg-white rounded-xl p-6 shadow-sm border">
-              <h3 className="font-bold mb-1">LTO Database Integration</h3>
+
+            {/* LTO Database Integration */}
+            <div className="bg-white rounded-xl p-6 shadow-sm border max-w-2xl">
+              <h3 className="font-bold mb-1 flex items-center gap-2"><Database className="w-5 h-5 text-violet-600" />LTO Database Integration</h3>
               <p className="text-sm text-slate-500 mb-4">Driver records are automatically synced from the Land Transportation Office (LTO) database. Manual addition of drivers is disabled.</p>
               <div className="flex items-center gap-3 p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
                 <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center"><Database className="w-4 h-4 text-emerald-600" /></div>
-                <div><p className="text-sm font-medium text-emerald-700">LTO Database Connected</p><p className="text-xs text-emerald-600">Last synced: Today at 6:00 AM</p></div>
-                <button onClick={() => setToast({ message: 'Database sync triggered!', type: 'info' })} className="ml-auto text-xs text-emerald-700 border border-emerald-300 px-3 py-1 rounded-lg hover:bg-emerald-100 transition flex items-center gap-1"><RefreshCw className="w-3 h-3" />Sync Now</button>
+                <div>
+                  <p className="text-sm font-medium text-emerald-700">LTO Database Connected</p>
+                  <p className="text-xs text-emerald-600">Last synced: Today at 6:00 AM</p>
+                </div>
+                <button onClick={() => setToast({ message: 'Database sync triggered!', type: 'info' })} className="ml-auto text-xs text-emerald-700 border border-emerald-300 px-3 py-1 rounded-lg hover:bg-emerald-100 transition flex items-center gap-1">
+                  <RefreshCw className="w-3 h-3" />Sync Now
+                </button>
               </div>
             </div>
           </>
@@ -1827,7 +1998,6 @@ const UsersContent = () => {
       </div>
     );
   };
-
   const renderContent = () => {
     switch (activeSection) {
       case 'dashboard': return <DashboardContent />;
