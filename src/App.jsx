@@ -1733,32 +1733,251 @@ const SupervisorDashboard = ({ onLogout }) => {
     );
   };
 
-  const DevicesContent = () => (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="font-semibold">Camera Devices</h3>
-        <button onClick={() => setToast({ message: 'Device status refreshed!', type: 'success' })} className="px-4 py-2 bg-violet-600 text-white rounded-lg text-sm hover:bg-violet-700 transition flex items-center gap-2"><RefreshCw className="w-4 h-4" />Refresh Status</button>
-      </div>
-      {loading ? (<div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">{[...Array(4)].map((_, i) => <Skeleton key={i} className="h-36 rounded-xl" />)}</div>) : (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {sampleDevices.map((d) => (
-            <div key={d.id} onClick={() => { setSelectedDevice(d); setShowDeviceDetails(true); }} className="bg-white rounded-xl p-4 shadow-sm border hover:shadow-md transition cursor-pointer">
-              <div className="flex justify-between items-start mb-3">
-                <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${d.status === 'online' ? 'bg-emerald-100' : 'bg-slate-100'}`}>
-                    <Camera className={`w-5 h-5 ${d.status === 'online' ? 'text-emerald-600' : 'text-slate-400'}`} />
-                  </div>
-                  <div><p className="font-semibold">{d.id}</p><p className="text-xs text-slate-500">{d.location}</p></div>
-                </div>
-                <StatusBadge status={d.status} />
-              </div>
-              <div className="flex justify-between text-sm text-slate-500"><span>{d.captures.toLocaleString()} captures</span><span>Active: {d.lastActive}</span></div>
+  const DevicesContent = () => {
+    const [showAddCamera, setShowAddCamera] = useState(false);
+    const [addingCamera, setAddingCamera] = useState(false);
+    const [newCamera, setNewCamera] = useState({
+      id: '',
+      location: '',
+      ipAddress: '',
+      type: 'speed',
+      installDate: new Date().toISOString().split('T')[0]
+    });
+
+    // Add Camera Modal
+    const AddCameraModal = () => (
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl animate-scale-in">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold flex items-center gap-2"><Camera className="w-5 h-5 text-violet-600" />Deploy New Camera</h3>
+            <button onClick={() => setShowAddCamera(false)} className="p-2 hover:bg-slate-100 rounded-lg"><X className="w-5 h-5" /></button>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-slate-700 mb-1 block">Camera ID *</label>
+              <input
+                type="text"
+                placeholder="CAM-XXX"
+                value={newCamera.id}
+                onChange={(e) => setNewCamera({ ...newCamera, id: e.target.value.toUpperCase() })}
+                className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500"
+              />
+              <p className="text-xs text-slate-400 mt-1">Format: CAM-001, CAM-002, etc.</p>
             </div>
-          ))}
+
+            <div>
+              <label className="text-sm font-medium text-slate-700 mb-1 block">Location / Intersection *</label>
+              <input
+                type="text"
+                placeholder="e.g., Rizal Ave & Main St"
+                value={newCamera.location}
+                onChange={(e) => setNewCamera({ ...newCamera, location: e.target.value })}
+                className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-slate-700 mb-1 block">IP Address *</label>
+              <input
+                type="text"
+                placeholder="192.168.1.XXX"
+                value={newCamera.ipAddress}
+                onChange={(e) => setNewCamera({ ...newCamera, ipAddress: e.target.value })}
+                className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 font-mono"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-slate-700 mb-1 block">Camera Type *</label>
+              <select
+                value={newCamera.type}
+                onChange={(e) => setNewCamera({ ...newCamera, type: e.target.value })}
+                className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500"
+              >
+                <option value="speed">Speed Detection</option>
+                <option value="redlight">Red Light Detection</option>
+                <option value="multi">Multi-Purpose (Speed + Red Light)</option>
+                <option value="lpr">License Plate Recognition (LPR)</option>
+                <option value="surveillance">General Surveillance</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-slate-700 mb-1 block">Installation Date</label>
+              <input
+                type="date"
+                value={newCamera.installDate}
+                onChange={(e) => setNewCamera({ ...newCamera, installDate: e.target.value })}
+                className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500"
+              />
+            </div>
+
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-amber-800">Deployment Notice</p>
+                  <p className="text-xs text-amber-700 mt-1">After adding, the camera will appear as "Offline" until it's physically connected and configured on the network.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-3 mt-6">
+            <button onClick={() => setShowAddCamera(false)} className="flex-1 py-3 border rounded-xl font-medium hover:bg-slate-50 transition">Cancel</button>
+            <button
+              onClick={() => {
+                if (!newCamera.id || !newCamera.location || !newCamera.ipAddress) {
+                  setToast({ message: 'Please fill in all required fields', type: 'warning' });
+                  return;
+                }
+                setAddingCamera(true);
+                setTimeout(() => {
+                  setAddingCamera(false);
+                  setShowAddCamera(false);
+                  setNewCamera({ id: '', location: '', ipAddress: '', type: 'speed', installDate: new Date().toISOString().split('T')[0] });
+                  setToast({ message: `Camera ${newCamera.id} added successfully! Awaiting network connection.`, type: 'success' });
+                }, 1500);
+              }}
+              disabled={addingCamera}
+              className="flex-1 py-3 bg-violet-600 text-white rounded-xl font-medium hover:bg-violet-700 transition flex items-center justify-center gap-2"
+            >
+              {addingCamera ? <><Loader2 className="w-4 h-4 animate-spin" />Adding...</> : <><Plus className="w-4 h-4" />Add Camera</>}
+            </button>
+          </div>
         </div>
-      )}
-    </div>
-  );
+      </div>
+    );
+
+    return (
+      <div className="space-y-4">
+        {showAddCamera && <AddCameraModal />}
+
+        {/* Header with Actions */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <div>
+            <h3 className="font-semibold text-lg">Camera Devices</h3>
+            <p className="text-sm text-slate-500">Manage traffic monitoring cameras across the network</p>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={() => setToast({ message: 'Refreshing device status...', type: 'info' })} className="px-4 py-2 border rounded-lg text-sm hover:bg-slate-50 transition flex items-center gap-2">
+              <RefreshCw className="w-4 h-4" />Refresh
+            </button>
+            <button onClick={() => setShowAddCamera(true)} className="px-4 py-2 bg-violet-600 text-white rounded-lg text-sm hover:bg-violet-700 transition flex items-center gap-2">
+              <Plus className="w-4 h-4" />Deploy Camera
+            </button>
+          </div>
+        </div>
+
+        {/* Status Summary */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="bg-white rounded-xl p-4 border shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-violet-100 rounded-lg flex items-center justify-center">
+                <Camera className="w-5 h-5 text-violet-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{sampleDevices.length}</p>
+                <p className="text-xs text-slate-500">Total Cameras</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-xl p-4 border shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
+                <Wifi className="w-5 h-5 text-emerald-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-emerald-600">{sampleDevices.filter(d => d.status === 'online').length}</p>
+                <p className="text-xs text-slate-500">Online</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-xl p-4 border shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-rose-100 rounded-lg flex items-center justify-center">
+                <WifiOff className="w-5 h-5 text-rose-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-rose-600">{sampleDevices.filter(d => d.status === 'offline').length}</p>
+                <p className="text-xs text-slate-500">Offline</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-xl p-4 border shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Activity className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-blue-600">{sampleDevices.reduce((acc, d) => acc + (d.captures || 0), 0).toLocaleString()}</p>
+                <p className="text-xs text-slate-500">Total Captures</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Camera Grid */}
+        {loading ? (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-40 rounded-xl" />)}
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {sampleDevices.map((d) => (
+              <div
+                key={d.id}
+                onClick={() => { setSelectedDevice(d); setShowDeviceDetails(true); }}
+                className="bg-white rounded-xl p-4 shadow-sm border hover:shadow-md cursor-pointer transition group"
+              >
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition ${d.status === 'online' ? 'bg-emerald-100 group-hover:bg-emerald-200' : 'bg-slate-100 group-hover:bg-slate-200'}`}>
+                      <Camera className={`w-6 h-6 ${d.status === 'online' ? 'text-emerald-600' : 'text-slate-400'}`} />
+                    </div>
+                    <div>
+                      <p className="font-semibold">{d.id}</p>
+                      <p className="text-xs text-slate-500">{d.location}</p>
+                    </div>
+                  </div>
+                  <StatusBadge status={d.status} />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="bg-slate-50 rounded-lg p-2">
+                    <p className="text-xs text-slate-500">Captures</p>
+                    <p className="font-semibold">{d.captures?.toLocaleString()}</p>
+                  </div>
+                  <div className="bg-slate-50 rounded-lg p-2">
+                    <p className="text-xs text-slate-500">Last Active</p>
+                    <p className="font-semibold text-xs">{d.lastActive}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between mt-3 pt-3 border-t">
+                  <span className="text-xs text-slate-400 font-mono">{d.ipAddress}</span>
+                  <span className="text-xs text-violet-600 group-hover:underline">View Details →</span>
+                </div>
+              </div>
+            ))}
+
+            {/* Add Camera Card */}
+            <div
+              onClick={() => setShowAddCamera(true)}
+              className="bg-slate-50 rounded-xl p-4 border-2 border-dashed border-slate-300 hover:border-violet-400 hover:bg-violet-50 cursor-pointer transition flex flex-col items-center justify-center min-h-[180px] group"
+            >
+              <div className="w-14 h-14 bg-slate-200 group-hover:bg-violet-100 rounded-xl flex items-center justify-center transition mb-3">
+                <Plus className="w-7 h-7 text-slate-400 group-hover:text-violet-600 transition" />
+              </div>
+              <p className="font-semibold text-slate-600 group-hover:text-violet-700 transition">Deploy New Camera</p>
+              <p className="text-xs text-slate-400 group-hover:text-violet-500 transition mt-1">Add a camera to the network</p>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const ReportsContent = () => {
     const reports = [
