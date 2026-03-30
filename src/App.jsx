@@ -1524,59 +1524,215 @@ const SupervisorDashboard = ({ onLogout }) => {
     </div>
   );
 
-  // USERS: No "Add User/Driver" button — drivers come from LTO database
-  const UsersContent = () => (
+  // USERS: Drivers synced from LTO, Enforcers can be added manually
+const UsersContent = () => {
+  const [activeUserTab, setActiveUserTab] = useState('drivers');
+  const [showAddEnforcer, setShowAddEnforcer] = useState(false);
+  
+  const drivers = sampleUsers.filter(u => u.role === 'driver' && 
+    (u.name.toLowerCase().includes(searchQuery.toLowerCase()) || u.email.toLowerCase().includes(searchQuery.toLowerCase())));
+  const enforcers = sampleUsers.filter(u => u.role === 'enforcer' && 
+    (u.name.toLowerCase().includes(searchQuery.toLowerCase()) || u.email.toLowerCase().includes(searchQuery.toLowerCase())));
+
+  // Add Enforcer Modal
+  const AddEnforcerModal = () => (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl animate-scale-in">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold">Add New Enforcer</h3>
+          <button onClick={() => setShowAddEnforcer(false)} className="p-2 hover:bg-slate-100 rounded-lg"><X className="w-5 h-5" /></button>
+        </div>
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm font-medium mb-1 block">Full Name *</label>
+            <input type="text" placeholder="Officer Name" className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500" />
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-1 block">Badge Number *</label>
+            <input type="text" placeholder="ENF-XXX" className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500" />
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-1 block">Email *</label>
+            <input type="email" placeholder="officer@lto.gov.ph" className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500" />
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-1 block">Phone Number *</label>
+            <input type="tel" placeholder="09XX XXX XXXX" className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500" />
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-1 block">Assigned Station *</label>
+            <select className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500">
+              <option value="">Select Station</option>
+              <option value="district1">District 1</option>
+              <option value="district2">District 2</option>
+              <option value="district3">District 3</option>
+              <option value="highway">Highway Patrol</option>
+            </select>
+          </div>
+        </div>
+        <div className="flex gap-3 mt-6">
+          <button onClick={() => setShowAddEnforcer(false)} className="flex-1 py-3 border rounded-xl font-medium hover:bg-slate-50">Cancel</button>
+          <button onClick={() => { setShowAddEnforcer(false); showToast('Enforcer added successfully!', 'success'); }} className="flex-1 py-3 bg-violet-600 text-white rounded-xl font-medium hover:bg-violet-700">Add Enforcer</button>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
     <div className="space-y-4">
+      {showAddEnforcer && <AddEnforcerModal />}
+      
+      {/* Tab Switcher */}
       <div className="flex justify-between items-center flex-wrap gap-3">
         <div className="flex gap-2">
-          {['All', 'Drivers', 'Enforcers'].map((tab) => (
-            <button key={tab} onClick={() => setUserFilter(tab)}
-              className={`px-4 py-2 rounded-lg text-sm transition ${userFilter === tab ? 'bg-violet-600 text-white' : 'bg-white border hover:bg-slate-50'}`}>{tab}</button>
-          ))}
+          <button onClick={() => { setActiveUserTab('drivers'); setSearchQuery(''); }}
+            className={`px-5 py-2.5 rounded-lg text-sm font-medium transition flex items-center gap-2 ${activeUserTab === 'drivers' ? 'bg-violet-600 text-white' : 'bg-white border hover:bg-slate-50'}`}>
+            <Car className="w-4 h-4" />Drivers
+            <span className={`px-2 py-0.5 rounded-full text-xs ${activeUserTab === 'drivers' ? 'bg-white/20' : 'bg-slate-100'}`}>{sampleUsers.filter(u => u.role === 'driver').length}</span>
+          </button>
+          <button onClick={() => { setActiveUserTab('enforcers'); setSearchQuery(''); }}
+            className={`px-5 py-2.5 rounded-lg text-sm font-medium transition flex items-center gap-2 ${activeUserTab === 'enforcers' ? 'bg-violet-600 text-white' : 'bg-white border hover:bg-slate-50'}`}>
+            <Shield className="w-4 h-4" />Enforcers
+            <span className={`px-2 py-0.5 rounded-full text-xs ${activeUserTab === 'enforcers' ? 'bg-white/20' : 'bg-slate-100'}`}>{sampleUsers.filter(u => u.role === 'enforcer').length}</span>
+          </button>
         </div>
+        
         <div className="flex gap-2">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search users..." className="pl-9 pr-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
+            <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} 
+              placeholder={`Search ${activeUserTab}...`} 
+              className="pl-9 pr-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
           </div>
-          {/* NOTE: "Add User" button removed — driver records are synced from LTO database */}
-          <div className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-500 rounded-lg text-sm border border-dashed">
-            <Database className="w-4 h-4" /><span>Synced from LTO DB</span>
-          </div>
+          
+          {/* Conditional: Add Enforcer button OR LTO sync indicator */}
+          {activeUserTab === 'enforcers' ? (
+            <button onClick={() => setShowAddEnforcer(true)} className="px-4 py-2 bg-violet-600 text-white rounded-lg text-sm hover:bg-violet-700 flex items-center gap-2">
+              <Plus className="w-4 h-4" />Add Enforcer
+            </button>
+          ) : (
+            <div className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-500 rounded-lg text-sm border border-dashed">
+              <Database className="w-4 h-4" /><span>Synced from LTO</span>
+            </div>
+          )}
         </div>
       </div>
-      {loading ? (<div className="bg-white rounded-xl shadow-sm border p-6"><TableSkeleton rows={5} /></div>) : (
-        <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-slate-50 border-b">
-                <tr>{['Name','Email','Role','Status','Actions'].map(h => <th key={h} className="px-4 py-3 text-left text-sm font-medium text-slate-600">{h}</th>)}</tr>
-              </thead>
-              <tbody className="divide-y">
-                {filteredUsers.map((u) => (
-                  <tr key={u.id} className="hover:bg-slate-50 transition">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-violet-100 rounded-full flex items-center justify-center"><span className="text-sm font-medium text-violet-600">{u.name.charAt(0)}</span></div>
-                        <span className="text-sm font-medium">{u.name}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-slate-500">{u.email}</td>
-                    <td className="px-4 py-3 text-sm capitalize">{u.role}</td>
-                    <td className="px-4 py-3"><StatusBadge status={u.status} /></td>
-                    <td className="px-4 py-3">
-                      <button onClick={() => { setSelectedUser(u); setShowUserDetails(true); }} className="text-violet-600 hover:underline text-sm flex items-center gap-1"><Eye className="w-4 h-4" />View</button>
-                    </td>
+
+      {/* Drivers Table */}
+      {activeUserTab === 'drivers' && (
+        loading ? (<div className="bg-white rounded-xl shadow-sm border p-6"><Skeleton className="h-64" /></div>) : (
+          <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-slate-50 border-b">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Name</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">License No.</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Email</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Vehicles</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Violations</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Status</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y">
+                  {drivers.map((u) => (
+                    <tr key={u.id} className="hover:bg-slate-50 transition">
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                            <span className="text-sm font-medium text-blue-600">{u.name.charAt(0)}</span>
+                          </div>
+                          <span className="text-sm font-medium">{u.name}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-sm font-mono text-slate-600">{u.license}</td>
+                      <td className="px-4 py-3 text-sm text-slate-500">{u.email}</td>
+                      <td className="px-4 py-3 text-sm text-center">{u.vehicles}</td>
+                      <td className="px-4 py-3 text-sm text-center">
+                        <span className={`font-medium ${u.violations > 2 ? 'text-rose-600' : 'text-slate-600'}`}>{u.violations}</span>
+                      </td>
+                      <td className="px-4 py-3"><StatusBadge status={u.status} /></td>
+                      <td className="px-4 py-3">
+                        <button onClick={() => { setSelectedUser(u); setShowUserDetails(true); }} className="text-violet-600 hover:underline text-sm flex items-center gap-1">
+                          <Eye className="w-4 h-4" />View
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {drivers.length === 0 && (
+              <div className="text-center py-12">
+                <Car className="w-12 h-12 mx-auto text-slate-300 mb-3" />
+                <p className="text-slate-500">No drivers found</p>
+              </div>
+            )}
           </div>
-          {filteredUsers.length === 0 && <div className="text-center py-12"><Users className="w-12 h-12 mx-auto text-slate-300 mb-3" /><p className="text-slate-500">No users found</p></div>}
-        </div>
+        )
+      )}
+
+      {/* Enforcers Table */}
+      {activeUserTab === 'enforcers' && (
+        loading ? (<div className="bg-white rounded-xl shadow-sm border p-6"><Skeleton className="h-64" /></div>) : (
+          <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-slate-50 border-b">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Name</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Badge No.</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Email</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Station</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Apprehensions</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Status</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {enforcers.map((u) => (
+                    <tr key={u.id} className="hover:bg-slate-50 transition">
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                            <span className="text-sm font-medium text-orange-600">{u.name.charAt(0)}</span>
+                          </div>
+                          <span className="text-sm font-medium">{u.name}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-sm font-mono text-slate-600">{u.badge}</td>
+                      <td className="px-4 py-3 text-sm text-slate-500">{u.email}</td>
+                      <td className="px-4 py-3 text-sm">{u.station}</td>
+                      <td className="px-4 py-3 text-sm text-center font-medium text-emerald-600">{u.apprehensions}</td>
+                      <td className="px-4 py-3"><StatusBadge status={u.status} /></td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => { setSelectedUser(u); setShowUserDetails(true); }} className="text-violet-600 hover:underline text-sm flex items-center gap-1">
+                            <Eye className="w-4 h-4" />View
+                          </button>
+                          <button onClick={() => showToast('Edit enforcer', 'info')} className="text-slate-500 hover:text-slate-700">
+                            <Edit className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {enforcers.length === 0 && (
+              <div className="text-center py-12">
+                <Shield className="w-12 h-12 mx-auto text-slate-300 mb-3" />
+                <p className="text-slate-500">No enforcers found</p>
+              </div>
+            )}
+          </div>
+        )
       )}
     </div>
   );
+};
 
   const DevicesContent = () => (
     <div className="space-y-4">
