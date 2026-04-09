@@ -5,18 +5,19 @@ import { Camera, Car, Shield, Users, Mail, Loader2 } from 'lucide-react';
 // LOGIN SCREEN
 // ─────────────────────────────────────────────────────────────
 
-const LoginScreen = ({ onLogin, userType, setUserType }) => {
+const LoginScreen = ({ onLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [forgotPassword, setForgotPassword] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const [userType, setUserType] = useState('driver');
 
   const handleLogin = () => { 
     setLoading(true); 
     setTimeout(() => { 
       setLoading(false); 
-      onLogin(); 
+      onLogin(userType); 
     }, 1500); 
   };
 
