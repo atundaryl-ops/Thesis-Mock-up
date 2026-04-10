@@ -4,7 +4,7 @@ import {
   FileText, DollarSign, TrendingUp, Users, Settings, BarChart3, 
   FileWarning, Gavel, Car, Download, Plus, Edit, Wifi, WifiOff,
   Activity, Printer, UserCheck, RefreshCw, AlertTriangle, Database, 
-  Power, Save, RotateCcw, Loader2
+  Power, Save, RotateCcw, Loader2, MapPin
 } from 'lucide-react';
 import { Toast, Skeleton, TableSkeleton, StatusBadge, ConfirmModal } from '../components/UIComponents';
 import { ViolationDetailsModal, DisputeDetailsModal, UserDetailsModal, DeviceDetailsModal, FilterModal, ExportModal } from '../components/Modals';
@@ -14,6 +14,25 @@ import { sampleViolations, sampleDisputes, sampleUsers, sampleDevices } from '..
 // SUPERVISOR / ADMIN DASHBOARD
 // ─────────────────────────────────────────────────────────────
 
+// Enforcer locations data
+const enforcerLocations = [
+  { id: 'ENF-001', name: 'Officer Garcia', lat: 14.5995, lng: 120.9842, status: 'active', area: 'Ermita, Manila' },
+  { id: 'ENF-002', name: 'Officer Santos', lat: 14.6091, lng: 120.9897, status: 'active', area: 'Quiapo, Manila' },
+  { id: 'ENF-003', name: 'Officer Reyes', lat: 14.5547, lng: 121.0244, status: 'active', area: 'Makati CBD' },
+  { id: 'ENF-004', name: 'Officer Cruz', lat: 14.6507, lng: 121.0495, status: 'break', area: 'Quezon City' },
+  { id: 'ENF-005', name: 'Officer Lopez', lat: 14.5832, lng: 120.9797, status: 'active', area: 'Malate, Manila' },
+];
+
+// CCTV locations data
+const cctvLocations = [
+  { id: 'CAM-001', location: 'EDSA-Ayala Intersection', lat: 14.5547, lng: 121.0194, status: 'online', type: 'Speed + Red Light' },
+  { id: 'CAM-002', location: 'Quezon Ave-EDSA', lat: 14.6285, lng: 121.0325, status: 'online', type: 'Multi-Purpose' },
+  { id: 'CAM-003', location: 'Roxas Blvd-UN Ave', lat: 14.5820, lng: 120.9787, status: 'offline', type: 'LPR Camera' },
+  { id: 'CAM-004', location: 'C5-Katipunan', lat: 14.6312, lng: 121.0756, status: 'online', type: 'Speed Detection' },
+  { id: 'CAM-005', location: 'Taft Ave-Vito Cruz', lat: 14.5636, lng: 120.9945, status: 'online', type: 'Red Light' },
+  { id: 'CAM-006', location: 'España Blvd-Lacson', lat: 14.6110, lng: 120.9880, status: 'online', type: 'Multi-Purpose' },
+];
+
 const SupervisorDashboard = ({ onLogout }) => {
   const [activeSection, setActiveSection] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -21,6 +40,7 @@ const SupervisorDashboard = ({ onLogout }) => {
   const [toast, setToast] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [userFilter, setUserFilter] = useState('All');
+  const [mapFilter, setMapFilter] = useState('all');
   
   // Modal states
   const [showNotif, setShowNotif] = useState(false);
@@ -52,6 +72,7 @@ const SupervisorDashboard = ({ onLogout }) => {
     { id: 'disputes', label: 'Disputes', icon: Gavel },
     { id: 'users', label: 'Users', icon: Users },
     { id: 'devices', label: 'Devices', icon: Camera },
+    { id: 'map', label: 'Map', icon: MapPin },
     { id: 'reports', label: 'Reports', icon: BarChart3 },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
@@ -1057,6 +1078,226 @@ const SupervisorDashboard = ({ onLogout }) => {
   };
 
   // ─────────────────────────────────────────────────────────────
+  // MAP CONTENT
+  // ─────────────────────────────────────────────────────────────
+
+  const MapContent = () => (
+    <div className="space-y-6">
+      {/* Filter Buttons */}
+      <div className="flex gap-3">
+        {[
+          { id: 'all', label: 'All Locations', icon: MapPin },
+          { id: 'cctv', label: 'CCTV Cameras', icon: Camera },
+          { id: 'enforcers', label: 'Enforcers', icon: Shield },
+        ].map((filter) => (
+          <button
+            key={filter.id}
+            onClick={() => setMapFilter(filter.id)}
+            className={`flex-1 py-3 px-4 rounded-xl font-medium flex items-center justify-center gap-2 transition ${
+              mapFilter === filter.id 
+                ? 'bg-violet-600 text-white shadow-lg' 
+                : 'bg-white border hover:bg-slate-50'
+            }`}
+          >
+            <filter.icon className="w-5 h-5" />
+            {filter.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-4 gap-4">
+        <div className="bg-white rounded-xl p-4 border shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
+              <Camera className="w-6 h-6 text-emerald-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-emerald-600">{cctvLocations.filter(c => c.status === 'online').length}</p>
+              <p className="text-sm text-slate-500">CCTV Online</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl p-4 border shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-rose-100 rounded-xl flex items-center justify-center">
+              <WifiOff className="w-6 h-6 text-rose-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-rose-600">{cctvLocations.filter(c => c.status === 'offline').length}</p>
+              <p className="text-sm text-slate-500">CCTV Offline</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl p-4 border shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+              <Shield className="w-6 h-6 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-blue-600">{enforcerLocations.filter(e => e.status === 'active').length}</p>
+              <p className="text-sm text-slate-500">On Patrol</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl p-4 border shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
+              <Shield className="w-6 h-6 text-amber-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-amber-600">{enforcerLocations.filter(e => e.status === 'break').length}</p>
+              <p className="text-sm text-slate-500">On Break</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Map Placeholder */}
+      <div className="bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl h-96 flex items-center justify-center border-2 border-dashed border-slate-300 relative overflow-hidden">
+        {/* Simulated map grid */}
+        <div className="absolute inset-0 opacity-20">
+          <div className="grid grid-cols-12 grid-rows-8 h-full">
+            {[...Array(96)].map((_, i) => (
+              <div key={i} className="border border-slate-400"></div>
+            ))}
+          </div>
+        </div>
+        
+        {/* Map pins simulation */}
+        <div className="absolute inset-0">
+          {(mapFilter === 'all' || mapFilter === 'cctv') && cctvLocations.map((cam, i) => (
+            <div 
+              key={cam.id}
+              className={`absolute ${cam.status === 'online' ? 'text-emerald-500' : 'text-rose-500'}`}
+              style={{ top: `${15 + (i * 12)}%`, left: `${10 + (i * 14)}%` }}
+            >
+              <Camera className="w-6 h-6 drop-shadow-lg" />
+            </div>
+          ))}
+          {(mapFilter === 'all' || mapFilter === 'enforcers') && enforcerLocations.map((enf, i) => (
+            <div 
+              key={enf.id}
+              className="absolute text-blue-500"
+              style={{ top: `${25 + (i * 13)}%`, left: `${20 + (i * 15)}%` }}
+            >
+              <Shield className="w-6 h-6 drop-shadow-lg" />
+            </div>
+          ))}
+        </div>
+
+        <div className="text-center z-10 bg-white/90 backdrop-blur-sm px-6 py-4 rounded-xl shadow-lg">
+          <MapPin className="w-10 h-10 mx-auto text-violet-500 mb-2" />
+          <p className="text-lg text-slate-700 font-semibold">Interactive Map</p>
+          <p className="text-sm text-slate-500">Google Maps API Integration</p>
+        </div>
+      </div>
+
+      {/* Legend */}
+      <div className="flex flex-wrap gap-6 justify-center text-sm bg-white rounded-xl p-4 border">
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 bg-emerald-500 rounded-full"></div>
+          <span className="text-slate-600">CCTV Online</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 bg-rose-500 rounded-full"></div>
+          <span className="text-slate-600">CCTV Offline</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
+          <span className="text-slate-600">Enforcer On Patrol</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 bg-amber-500 rounded-full"></div>
+          <span className="text-slate-600">Enforcer On Break</span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-6">
+        {/* CCTV List */}
+        {(mapFilter === 'all' || mapFilter === 'cctv') && (
+          <div className="bg-white rounded-xl border shadow-sm">
+            <div className="p-4 border-b flex items-center justify-between">
+              <h3 className="font-semibold flex items-center gap-2">
+                <Camera className="w-5 h-5 text-violet-500" />
+                CCTV Cameras
+              </h3>
+              <span className="text-xs bg-slate-100 px-2 py-1 rounded-full">{cctvLocations.length} total</span>
+            </div>
+            <div className="divide-y max-h-80 overflow-y-auto">
+              {cctvLocations.map((cam) => (
+                <div key={cam.id} className="p-4 hover:bg-slate-50 transition">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${cam.status === 'online' ? 'bg-emerald-100' : 'bg-rose-100'}`}>
+                        <Camera className={`w-5 h-5 ${cam.status === 'online' ? 'text-emerald-600' : 'text-rose-600'}`} />
+                      </div>
+                      <div>
+                        <p className="font-medium">{cam.id}</p>
+                        <p className="text-sm text-slate-500">{cam.location}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="flex items-center gap-1">
+                        {cam.status === 'online' ? (
+                          <Wifi className="w-4 h-4 text-emerald-500" />
+                        ) : (
+                          <WifiOff className="w-4 h-4 text-rose-500" />
+                        )}
+                        <span className={`text-xs font-medium ${cam.status === 'online' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                          {cam.status}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-400">{cam.type}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Enforcers List */}
+        {(mapFilter === 'all' || mapFilter === 'enforcers') && (
+          <div className="bg-white rounded-xl border shadow-sm">
+            <div className="p-4 border-b flex items-center justify-between">
+              <h3 className="font-semibold flex items-center gap-2">
+                <Shield className="w-5 h-5 text-violet-500" />
+                Enforcers on Duty
+              </h3>
+              <span className="text-xs bg-slate-100 px-2 py-1 rounded-full">{enforcerLocations.length} total</span>
+            </div>
+            <div className="divide-y max-h-80 overflow-y-auto">
+              {enforcerLocations.map((enf) => (
+                <div key={enf.id} className="p-4 hover:bg-slate-50 transition">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${enf.status === 'active' ? 'bg-blue-100' : 'bg-amber-100'}`}>
+                        <Shield className={`w-5 h-5 ${enf.status === 'active' ? 'text-blue-600' : 'text-amber-600'}`} />
+                      </div>
+                      <div>
+                        <p className="font-medium">{enf.name}</p>
+                        <p className="text-sm text-slate-500 flex items-center gap-1">
+                          <MapPin className="w-3 h-3" />{enf.area}
+                        </p>
+                      </div>
+                    </div>
+                    <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      enf.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                    }`}>
+                      {enf.status === 'active' ? 'On Patrol' : 'On Break'}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  // ─────────────────────────────────────────────────────────────
   // RENDER CONTENT
   // ─────────────────────────────────────────────────────────────
 
@@ -1067,6 +1308,7 @@ const SupervisorDashboard = ({ onLogout }) => {
       case 'disputes': return <DisputesContent />;
       case 'users': return <UsersContent />;
       case 'devices': return <DevicesContent />;
+      case 'map': return <MapContent />;
       case 'reports': return <ReportsContent />;
       case 'settings': return <SettingsContent />;
       default: return <DashboardContent />;
