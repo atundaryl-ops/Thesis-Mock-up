@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
-import { Loader2, CheckCircle, XCircle, AlertTriangle, Info, X } from 'lucide-react';
+import { Loader2, CheckCircle, XCircle, AlertTriangle, Info, X, AlertCircle } from 'lucide-react';
 
 // ─────────────────────────────────────────────────────────────
-// LOADING SPINNER
+// SHARED UI PRIMITIVES
 // ─────────────────────────────────────────────────────────────
 
 export const LoadingSpinner = ({ size = 'md', text = 'Loading...' }) => {
@@ -14,10 +14,6 @@ export const LoadingSpinner = ({ size = 'md', text = 'Loading...' }) => {
     </div>
   );
 };
-
-// ─────────────────────────────────────────────────────────────
-// SKELETON LOADERS
-// ─────────────────────────────────────────────────────────────
 
 export const Skeleton = ({ className }) => (
   <div className={`animate-pulse bg-slate-200 rounded ${className}`}></div>
@@ -53,30 +49,11 @@ export const TableSkeleton = ({ rows = 5 }) => (
   </div>
 );
 
-// ─────────────────────────────────────────────────────────────
-// TOAST NOTIFICATION
-// ─────────────────────────────────────────────────────────────
-
 export const Toast = ({ message, type = 'success', onClose }) => {
-  useEffect(() => { 
-    const t = setTimeout(onClose, 3000); 
-    return () => clearTimeout(t); 
-  }, [onClose]);
-  
-  const styles = { 
-    success: 'bg-emerald-500', 
-    error: 'bg-rose-500', 
-    warning: 'bg-amber-500', 
-    info: 'bg-blue-500' 
-  };
-  const icons = { 
-    success: CheckCircle, 
-    error: XCircle, 
-    warning: AlertTriangle, 
-    info: Info 
-  };
+  useEffect(() => { const t = setTimeout(onClose, 3000); return () => clearTimeout(t); }, [onClose]);
+  const styles = { success: 'bg-emerald-500', error: 'bg-rose-500', warning: 'bg-amber-500', info: 'bg-blue-500' };
+  const icons = { success: CheckCircle, error: XCircle, warning: AlertTriangle, info: Info };
   const Icon = icons[type];
-  
   return (
     <div className={`fixed bottom-4 right-4 ${styles[type]} text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 z-50 animate-slide-up`}>
       <Icon className="w-5 h-5" /><span>{message}</span>
@@ -84,10 +61,6 @@ export const Toast = ({ message, type = 'success', onClose }) => {
     </div>
   );
 };
-
-// ─────────────────────────────────────────────────────────────
-// STATUS BADGE
-// ─────────────────────────────────────────────────────────────
 
 export const StatusBadge = ({ status }) => {
   const styles = {
@@ -109,15 +82,11 @@ export const StatusBadge = ({ status }) => {
   );
 };
 
-// ─────────────────────────────────────────────────────────────
-// CONFIRM MODAL
-// ─────────────────────────────────────────────────────────────
-
 export const ConfirmModal = ({ title, message, onConfirm, onCancel, confirmText = 'Confirm', confirmColor = 'bg-violet-600 hover:bg-violet-700' }) => (
   <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
     <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl animate-scale-in">
       <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
-        <AlertTriangle className="w-6 h-6 text-amber-600" />
+        <AlertCircle className="w-6 h-6 text-amber-600" />
       </div>
       <h3 className="text-lg font-bold text-center mb-2">{title}</h3>
       <p className="text-slate-500 text-center text-sm mb-6">{message}</p>
@@ -128,11 +97,3 @@ export const ConfirmModal = ({ title, message, onConfirm, onCancel, confirmText 
     </div>
   </div>
 );
-
-// ─────────────────────────────────────────────────────────────
-// GLOBAL STYLES (Add to index.css or App.css)
-// ─────────────────────────────────────────────────────────────
-// @keyframes scale-in { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-// @keyframes slide-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-// .animate-scale-in { animation: scale-in 0.2s ease-out; }
-// .animate-slide-up { animation: slide-up 0.3s ease-out; }

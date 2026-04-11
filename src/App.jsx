@@ -5,47 +5,24 @@ import EnforcerDashboard from './dashboards/EnforcerDashboard';
 import SupervisorDashboard from './dashboards/SupervisorDashboard';
 
 // ─────────────────────────────────────────────────────────────
-// SMART TRAFFIC VIOLATION MONITORING SYSTEM (STVMS)
-// Main Application Router
+// MAIN APP
 // ─────────────────────────────────────────────────────────────
 
-const App = () => {
+export default function TrafficViolationSystem() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userType, setUserType] = useState(null);
+  const [userType, setUserType] = useState('driver');
 
-  // Handle login from LoginScreen
   const handleLogin = (type) => {
     setUserType(type);
     setIsLoggedIn(true);
   };
 
-  // Handle logout - return to login screen
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    setUserType(null);
-  };
+  if (!isLoggedIn) return <LoginScreen onLogin={handleLogin} />;
 
-  // Render appropriate dashboard based on user type
-  const renderDashboard = () => {
-    switch (userType) {
-      case 'driver':
-        return <VehicleOwnerPortal onLogout={handleLogout} />;
-      case 'enforcer':
-        return <EnforcerDashboard onLogout={handleLogout} />;
-      case 'supervisor':
-        return <SupervisorDashboard onLogout={handleLogout} />;
-      default:
-        return <LoginScreen onLogin={handleLogin} />;
-    }
-  };
-
-  // If not logged in, show login screen
-  if (!isLoggedIn) {
-    return <LoginScreen onLogin={handleLogin} />;
+  switch (userType) {
+    case 'driver': return <VehicleOwnerPortal onLogout={() => setIsLoggedIn(false)} />;
+    case 'enforcer': return <EnforcerDashboard onLogout={() => setIsLoggedIn(false)} />;
+    case 'supervisor': return <SupervisorDashboard onLogout={() => setIsLoggedIn(false)} />;
+    default: return <VehicleOwnerPortal onLogout={() => setIsLoggedIn(false)} />;
   }
-
-  // Render the appropriate dashboard
-  return renderDashboard();
-};
-
-export default App;
+}

@@ -27,10 +27,10 @@ export const sampleUsers = [
 ];
 
 export const sampleDevices = [
-  { id: 'CAM-001', location: 'Rizal Ave & Main St', status: 'online', captures: 1245, lastActive: '2 mins ago', ipAddress: '192.168.1.101', installDate: '2023-06-15', type: 'Speed Camera' },
-  { id: 'CAM-002', location: 'Highway 54 KM 12', status: 'online', captures: 892, lastActive: '1 min ago', ipAddress: '192.168.1.102', installDate: '2023-07-20', type: 'Red Light Camera' },
-  { id: 'CAM-003', location: 'EDSA Northbound', status: 'offline', captures: 2341, lastActive: '2 hours ago', ipAddress: '192.168.1.103', installDate: '2023-05-10', type: 'Multi-Purpose' },
-  { id: 'CAM-004', location: 'Quezon Blvd Junction', status: 'online', captures: 567, lastActive: '30 secs ago', ipAddress: '192.168.1.104', installDate: '2023-08-01', type: 'LPR Camera' },
+  { id: 'CAM-001', location: 'Rizal Ave & Main St', status: 'online', captures: 1245, lastActive: '2 mins ago', ipAddress: '192.168.1.101', installDate: '2023-06-15' },
+  { id: 'CAM-002', location: 'Highway 54 KM 12', status: 'online', captures: 892, lastActive: '1 min ago', ipAddress: '192.168.1.102', installDate: '2023-07-20' },
+  { id: 'CAM-003', location: 'EDSA Northbound', status: 'offline', captures: 2341, lastActive: '2 hours ago', ipAddress: '192.168.1.103', installDate: '2023-05-10' },
+  { id: 'CAM-004', location: 'Quezon Blvd Junction', status: 'online', captures: 567, lastActive: '30 secs ago', ipAddress: '192.168.1.104', installDate: '2023-08-01' },
 ];
 
 export const sampleDrivers = [
@@ -39,11 +39,4 @@ export const sampleDrivers = [
   { id: 'DRV-003', name: 'Pedro Reyes', plate: 'DEF 9012', license: 'N03-12-345678', violations: 2, unpaidFines: 2500, status: 'suspended' },
   { id: 'DRV-004', name: 'Ana Garcia', plate: 'GHI 3456', license: 'N04-12-345678', violations: 1, unpaidFines: 1500, status: 'active' },
   { id: 'DRV-005', name: 'Roberto Cruz', plate: 'JKL 7890', license: 'N05-12-345678', violations: 1, unpaidFines: 0, status: 'active' },
-];
-
-export const sampleNotifications = [
-  { id: 1, msg: 'New violation recorded', detail: 'VIO-2024-008', time: '2 mins ago', unread: true },
-  { id: 2, msg: 'Payment received', detail: '₱2,500 from Pedro Reyes', time: '15 mins ago', unread: true },
-  { id: 3, msg: 'Dispute submitted', detail: 'DIS-2024-004 awaiting review', time: '1 hour ago', unread: false },
-  { id: 4, msg: 'Camera CAM-003 offline', detail: 'EDSA Northbound location', time: '2 hours ago', unread: false },
 ];

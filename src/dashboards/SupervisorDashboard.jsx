@@ -4,11 +4,11 @@ import {
   FileText, DollarSign, TrendingUp, Users, Settings, BarChart3, 
   FileWarning, Gavel, Car, Download, Plus, Edit, Wifi, WifiOff,
   Activity, Printer, UserCheck, RefreshCw, AlertTriangle, Database, 
-  Power, Save, RotateCcw, Loader2, MapPin
+  Power, Save, RotateCcw, Loader2, MapPin, Clock, Calendar
 } from 'lucide-react';
 import { Toast, Skeleton, TableSkeleton, StatusBadge, ConfirmModal } from '../components/UIComponents';
 import { ViolationDetailsModal, DisputeDetailsModal, UserDetailsModal, DeviceDetailsModal, FilterModal, ExportModal } from '../components/Modals';
-import { sampleViolations, sampleDisputes, sampleUsers, sampleDevices } from '../data/sampleData';
+import { sampleViolations, sampleDisputes, sampleUsers, sampleDevices, sampleDrivers } from '../data/sampleData';
 
 // ─────────────────────────────────────────────────────────────
 // SUPERVISOR / ADMIN DASHBOARD
@@ -33,46 +33,43 @@ const cctvLocations = [
   { id: 'CAM-006', location: 'España Blvd-Lacson', lat: 14.6110, lng: 120.9880, status: 'online', type: 'Multi-Purpose' },
 ];
 
+
 const SupervisorDashboard = ({ onLogout }) => {
   const [activeSection, setActiveSection] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [userFilter, setUserFilter] = useState('All');
-  const [mapFilter, setMapFilter] = useState('all');
-  
-  // Modal states
-  const [showNotif, setShowNotif] = useState(false);
-  const [showFilter, setShowFilter] = useState(false);
-  const [showExport, setShowExport] = useState(false);
   const [showConfirm, setShowConfirm] = useState(null);
-  const [showViolationDetails, setShowViolationDetails] = useState(false);
-  const [showDisputeDetails, setShowDisputeDetails] = useState(false);
-  const [showUserDetails, setShowUserDetails] = useState(false);
-  const [showDeviceDetails, setShowDeviceDetails] = useState(false);
-  const [showReportModal, setShowReportModal] = useState(null);
-  
-  // Selected items
   const [selectedViolation, setSelectedViolation] = useState(null);
   const [selectedDispute, setSelectedDispute] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedDevice, setSelectedDevice] = useState(null);
+  const [showViolationDetails, setShowViolationDetails] = useState(false);
+  const [showDisputeDetails, setShowDisputeDetails] = useState(false);
+  const [showUserDetails, setShowUserDetails] = useState(false);
+  const [showDeviceDetails, setShowDeviceDetails] = useState(false);
+  const [showFilter, setShowFilter] = useState(false);
+  const [showExport, setShowExport] = useState(false);
+  const [showNotif, setShowNotif] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(null);
+  const [showReportPreview, setShowReportPreview] = useState(null);
+  const [enforcerList, setEnforcerList] = useState(sampleUsers.filter(u => u.role === 'enforcer'));
+  const [deviceList, setDeviceList] = useState(sampleDevices);
+  const [cameraEnabled, setCameraEnabled] = useState(
+    Object.fromEntries(sampleDevices.map(d => [d.id, d.status === 'online']))
+  );
+  const [searchQuery, setSearchQuery] = useState('');
+  const [userFilter, setUserFilter] = useState('All');
 
-  useEffect(() => { 
-    const t = setTimeout(() => setLoading(false), 1200); 
-    return () => clearTimeout(t); 
-  }, []);
-
-  const showToast = (message, type = 'success') => setToast({ message, type });
+  useEffect(() => { setLoading(true); const t = setTimeout(() => setLoading(false), 1000); return () => clearTimeout(t); }, [activeSection]);
 
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
+    { id: 'dashboard', label: 'Dashboard', icon: Activity },
     { id: 'violations', label: 'Violations', icon: FileWarning },
     { id: 'disputes', label: 'Disputes', icon: Gavel },
     { id: 'users', label: 'Users', icon: Users },
     { id: 'devices', label: 'Devices', icon: Camera },
-    { id: 'map', label: 'Map', icon: MapPin },
+    { id: 'map', label: 'Map View', icon: MapPin },
     { id: 'reports', label: 'Reports', icon: BarChart3 },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
@@ -90,221 +87,80 @@ const SupervisorDashboard = ({ onLogout }) => {
     return matchesSearch && matchesFilter;
   });
 
-  // ─────────────────────────────────────────────────────────────
-  // SIDEBAR
-  // ─────────────────────────────────────────────────────────────
-
   const Sidebar = () => (
     <aside className={`fixed inset-y-0 left-0 w-64 bg-slate-900 text-white transform transition-transform z-50 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
       <div className="p-4 border-b border-slate-700">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl flex items-center justify-center">
-            <Shield className="w-5 h-5" />
-          </div>
-          <div>
-            <h1 className="font-bold">STVMS Admin</h1>
-            <p className="text-xs text-slate-400">Traffic Chief</p>
-          </div>
+          <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl flex items-center justify-center"><Shield className="w-5 h-5" /></div>
+          <div><h1 className="font-bold">STVMS Admin</h1><p className="text-xs text-slate-400">Traffic Chief</p></div>
         </div>
       </div>
       <nav className="p-4 space-y-1">
         {menuItems.map((item) => (
-          <button 
-            key={item.id} 
-            onClick={() => { setActiveSection(item.id); setSidebarOpen(false); setSearchQuery(''); }}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${activeSection === item.id ? 'bg-violet-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
-          >
-            <item.icon className="w-5 h-5" />
-            <span>{item.label}</span>
-            {item.id === 'disputes' && (
-              <span className="ml-auto bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full">
-                {sampleDisputes.filter(d => d.status === 'pending').length}
-              </span>
-            )}
+          <button key={item.id} onClick={() => { setActiveSection(item.id); setSidebarOpen(false); setSearchQuery(''); }}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${activeSection === item.id ? 'bg-violet-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}>
+            <item.icon className="w-5 h-5" /><span>{item.label}</span>
+            {item.id === 'disputes' && <span className="ml-auto bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full">{sampleDisputes.filter(d => d.status === 'pending').length}</span>}
           </button>
         ))}
       </nav>
       <div className="absolute bottom-4 left-4 right-4">
-        <button onClick={onLogout} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition">
-          <LogOut className="w-5 h-5" /><span>Logout</span>
-        </button>
+        <button onClick={onLogout} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition"><LogOut className="w-5 h-5" /><span>Logout</span></button>
       </div>
     </aside>
   );
 
-  // ─────────────────────────────────────────────────────────────
-  // NOTIFICATION PANEL
-  // ─────────────────────────────────────────────────────────────
-
-  const NotificationPanel = ({ onClose }) => (
-    <div className="fixed inset-0 z-50" onClick={onClose}>
-      <div className="absolute top-16 right-4 bg-white rounded-2xl shadow-2xl border w-80 animate-scale-in" onClick={e => e.stopPropagation()}>
-        <div className="p-4 border-b font-bold">Notifications</div>
-        {[
-          { msg: 'New violation recorded', detail: 'VIO-2024-008', time: '2 mins ago', unread: true },
-          { msg: 'Payment received', detail: '₱2,500 from Pedro Reyes', time: '15 mins ago', unread: true },
-          { msg: 'Dispute submitted', detail: 'DIS-2024-004 awaiting review', time: '1 hour ago', unread: false },
-          { msg: 'Camera CAM-003 offline', detail: 'EDSA Northbound location', time: '2 hours ago', unread: false },
-        ].map((n, i) => (
-          <div key={i} className={`p-4 border-b text-sm hover:bg-slate-50 cursor-pointer ${n.unread ? 'bg-violet-50/50' : ''}`}>
-            <p className="font-medium">{n.msg}</p>
-            <p className="text-xs text-slate-500">{n.detail}</p>
-            <p className="text-xs text-slate-400 mt-1">{n.time}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-
-  // ─────────────────────────────────────────────────────────────
-  // REPORT MODAL
-  // ─────────────────────────────────────────────────────────────
-
-  const ReportModal = ({ report, onClose, onGenerate }) => {
-    const [period, setPeriod] = useState('monthly');
-    const [generating, setGenerating] = useState(false);
-
-    const handleGenerate = () => {
-      setGenerating(true);
-      setTimeout(() => {
-        setGenerating(false);
-        onGenerate(report.title, period);
-        onClose();
-      }, 1500);
-    };
-
-    return (
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl animate-scale-in">
-          <div className="flex items-center gap-3 mb-4">
-            <div className={`w-12 h-12 ${report.bg} rounded-xl flex items-center justify-center`}>
-              <report.icon className={`w-6 h-6 ${report.color}`} />
-            </div>
-            <div>
-              <h3 className="text-lg font-bold">{report.title}</h3>
-              <p className="text-sm text-slate-500">Generate report</p>
-            </div>
-          </div>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">Report Period</label>
-              <div className="grid grid-cols-3 gap-2">
-                {['daily', 'weekly', 'monthly'].map(p => (
-                  <button 
-                    key={p} 
-                    onClick={() => setPeriod(p)}
-                    className={`py-2 px-3 rounded-lg text-sm font-medium capitalize transition ${period === p ? 'bg-violet-600 text-white' : 'bg-slate-100 hover:bg-slate-200'}`}
-                  >
-                    {p}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-          <div className="flex gap-3 mt-6">
-            <button onClick={onClose} className="flex-1 py-2.5 border rounded-xl font-medium hover:bg-slate-50 transition">Cancel</button>
-            <button onClick={handleGenerate} disabled={generating} className="flex-1 py-2.5 bg-violet-600 text-white rounded-xl font-medium hover:bg-violet-700 transition flex items-center justify-center gap-2">
-              {generating ? <><Loader2 className="w-4 h-4 animate-spin" />Generating...</> : <><Printer className="w-4 h-4" />Generate</>}
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // ─────────────────────────────────────────────────────────────
-  // DASHBOARD CONTENT
-  // ─────────────────────────────────────────────────────────────
-
   const DashboardContent = () => (
     <div className="space-y-6">
-      {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {loading ? [...Array(4)].map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />) : (
           <>
             <div className="bg-white rounded-xl p-4 shadow-sm border hover:shadow-md transition cursor-pointer" onClick={() => setActiveSection('violations')}>
-              <div className="flex items-center justify-between mb-2">
-                <FileWarning className="w-8 h-8 text-violet-500" />
-                <span className="text-xs text-emerald-500 font-medium flex items-center gap-1"><TrendingUp className="w-3 h-3" />+12%</span>
-              </div>
-              <p className="text-2xl font-bold">1,234</p>
-              <p className="text-sm text-slate-500">Total Violations</p>
+              <div className="flex items-center justify-between mb-2"><FileWarning className="w-8 h-8 text-violet-500" /><span className="text-xs text-emerald-500 font-medium flex items-center gap-1"><TrendingUp className="w-3 h-3" />+12%</span></div>
+              <p className="text-2xl font-bold">1,234</p><p className="text-sm text-slate-500">Total Violations</p>
             </div>
             <div className="bg-white rounded-xl p-4 shadow-sm border hover:shadow-md transition cursor-pointer">
-              <div className="flex items-center justify-between mb-2">
-                <DollarSign className="w-8 h-8 text-emerald-500" />
-                <span className="text-xs text-emerald-500 font-medium flex items-center gap-1"><TrendingUp className="w-3 h-3" />+8%</span>
-              </div>
-              <p className="text-2xl font-bold">₱2.4M</p>
-              <p className="text-sm text-slate-500">Fines Collected</p>
+              <div className="flex items-center justify-between mb-2"><span className="w-8 h-8 text-emerald-500 font-bold text-2xl flex items-center">₱</span><span className="text-xs text-emerald-500 font-medium flex items-center gap-1"><TrendingUp className="w-3 h-3" />+8%</span></div>
+              <p className="text-2xl font-bold">₱2.4M</p><p className="text-sm text-slate-500">Fines Collected</p>
             </div>
             <div className="bg-white rounded-xl p-4 shadow-sm border hover:shadow-md transition cursor-pointer" onClick={() => setActiveSection('disputes')}>
-              <div className="flex items-center justify-between mb-2">
-                <Gavel className="w-8 h-8 text-amber-500" />
-                <span className="text-xs text-amber-500 font-medium">+5 new</span>
-              </div>
-              <p className="text-2xl font-bold">23</p>
-              <p className="text-sm text-slate-500">Pending Disputes</p>
+              <div className="flex items-center justify-between mb-2"><Gavel className="w-8 h-8 text-amber-500" /><span className="text-xs text-amber-500 font-medium">+5 new</span></div>
+              <p className="text-2xl font-bold">23</p><p className="text-sm text-slate-500">Pending Disputes</p>
             </div>
             <div className="bg-white rounded-xl p-4 shadow-sm border hover:shadow-md transition cursor-pointer" onClick={() => setActiveSection('devices')}>
-              <div className="flex items-center justify-between mb-2">
-                <Camera className="w-8 h-8 text-blue-500" />
-                <span className="text-xs text-emerald-500 font-medium">3 online</span>
-              </div>
-              <p className="text-2xl font-bold">3/4</p>
-              <p className="text-sm text-slate-500">Active Cameras</p>
+              <div className="flex items-center justify-between mb-2"><Camera className="w-8 h-8 text-blue-500" /><span className="text-xs text-emerald-500 font-medium">3 online</span></div>
+              <p className="text-2xl font-bold">3/4</p><p className="text-sm text-slate-500">Active Cameras</p>
             </div>
           </>
         )}
       </div>
-
-      {/* Charts Row */}
       <div className="grid lg:grid-cols-2 gap-6">
         {loading ? (<><Skeleton className="h-64 rounded-xl" /><Skeleton className="h-64 rounded-xl" /></>) : (
           <>
-            {/* Violations by Type */}
             <div className="bg-white rounded-xl p-6 shadow-sm border">
               <h3 className="font-bold mb-4">Violations by Type</h3>
               <div className="space-y-3">
-                {[
-                  { type: 'Running Red Light', percent: 35, color: 'from-rose-500 to-pink-500' },
-                  { type: 'Over Speeding', percent: 28, color: 'from-amber-500 to-orange-500' },
-                  { type: 'Illegal Parking', percent: 22, color: 'from-blue-500 to-cyan-500' },
-                  { type: 'No Helmet', percent: 15, color: 'from-violet-500 to-purple-500' }
-                ].map((item) => (
+                {[{ type: 'Running Red Light', percent: 35, color: 'from-rose-500 to-pink-500' }, { type: 'Over Speeding', percent: 28, color: 'from-amber-500 to-orange-500' }, { type: 'Illegal Parking', percent: 22, color: 'from-blue-500 to-cyan-500' }, { type: 'No Helmet', percent: 15, color: 'from-violet-500 to-purple-500' }].map((item) => (
                   <div key={item.type} className="flex items-center gap-3">
                     <div className="flex-1">
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>{item.type}</span>
-                        <span className="text-slate-500">{item.percent}%</span>
-                      </div>
-                      <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                        <div className={`h-full bg-gradient-to-r ${item.color} rounded-full`} style={{ width: `${item.percent}%` }}></div>
-                      </div>
+                      <div className="flex justify-between text-sm mb-1"><span>{item.type}</span><span className="text-slate-500">{item.percent}%</span></div>
+                      <div className="h-2 bg-slate-100 rounded-full overflow-hidden"><div className={`h-full bg-gradient-to-r ${item.color} rounded-full`} style={{ width: `${item.percent}%` }}></div></div>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
-
-            {/* Recent Activity */}
             <div className="bg-white rounded-xl p-6 shadow-sm border">
               <h3 className="font-bold mb-4">Recent Activity</h3>
               <div className="space-y-4">
-                {[
-                  { action: 'New violation recorded', detail: 'VIO-2024-008 - Running Red Light', time: '2 mins ago', icon: FileWarning, color: 'text-rose-500 bg-rose-100', section: 'violations' },
-                  { action: 'Payment received', detail: '₱2,500 from Pedro Reyes', time: '15 mins ago', icon: DollarSign, color: 'text-emerald-500 bg-emerald-100', section: null },
-                  { action: 'Dispute submitted', detail: 'DIS-2024-004 awaiting review', time: '1 hour ago', icon: Gavel, color: 'text-amber-500 bg-amber-100', section: 'disputes' },
-                  { action: 'Camera CAM-003 offline', detail: 'EDSA Northbound location', time: '2 hours ago', icon: Camera, color: 'text-slate-500 bg-slate-100', section: 'devices' }
+                {[{ action: 'New violation recorded', detail: 'VIO-2024-008 - Running Red Light', time: '2 mins ago', icon: FileWarning, color: 'text-rose-500 bg-rose-100', section: 'violations' },
+                { action: 'Payment received', detail: '₱2,500 from Pedro Reyes', time: '15 mins ago', icon: ({ className }) => <span className={`font-bold flex items-center justify-center ${className}`}>₱</span>, color: 'text-emerald-500 bg-emerald-100', section: null },
+                { action: 'Dispute submitted', detail: 'DIS-2024-004 awaiting review', time: '1 hour ago', icon: Gavel, color: 'text-amber-500 bg-amber-100', section: 'disputes' },
+                { action: 'Camera CAM-003 offline', detail: 'EDSA Northbound location', time: '2 hours ago', icon: Camera, color: 'text-slate-500 bg-slate-100', section: 'devices' }
                 ].map((item, i) => (
                   <div key={i} onClick={() => item.section && setActiveSection(item.section)} className="flex items-start gap-3 cursor-pointer hover:bg-slate-50 p-2 rounded-lg -mx-2 transition">
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${item.color}`}>
-                      <item.icon className="w-4 h-4" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">{item.action}</p>
-                      <p className="text-xs text-slate-500 truncate">{item.detail}</p>
-                    </div>
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${item.color}`}><item.icon className="w-4 h-4" /></div>
+                    <div className="flex-1 min-w-0"><p className="text-sm font-medium">{item.action}</p><p className="text-xs text-slate-500 truncate">{item.detail}</p></div>
                     <p className="text-xs text-slate-400 whitespace-nowrap">{item.time}</p>
                   </div>
                 ))}
@@ -316,34 +172,17 @@ const SupervisorDashboard = ({ onLogout }) => {
     </div>
   );
 
-  // ─────────────────────────────────────────────────────────────
-  // VIOLATIONS CONTENT
-  // ─────────────────────────────────────────────────────────────
-
   const ViolationsContent = () => (
     <div className="space-y-4">
       <div className="flex gap-3 flex-wrap">
         <div className="flex-1 min-w-[200px] relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-          <input 
-            type="text" 
-            value={searchQuery} 
-            onChange={(e) => setSearchQuery(e.target.value)} 
-            placeholder="Search by ID, plate, driver, type..." 
-            className="w-full pl-10 pr-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500" 
-          />
+          <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search by ID, plate, driver, type..." className="w-full pl-10 pr-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500" />
         </div>
-        <button onClick={() => setShowFilter(true)} className="px-4 py-2 border rounded-xl flex items-center gap-2 hover:bg-slate-50 transition">
-          <Filter className="w-4 h-4" />Filter
-        </button>
-        <button onClick={() => setShowExport(true)} className="px-4 py-2 border rounded-xl flex items-center gap-2 hover:bg-slate-50 transition">
-          <Download className="w-4 h-4" />Export
-        </button>
+        <button onClick={() => setShowFilter(true)} className="px-4 py-2 border rounded-xl flex items-center gap-2 hover:bg-slate-50 transition"><Filter className="w-4 h-4" />Filter</button>
+        <button onClick={() => setShowExport(true)} className="px-4 py-2 border rounded-xl flex items-center gap-2 hover:bg-slate-50 transition"><Download className="w-4 h-4" />Export</button>
       </div>
-      
-      {loading ? (
-        <div className="bg-white rounded-xl shadow-sm border p-6"><TableSkeleton rows={5} /></div>
-      ) : (
+      {loading ? (<div className="bg-white rounded-xl shadow-sm border p-6"><TableSkeleton rows={5} /></div>) : (
         <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -358,18 +197,14 @@ const SupervisorDashboard = ({ onLogout }) => {
                 {filteredViolations.map((v) => (
                   <tr key={v.id} className="hover:bg-slate-50 transition">
                     <td className="px-4 py-3 text-sm font-mono">{v.id}</td>
-                    <td className="px-4 py-3 text-sm">
-                      <span className="flex items-center gap-2">{v.image} {v.type}</span>
-                    </td>
+                    <td className="px-4 py-3 text-sm"><span className="flex items-center gap-2">{v.image} {v.type}</span></td>
                     <td className="px-4 py-3 text-sm font-medium">{v.plate}</td>
                     <td className="px-4 py-3 text-sm">{v.driver}</td>
                     <td className="px-4 py-3 text-sm text-slate-500">{v.date}</td>
                     <td className="px-4 py-3 text-sm font-medium">₱{v.fine.toLocaleString()}</td>
                     <td className="px-4 py-3"><StatusBadge status={v.status} /></td>
                     <td className="px-4 py-3">
-                      <button onClick={() => { setSelectedViolation(v); setShowViolationDetails(true); }} className="text-violet-600 hover:underline text-sm flex items-center gap-1">
-                        <Eye className="w-4 h-4" />View
-                      </button>
+                      <button onClick={() => { setSelectedViolation(v); setShowViolationDetails(true); }} className="text-violet-600 hover:underline text-sm flex items-center gap-1"><Eye className="w-4 h-4" />View</button>
                     </td>
                   </tr>
                 ))}
@@ -377,127 +212,151 @@ const SupervisorDashboard = ({ onLogout }) => {
             </table>
           </div>
           {filteredViolations.length === 0 && (
-            <div className="text-center py-12">
-              <Search className="w-12 h-12 mx-auto text-slate-300 mb-3" />
-              <p className="text-slate-500">No violations found matching "{searchQuery}"</p>
-            </div>
+            <div className="text-center py-12"><Search className="w-12 h-12 mx-auto text-slate-300 mb-3" /><p className="text-slate-500">No violations found matching "{searchQuery}"</p></div>
           )}
         </div>
       )}
     </div>
   );
 
-  // ─────────────────────────────────────────────────────────────
-  // DISPUTES CONTENT
-  // ─────────────────────────────────────────────────────────────
-
-  const DisputesContent = () => (
+  const DisputesContent = () => {
+    const [disputeFilter, setDisputeFilter] = useState('all');
+    const filteredDisputes = sampleDisputes.filter(d =>
+      disputeFilter === 'all' ? true : d.status === disputeFilter
+    );
+    return (
     <div className="space-y-4">
-      {loading ? (
+      {/* Filter bar */}
+      <div className="flex gap-2 flex-wrap">
+        {[
+          { id: 'all', label: 'All', count: sampleDisputes.length },
+          { id: 'pending', label: 'Pending', count: sampleDisputes.filter(d => d.status === 'pending').length },
+          { id: 'approved', label: 'Approved', count: sampleDisputes.filter(d => d.status === 'approved').length },
+          { id: 'rejected', label: 'Rejected', count: sampleDisputes.filter(d => d.status === 'rejected').length },
+        ].map(f => (
+          <button key={f.id} onClick={() => setDisputeFilter(f.id)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 ${
+              disputeFilter === f.id
+                ? f.id === 'pending' ? 'bg-amber-500 text-white'
+                : f.id === 'approved' ? 'bg-emerald-500 text-white'
+                : f.id === 'rejected' ? 'bg-rose-500 text-white'
+                : 'bg-violet-600 text-white'
+                : 'bg-white border hover:bg-slate-50'
+            }`}>
+            <Filter className="w-3.5 h-3.5" />{f.label}
+            <span className={`px-1.5 py-0.5 rounded-full text-xs ${disputeFilter === f.id ? 'bg-white/20' : 'bg-slate-100'}`}>{f.count}</span>
+          </button>
+        ))}
+      </div>
+      {loading ? (<div className="grid md:grid-cols-3 gap-4">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-48 rounded-xl" />)}</div>) : (
+        filteredDisputes.length === 0 ? (
+          <div className="text-center py-16 bg-white rounded-xl border shadow-sm">
+            <Gavel className="w-12 h-12 mx-auto text-slate-200 mb-3" />
+            <p className="text-slate-500">No {disputeFilter !== 'all' ? disputeFilter : ''} disputes found</p>
+          </div>
+        ) : (
         <div className="grid md:grid-cols-3 gap-4">
-          {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-48 rounded-xl" />)}
-        </div>
-      ) : (
-        <div className="grid md:grid-cols-3 gap-4">
-          {sampleDisputes.map((d) => (
+          {filteredDisputes.map((d) => (
             <div key={d.id} className="bg-white rounded-xl p-4 shadow-sm border hover:shadow-md transition">
-              <div className="flex justify-between items-start mb-3">
-                <div>
-                  <p className="font-semibold">{d.id}</p>
-                  <p className="text-sm text-slate-500">{d.driver}</p>
-                </div>
-                <StatusBadge status={d.status} />
-              </div>
+              <div className="flex justify-between items-start mb-3"><div><p className="font-semibold">{d.id}</p><p className="text-sm text-slate-500">{d.driver}</p></div><StatusBadge status={d.status} /></div>
               <p className="text-sm text-slate-600 mb-3 line-clamp-2">{d.reason}</p>
               <p className="text-xs text-slate-400 mb-3">For: {d.violationId}</p>
-              <button onClick={() => { setSelectedDispute(d); setShowDisputeDetails(true); }} className="w-full py-2 text-sm border rounded-lg hover:bg-slate-50 transition">
-                View Details
-              </button>
+              <button onClick={() => { setSelectedDispute(d); setShowDisputeDetails(true); }} className="w-full py-2 text-sm border rounded-lg hover:bg-slate-50 transition">View Details</button>
               {d.status === 'pending' && (
                 <div className="flex gap-2 mt-2">
-                  <button 
-                    onClick={() => setShowConfirm({ 
-                      title: 'Approve Dispute', 
-                      message: `Approve ${d.id} and dismiss the related violation?`, 
-                      onConfirm: () => { setShowConfirm(null); showToast('Dispute approved! Violation dismissed.', 'success'); } 
-                    })}
-                    className="flex-1 py-2 text-sm bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition"
-                  >
-                    Approve
-                  </button>
-                  <button 
-                    onClick={() => setShowConfirm({ 
-                      title: 'Reject Dispute', 
-                      message: `Reject ${d.id}? The driver will be notified.`, 
-                      confirmText: 'Reject', 
-                      confirmColor: 'bg-rose-500 hover:bg-rose-600', 
-                      onConfirm: () => { setShowConfirm(null); showToast('Dispute rejected. Driver notified.', 'warning'); } 
-                    })}
-                    className="flex-1 py-2 text-sm bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition"
-                  >
-                    Reject
-                  </button>
+                  <button onClick={() => setShowConfirm({ title: 'Approve Dispute', message: `Approve ${d.id} and dismiss the related violation?`, onConfirm: () => { setShowConfirm(null); setToast({ message: 'Dispute approved! Violation dismissed.', type: 'success' }); } })}
+                    className="flex-1 py-2 text-sm bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition">Approve</button>
+                  <button onClick={() => setShowConfirm({ title: 'Reject Dispute', message: `Reject ${d.id}? The driver will be notified.`, confirmText: 'Reject', confirmColor: 'bg-rose-500 hover:bg-rose-600', onConfirm: () => { setShowConfirm(null); setToast({ message: 'Dispute rejected. Driver notified.', type: 'warning' }); } })}
+                    className="flex-1 py-2 text-sm bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition">Reject</button>
                 </div>
               )}
             </div>
           ))}
         </div>
+        )
       )}
     </div>
-  );
+    );
+  };
 
-  // ─────────────────────────────────────────────────────────────
-  // USERS CONTENT
-  // ─────────────────────────────────────────────────────────────
-
+  // USERS: Drivers synced from LTO, Enforcers can be added manually
   const UsersContent = () => {
     const [activeUserTab, setActiveUserTab] = useState('drivers');
     const [showAddEnforcer, setShowAddEnforcer] = useState(false);
+    const [newEnforcer, setNewEnforcer] = useState({ name: '', badge: '', email: '', phone: '', station: '' });
+    const [addingEnforcer, setAddingEnforcer] = useState(false);
 
     const drivers = sampleUsers.filter(u => u.role === 'driver' &&
       (u.name.toLowerCase().includes(searchQuery.toLowerCase()) || u.email.toLowerCase().includes(searchQuery.toLowerCase())));
-    const enforcers = sampleUsers.filter(u => u.role === 'enforcer' &&
-      (u.name.toLowerCase().includes(searchQuery.toLowerCase()) || u.email.toLowerCase().includes(searchQuery.toLowerCase())));
+    const enforcers = enforcerList.filter(u =>
+      u.name.toLowerCase().includes(searchQuery.toLowerCase()) || u.email.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    const handleAddEnforcer = () => {
+      if (!newEnforcer.name || !newEnforcer.badge || !newEnforcer.email || !newEnforcer.station) {
+        setToast({ message: 'Please fill in all required fields.', type: 'warning' }); return;
+      }
+      setAddingEnforcer(true);
+      setTimeout(() => {
+        const added = {
+          id: Date.now(), odId: newEnforcer.badge, name: newEnforcer.name,
+          email: newEnforcer.email, phone: newEnforcer.phone, role: 'enforcer',
+          badge: newEnforcer.badge, status: 'active', station: newEnforcer.station, apprehensions: 0,
+        };
+        setEnforcerList(prev => [...prev, added]);
+        setAddingEnforcer(false);
+        setShowAddEnforcer(false);
+        setNewEnforcer({ name: '', badge: '', email: '', phone: '', station: '' });
+        setToast({ message: `Enforcer ${added.name} added successfully!`, type: 'success' });
+      }, 1200);
+    };
 
     // Add Enforcer Modal
     const AddEnforcerModal = () => (
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl animate-scale-in">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold">Add New Enforcer</h3>
+            <h3 className="text-lg font-bold flex items-center gap-2"><Shield className="w-5 h-5 text-violet-600" />Add New Enforcer</h3>
             <button onClick={() => setShowAddEnforcer(false)} className="p-2 hover:bg-slate-100 rounded-lg"><X className="w-5 h-5" /></button>
           </div>
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium mb-1 block">Full Name *</label>
-              <input type="text" placeholder="Officer Name" className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500" />
+              <input type="text" value={newEnforcer.name} onChange={e => setNewEnforcer(f => ({...f, name: e.target.value}))}
+                placeholder="Officer Name" className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500" />
             </div>
             <div>
               <label className="text-sm font-medium mb-1 block">Badge Number *</label>
-              <input type="text" placeholder="ENF-XXX" className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500" />
+              <input type="text" value={newEnforcer.badge} onChange={e => setNewEnforcer(f => ({...f, badge: e.target.value.toUpperCase()}))}
+                placeholder="ENF-XXX" className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 font-mono" />
             </div>
             <div>
               <label className="text-sm font-medium mb-1 block">Email *</label>
-              <input type="email" placeholder="officer@lto.gov.ph" className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500" />
+              <input type="email" value={newEnforcer.email} onChange={e => setNewEnforcer(f => ({...f, email: e.target.value}))}
+                placeholder="officer@lto.gov.ph" className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500" />
             </div>
             <div>
-              <label className="text-sm font-medium mb-1 block">Phone Number *</label>
-              <input type="tel" placeholder="09XX XXX XXXX" className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500" />
+              <label className="text-sm font-medium mb-1 block">Phone Number</label>
+              <input type="tel" value={newEnforcer.phone} onChange={e => setNewEnforcer(f => ({...f, phone: e.target.value}))}
+                placeholder="09XX XXX XXXX" className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500" />
             </div>
             <div>
               <label className="text-sm font-medium mb-1 block">Assigned Station *</label>
-              <select className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500">
+              <select value={newEnforcer.station} onChange={e => setNewEnforcer(f => ({...f, station: e.target.value}))}
+                className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500">
                 <option value="">Select Station</option>
-                <option value="district1">District 1</option>
-                <option value="district2">District 2</option>
-                <option value="district3">District 3</option>
-                <option value="highway">Highway Patrol</option>
+                <option value="District 1">District 1</option>
+                <option value="District 2">District 2</option>
+                <option value="District 3">District 3</option>
+                <option value="Highway Patrol">Highway Patrol</option>
               </select>
             </div>
           </div>
           <div className="flex gap-3 mt-6">
             <button onClick={() => setShowAddEnforcer(false)} className="flex-1 py-3 border rounded-xl font-medium hover:bg-slate-50">Cancel</button>
-            <button onClick={() => { setShowAddEnforcer(false); showToast('Enforcer added successfully!', 'success'); }} className="flex-1 py-3 bg-violet-600 text-white rounded-xl font-medium hover:bg-violet-700">Add Enforcer</button>
+            <button onClick={handleAddEnforcer} disabled={addingEnforcer}
+              className="flex-1 py-3 bg-violet-600 text-white rounded-xl font-medium hover:bg-violet-700 flex items-center justify-center gap-2">
+              {addingEnforcer ? <><Loader2 className="w-4 h-4 animate-spin" />Adding...</> : <><Plus className="w-4 h-4" />Add Enforcer</>}
+            </button>
           </div>
         </div>
       </div>
@@ -518,7 +377,7 @@ const SupervisorDashboard = ({ onLogout }) => {
             <button onClick={() => { setActiveUserTab('enforcers'); setSearchQuery(''); }}
               className={`px-5 py-2.5 rounded-lg text-sm font-medium transition flex items-center gap-2 ${activeUserTab === 'enforcers' ? 'bg-violet-600 text-white' : 'bg-white border hover:bg-slate-50'}`}>
               <Shield className="w-4 h-4" />Enforcers
-              <span className={`px-2 py-0.5 rounded-full text-xs ${activeUserTab === 'enforcers' ? 'bg-white/20' : 'bg-slate-100'}`}>{sampleUsers.filter(u => u.role === 'enforcer').length}</span>
+              <span className={`px-2 py-0.5 rounded-full text-xs ${activeUserTab === 'enforcers' ? 'bg-white/20' : 'bg-slate-100'}`}>{enforcerList.length}</span>
             </button>
           </div>
 
@@ -529,24 +388,19 @@ const SupervisorDashboard = ({ onLogout }) => {
                 placeholder={`Search ${activeUserTab}...`}
                 className="pl-9 pr-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
             </div>
-            {activeUserTab === 'enforcers' && (
-              <button onClick={() => setShowAddEnforcer(true)} className="px-4 py-2 bg-violet-600 text-white rounded-lg text-sm font-medium hover:bg-violet-700 flex items-center gap-2">
+
+            {/* Conditional: Add Enforcer button OR LTO sync indicator */}
+            {activeUserTab === 'enforcers' ? (
+              <button onClick={() => setShowAddEnforcer(true)} className="px-4 py-2 bg-violet-600 text-white rounded-lg text-sm hover:bg-violet-700 flex items-center gap-2">
                 <Plus className="w-4 h-4" />Add Enforcer
               </button>
+            ) : (
+              <div className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-500 rounded-lg text-sm border border-dashed">
+                <Database className="w-4 h-4" /><span>Synced from LTO</span>
+              </div>
             )}
           </div>
         </div>
-
-        {/* Info Banner for Drivers */}
-        {activeUserTab === 'drivers' && (
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-center gap-3">
-            <Database className="w-5 h-5 text-blue-600" />
-            <div>
-              <p className="text-sm font-medium text-blue-800">Driver records synced from LTO Database</p>
-              <p className="text-xs text-blue-600">Manual driver registration is disabled. All records are automatically imported.</p>
-            </div>
-          </div>
-        )}
 
         {/* Drivers Table */}
         {activeUserTab === 'drivers' && (
@@ -570,8 +424,8 @@ const SupervisorDashboard = ({ onLogout }) => {
                       <tr key={u.id} className="hover:bg-slate-50 transition">
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-violet-100 rounded-full flex items-center justify-center">
-                              <span className="text-sm font-medium text-violet-600">{u.name.charAt(0)}</span>
+                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                              <span className="text-sm font-medium text-blue-600">{u.name.charAt(0)}</span>
                             </div>
                             <span className="text-sm font-medium">{u.name}</span>
                           </div>
@@ -664,10 +518,6 @@ const SupervisorDashboard = ({ onLogout }) => {
     );
   };
 
-  // ─────────────────────────────────────────────────────────────
-  // DEVICES CONTENT
-  // ─────────────────────────────────────────────────────────────
-
   const DevicesContent = () => {
     const [showAddCamera, setShowAddCamera] = useState(false);
     const [addingCamera, setAddingCamera] = useState(false);
@@ -675,6 +525,40 @@ const SupervisorDashboard = ({ onLogout }) => {
       id: '', location: '', ipAddress: '', type: 'speed',
       installDate: new Date().toISOString().split('T')[0]
     });
+
+    const toggleCamera = (id) => {
+      setCameraEnabled(prev => {
+        const next = { ...prev, [id]: !prev[id] };
+        setToast({ message: `${id} ${next[id] ? 'enabled — now Online' : 'disabled — now Offline'}.`, type: next[id] ? 'success' : 'warning' });
+        return next;
+      });
+    };
+
+    const handleDeployCamera = () => {
+      if (!newCamera.id || !newCamera.location || !newCamera.ipAddress) {
+        setToast({ message: 'Please fill in all required fields.', type: 'warning' });
+        return;
+      }
+      setAddingCamera(true);
+      setTimeout(() => {
+        const deployed = {
+          id: newCamera.id,
+          location: newCamera.location,
+          status: 'offline',
+          captures: 0,
+          lastActive: 'Just deployed',
+          ipAddress: newCamera.ipAddress,
+          installDate: newCamera.installDate,
+          type: newCamera.type,
+        };
+        setDeviceList(prev => [...prev, deployed]);
+        setCameraEnabled(prev => ({ ...prev, [deployed.id]: false }));
+        setAddingCamera(false);
+        setShowAddCamera(false);
+        setNewCamera({ id: '', location: '', ipAddress: '', type: 'speed', installDate: new Date().toISOString().split('T')[0] });
+        setToast({ message: `Camera ${deployed.id} deployed! Awaiting network connection.`, type: 'success' });
+      }, 1500);
+    };
 
     // Add Camera Modal
     const AddCameraModal = () => (
@@ -684,27 +568,49 @@ const SupervisorDashboard = ({ onLogout }) => {
             <h3 className="text-lg font-bold flex items-center gap-2"><Camera className="w-5 h-5 text-violet-600" />Deploy New Camera</h3>
             <button onClick={() => setShowAddCamera(false)} className="p-2 hover:bg-slate-100 rounded-lg"><X className="w-5 h-5" /></button>
           </div>
+
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium text-slate-700 mb-1 block">Camera ID *</label>
-              <input type="text" placeholder="CAM-XXX" value={newCamera.id} onChange={(e) => setNewCamera({ ...newCamera, id: e.target.value.toUpperCase() })}
-                className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500" />
+              <input
+                type="text"
+                placeholder="CAM-XXX"
+                value={newCamera.id}
+                onChange={(e) => setNewCamera({ ...newCamera, id: e.target.value.toUpperCase() })}
+                className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500"
+              />
               <p className="text-xs text-slate-400 mt-1">Format: CAM-001, CAM-002, etc.</p>
             </div>
+
             <div>
               <label className="text-sm font-medium text-slate-700 mb-1 block">Location / Intersection *</label>
-              <input type="text" placeholder="e.g., Rizal Ave & Main St" value={newCamera.location} onChange={(e) => setNewCamera({ ...newCamera, location: e.target.value })}
-                className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500" />
+              <input
+                type="text"
+                placeholder="e.g., Rizal Ave & Main St"
+                value={newCamera.location}
+                onChange={(e) => setNewCamera({ ...newCamera, location: e.target.value })}
+                className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500"
+              />
             </div>
+
             <div>
               <label className="text-sm font-medium text-slate-700 mb-1 block">IP Address *</label>
-              <input type="text" placeholder="192.168.1.XXX" value={newCamera.ipAddress} onChange={(e) => setNewCamera({ ...newCamera, ipAddress: e.target.value })}
-                className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 font-mono" />
+              <input
+                type="text"
+                placeholder="192.168.1.XXX"
+                value={newCamera.ipAddress}
+                onChange={(e) => setNewCamera({ ...newCamera, ipAddress: e.target.value })}
+                className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 font-mono"
+              />
             </div>
+
             <div>
               <label className="text-sm font-medium text-slate-700 mb-1 block">Camera Type *</label>
-              <select value={newCamera.type} onChange={(e) => setNewCamera({ ...newCamera, type: e.target.value })}
-                className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500">
+              <select
+                value={newCamera.type}
+                onChange={(e) => setNewCamera({ ...newCamera, type: e.target.value })}
+                className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500"
+              >
                 <option value="speed">Speed Detection</option>
                 <option value="redlight">Red Light Detection</option>
                 <option value="multi">Multi-Purpose (Speed + Red Light)</option>
@@ -712,11 +618,17 @@ const SupervisorDashboard = ({ onLogout }) => {
                 <option value="surveillance">General Surveillance</option>
               </select>
             </div>
+
             <div>
               <label className="text-sm font-medium text-slate-700 mb-1 block">Installation Date</label>
-              <input type="date" value={newCamera.installDate} onChange={(e) => setNewCamera({ ...newCamera, installDate: e.target.value })}
-                className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500" />
+              <input
+                type="date"
+                value={newCamera.installDate}
+                onChange={(e) => setNewCamera({ ...newCamera, installDate: e.target.value })}
+                className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500"
+              />
             </div>
+
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
               <div className="flex items-start gap-2">
                 <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
@@ -727,26 +639,15 @@ const SupervisorDashboard = ({ onLogout }) => {
               </div>
             </div>
           </div>
+
           <div className="flex gap-3 mt-6">
             <button onClick={() => setShowAddCamera(false)} className="flex-1 py-3 border rounded-xl font-medium hover:bg-slate-50 transition">Cancel</button>
             <button
-              onClick={() => {
-                if (!newCamera.id || !newCamera.location || !newCamera.ipAddress) {
-                  showToast('Please fill in all required fields', 'warning');
-                  return;
-                }
-                setAddingCamera(true);
-                setTimeout(() => {
-                  setAddingCamera(false);
-                  setShowAddCamera(false);
-                  setNewCamera({ id: '', location: '', ipAddress: '', type: 'speed', installDate: new Date().toISOString().split('T')[0] });
-                  showToast(`Camera ${newCamera.id} added successfully! Awaiting network connection.`, 'success');
-                }, 1500);
-              }}
+              onClick={handleDeployCamera}
               disabled={addingCamera}
               className="flex-1 py-3 bg-violet-600 text-white rounded-xl font-medium hover:bg-violet-700 transition flex items-center justify-center gap-2"
             >
-              {addingCamera ? <><Loader2 className="w-4 h-4 animate-spin" />Adding...</> : <><Plus className="w-4 h-4" />Add Camera</>}
+              {addingCamera ? <><Loader2 className="w-4 h-4 animate-spin" />Deploying...</> : <><Plus className="w-4 h-4" />Deploy Camera</>}
             </button>
           </div>
         </div>
@@ -764,7 +665,7 @@ const SupervisorDashboard = ({ onLogout }) => {
             <p className="text-sm text-slate-500">Manage traffic monitoring cameras across the network</p>
           </div>
           <div className="flex gap-2">
-            <button onClick={() => showToast('Refreshing device status...', 'info')} className="px-4 py-2 border rounded-lg text-sm hover:bg-slate-50 transition flex items-center gap-2">
+            <button onClick={() => setToast({ message: 'Refreshing device status...', type: 'info' })} className="px-4 py-2 border rounded-lg text-sm hover:bg-slate-50 transition flex items-center gap-2">
               <RefreshCw className="w-4 h-4" />Refresh
             </button>
             <button onClick={() => setShowAddCamera(true)} className="px-4 py-2 bg-violet-600 text-white rounded-lg text-sm hover:bg-violet-700 transition flex items-center gap-2">
@@ -777,26 +678,46 @@ const SupervisorDashboard = ({ onLogout }) => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <div className="bg-white rounded-xl p-4 border shadow-sm">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-violet-100 rounded-lg flex items-center justify-center"><Camera className="w-5 h-5 text-violet-600" /></div>
-              <div><p className="text-2xl font-bold">{sampleDevices.length}</p><p className="text-xs text-slate-500">Total Cameras</p></div>
+              <div className="w-10 h-10 bg-violet-100 rounded-lg flex items-center justify-center">
+                <Camera className="w-5 h-5 text-violet-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{deviceList.length}</p>
+                <p className="text-xs text-slate-500">Total Cameras</p>
+              </div>
             </div>
           </div>
           <div className="bg-white rounded-xl p-4 border shadow-sm">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center"><Wifi className="w-5 h-5 text-emerald-600" /></div>
-              <div><p className="text-2xl font-bold text-emerald-600">{sampleDevices.filter(d => d.status === 'online').length}</p><p className="text-xs text-slate-500">Online</p></div>
+              <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
+                <Wifi className="w-5 h-5 text-emerald-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-emerald-600">{deviceList.filter(d => cameraEnabled[d.id]).length}</p>
+                <p className="text-xs text-slate-500">Online</p>
+              </div>
             </div>
           </div>
           <div className="bg-white rounded-xl p-4 border shadow-sm">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-rose-100 rounded-lg flex items-center justify-center"><WifiOff className="w-5 h-5 text-rose-600" /></div>
-              <div><p className="text-2xl font-bold text-rose-600">{sampleDevices.filter(d => d.status === 'offline').length}</p><p className="text-xs text-slate-500">Offline</p></div>
+              <div className="w-10 h-10 bg-rose-100 rounded-lg flex items-center justify-center">
+                <WifiOff className="w-5 h-5 text-rose-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-rose-600">{deviceList.filter(d => !cameraEnabled[d.id]).length}</p>
+                <p className="text-xs text-slate-500">Offline</p>
+              </div>
             </div>
           </div>
           <div className="bg-white rounded-xl p-4 border shadow-sm">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center"><Activity className="w-5 h-5 text-blue-600" /></div>
-              <div><p className="text-2xl font-bold text-blue-600">{sampleDevices.reduce((acc, d) => acc + (d.captures || 0), 0).toLocaleString()}</p><p className="text-xs text-slate-500">Total Captures</p></div>
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Activity className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-blue-600">{deviceList.reduce((acc, d) => acc + (d.captures || 0), 0).toLocaleString()}</p>
+                <p className="text-xs text-slate-500">Total Captures</p>
+              </div>
             </div>
           </div>
         </div>
@@ -808,39 +729,57 @@ const SupervisorDashboard = ({ onLogout }) => {
           </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {sampleDevices.map((d) => (
-              <div key={d.id} onClick={() => { setSelectedDevice(d); setShowDeviceDetails(true); }} className="bg-white rounded-xl p-4 shadow-sm border hover:shadow-md cursor-pointer transition group">
+            {deviceList.map((d) => {
+              const enabled = cameraEnabled[d.id] ?? false;
+              const displayStatus = enabled ? (d.status === 'online' ? 'online' : 'online') : 'offline';
+              return (
+              <div key={d.id} className={`bg-white rounded-xl p-4 shadow-sm border transition group ${!enabled ? 'opacity-60' : 'hover:shadow-md'}`}>
                 <div className="flex justify-between items-start mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition ${d.status === 'online' ? 'bg-emerald-100 group-hover:bg-emerald-200' : 'bg-slate-100 group-hover:bg-slate-200'}`}>
-                      <Camera className={`w-6 h-6 ${d.status === 'online' ? 'text-emerald-600' : 'text-slate-400'}`} />
+                  <div className="flex items-center gap-3 cursor-pointer" onClick={() => { setSelectedDevice(d); setShowDeviceDetails(true); }}>
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition ${enabled ? 'bg-emerald-100' : 'bg-slate-100'}`}>
+                      <Camera className={`w-6 h-6 ${enabled ? 'text-emerald-600' : 'text-slate-400'}`} />
                     </div>
                     <div>
                       <p className="font-semibold">{d.id}</p>
                       <p className="text-xs text-slate-500">{d.location}</p>
                     </div>
                   </div>
-                  <StatusBadge status={d.status} />
+                  <StatusBadge status={displayStatus} />
                 </div>
-                <div className="grid grid-cols-2 gap-2 text-sm">
+
+                <div className="grid grid-cols-2 gap-2 text-sm mb-3">
                   <div className="bg-slate-50 rounded-lg p-2">
                     <p className="text-xs text-slate-500">Captures</p>
-                    <p className="font-semibold">{d.captures?.toLocaleString()}</p>
+                    <p className="font-semibold">{(d.captures || 0).toLocaleString()}</p>
                   </div>
                   <div className="bg-slate-50 rounded-lg p-2">
                     <p className="text-xs text-slate-500">Last Active</p>
                     <p className="font-semibold text-xs">{d.lastActive}</p>
                   </div>
                 </div>
-                <div className="flex items-center justify-between mt-3 pt-3 border-t">
+
+                <div className="flex items-center justify-between pt-3 border-t">
                   <span className="text-xs text-slate-400 font-mono">{d.ipAddress}</span>
-                  <span className="text-xs text-violet-600 group-hover:underline">View Details →</span>
+                  <button
+                    onClick={() => toggleCamera(d.id)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                      enabled
+                        ? 'bg-rose-100 text-rose-700 hover:bg-rose-200'
+                        : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+                    }`}>
+                    <Power className="w-3 h-3" />
+                    {enabled ? 'Disable' : 'Enable'}
+                  </button>
                 </div>
               </div>
-            ))}
+              );
+            })}
 
             {/* Add Camera Card */}
-            <div onClick={() => setShowAddCamera(true)} className="bg-slate-50 rounded-xl p-4 border-2 border-dashed border-slate-300 hover:border-violet-400 hover:bg-violet-50 cursor-pointer transition flex flex-col items-center justify-center min-h-[180px] group">
+            <div
+              onClick={() => setShowAddCamera(true)}
+              className="bg-slate-50 rounded-xl p-4 border-2 border-dashed border-slate-300 hover:border-violet-400 hover:bg-violet-50 cursor-pointer transition flex flex-col items-center justify-center min-h-[180px] group"
+            >
               <div className="w-14 h-14 bg-slate-200 group-hover:bg-violet-100 rounded-xl flex items-center justify-center transition mb-3">
                 <Plus className="w-7 h-7 text-slate-400 group-hover:text-violet-600 transition" />
               </div>
@@ -853,34 +792,513 @@ const SupervisorDashboard = ({ onLogout }) => {
     );
   };
 
-  // ─────────────────────────────────────────────────────────────
-  // REPORTS CONTENT
-  // ─────────────────────────────────────────────────────────────
+  // ── MAP VIEW ──────────────────────────────────────────────────
+  const MapContent = () => {
+    const [selectedCam, setSelectedCam] = useState(null);
+    const [mapFilter, setMapFilter] = useState('all');
+
+    // Simulated camera positions on a stylized SVG city grid
+    const cameras = [
+      { ...sampleDevices[0], x: 28, y: 35, violations: 312, hotspot: true },
+      { ...sampleDevices[1], x: 68, y: 22, violations: 198, hotspot: false },
+      { ...sampleDevices[2], x: 55, y: 62, violations: 87,  hotspot: false },
+      { ...sampleDevices[3], x: 18, y: 72, violations: 241, hotspot: true },
+    ];
+
+    const violationHotspots = [
+      { x: 30, y: 37, radius: 14, label: 'High — 312 violations', color: 'rgba(239,68,68,0.18)', border: '#ef4444' },
+      { x: 20, y: 74, radius: 11, label: 'High — 241 violations', color: 'rgba(249,115,22,0.15)', border: '#f97316' },
+      { x: 68, y: 24, radius: 9,  label: 'Medium — 198 violations', color: 'rgba(234,179,8,0.13)', border: '#eab308' },
+      { x: 55, y: 64, radius: 7,  label: 'Low — 87 violations', color: 'rgba(34,197,94,0.12)', border: '#22c55e' },
+    ];
+
+    const filtered = cameras.filter(c =>
+      mapFilter === 'all' ? true :
+      mapFilter === 'online' ? c.status === 'online' :
+      mapFilter === 'offline' ? c.status === 'offline' :
+      c.hotspot
+    );
+
+    return (
+      <div className="space-y-4">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <div>
+            <h3 className="font-semibold text-lg">Camera & Violation Map</h3>
+            <p className="text-sm text-slate-500">Live camera locations, status, and violation hotspots</p>
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            {[
+              { id: 'all', label: 'All Cameras' },
+              { id: 'online', label: 'Online' },
+              { id: 'offline', label: 'Offline' },
+              { id: 'hotspot', label: '🔥 Hotspots' },
+            ].map(f => (
+              <button key={f.id} onClick={() => setMapFilter(f.id)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition border ${
+                  mapFilter === f.id ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                }`}>{f.label}</button>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-4">
+          {/* SVG Map */}
+          <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border overflow-hidden">
+            <div className="relative">
+              <svg viewBox="0 0 100 90" className="w-full" style={{height: '420px', background: 'linear-gradient(135deg,#e8f4fd 0%,#dbeafe 100%)'}}>
+                {/* Road grid */}
+                {[15,35,55,75].map(x => <line key={`vr${x}`} x1={x} y1="0" x2={x} y2="90" stroke="#cbd5e1" strokeWidth="2.5"/>)}
+                {[20,40,60,80].map(y => <line key={`hr${y}`} x1="0" y1={y} x2="100" y2={y} stroke="#cbd5e1" strokeWidth="2.5"/>)}
+                {/* City blocks */}
+                {[[0,0,14,19],[16,0,18,19],[36,0,18,19],[56,0,18,19],[0,21,14,18],[16,21,18,18],[36,21,18,18],[56,21,18,18],[76,21,23,18],[0,41,14,18],[16,41,18,18],[36,41,18,18],[56,41,18,18],[0,61,14,18],[16,61,18,18],[36,61,18,18],[56,61,18,18],[76,61,23,18]].map(([x,y,w,h],i) => (
+                  <rect key={i} x={x} y={y} width={w} height={h} rx="0.8" fill="#f1f5f9" stroke="#e2e8f0" strokeWidth="0.3"/>
+                ))}
+                {/* Building blocks inside city areas */}
+                {[[2,2,4,4],[7,2,5,4],[2,7,4,6],[7,7,5,6],[17,2,6,5],[25,2,7,5],[17,8,6,4],[25,8,7,4]].map(([x,y,w,h],i)=>(
+                  <rect key={`b${i}`} x={x} y={y} width={w} height={h} rx="0.5" fill="#dde4ef" stroke="none"/>
+                ))}
+                {/* Labels */}
+                <text x="34" y="19" textAnchor="middle" fontSize="1.8" fill="#94a3b8" fontWeight="600">Rizal Ave</text>
+                <text x="55" y="19" textAnchor="middle" fontSize="1.8" fill="#94a3b8" fontWeight="600">Main St</text>
+                <text x="5" y="55" textAnchor="middle" fontSize="1.6" fill="#94a3b8" fontWeight="600" transform="rotate(-90,5,55)">Highway 54</text>
+                <text x="50" y="89" textAnchor="middle" fontSize="1.8" fill="#94a3b8" fontWeight="600">Quezon Blvd</text>
+                {/* Violation hotspot circles */}
+                {violationHotspots.map((h, i) => (
+                  <g key={`hs${i}`}>
+                    <circle cx={h.x} cy={h.y} r={h.radius} fill={h.color} stroke={h.border} strokeWidth="0.5" strokeDasharray="1,0.5"/>
+                  </g>
+                ))}
+                {/* Camera markers */}
+                {filtered.map((cam) => {
+                  const isOnline = cam.status === 'online';
+                  const isSelected = selectedCam?.id === cam.id;
+                  return (
+                    <g key={cam.id} onClick={() => setSelectedCam(selectedCam?.id === cam.id ? null : cam)} style={{cursor:'pointer'}}>
+                      <circle cx={cam.x} cy={cam.y} r={isSelected ? 4.5 : 3.5}
+                        fill={isOnline ? '#22c55e' : '#94a3b8'}
+                        stroke="white" strokeWidth="1"
+                        style={{filter: isSelected ? 'drop-shadow(0 0 3px rgba(0,0,0,0.4))' : 'none'}}/>
+                      <text x={cam.x} y={cam.y + 0.6} textAnchor="middle" fontSize="2" fill="white" fontWeight="bold">📷</text>
+                      <text x={cam.x} y={cam.y - 4.5} textAnchor="middle" fontSize="1.8" fill="#1e293b" fontWeight="700">{cam.id}</text>
+                    </g>
+                  );
+                })}
+              </svg>
+              {/* Legend */}
+              <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur rounded-xl px-3 py-2 shadow text-xs space-y-1 border">
+                <p className="font-semibold text-slate-700 mb-1">Legend</p>
+                <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>Online Camera</div>
+                <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-slate-400 inline-block"></span>Offline Camera</div>
+                <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-rose-400/40 border border-rose-400 inline-block"></span>High Violations</div>
+                <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-amber-400/30 border border-amber-400 inline-block"></span>Medium Violations</div>
+                <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-emerald-400/20 border border-emerald-400 inline-block"></span>Low Violations</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Side Panel */}
+          <div className="space-y-3">
+            {selectedCam ? (
+              <div className="bg-white rounded-2xl shadow-sm border p-4 animate-scale-in">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-bold text-slate-800">{selectedCam.id}</h4>
+                  <button onClick={() => setSelectedCam(null)} className="p-1 hover:bg-slate-100 rounded-lg"><X className="w-4 h-4 text-slate-400"/></button>
+                </div>
+                <StatusBadge status={selectedCam.status} />
+                <div className="mt-3 space-y-2 text-sm">
+                  <div className="flex items-start gap-2"><MapPin className="w-4 h-4 text-slate-400 mt-0.5 shrink-0"/><span className="text-slate-600">{selectedCam.location}</span></div>
+                  <div className="flex items-center gap-2"><Activity className="w-4 h-4 text-slate-400"/><span className="text-slate-600">{selectedCam.captures?.toLocaleString()} total captures</span></div>
+                  <div className="flex items-center gap-2"><Clock className="w-4 h-4 text-slate-400"/><span className="text-slate-600">Last active: {selectedCam.lastActive}</span></div>
+                  <div className="flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-rose-400"/><span className="text-slate-600">{selectedCam.violations} violations recorded</span></div>
+                </div>
+                <div className={`mt-3 rounded-xl p-3 text-xs font-medium ${selectedCam.hotspot ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-slate-50 text-slate-600'}`}>
+                  {selectedCam.hotspot ? '🔥 High violation hotspot area' : '✅ Normal violation rate'}
+                </div>
+                <button onClick={() => setActiveSection('devices')} className="w-full mt-3 py-2 text-xs border rounded-xl hover:bg-slate-50 text-violet-600 font-medium">
+                  View in Devices →
+                </button>
+              </div>
+            ) : (
+              <div className="bg-white rounded-2xl shadow-sm border p-4">
+                <p className="text-sm text-slate-500 text-center py-4">Click a camera marker on the map to see details</p>
+              </div>
+            )}
+
+            {/* Camera list */}
+            <div className="bg-white rounded-2xl shadow-sm border p-4">
+              <h4 className="font-semibold text-sm mb-3 text-slate-700">All Cameras</h4>
+              <div className="space-y-2">
+                {cameras.map(c => (
+                  <button key={c.id} onClick={() => setSelectedCam(selectedCam?.id === c.id ? null : c)}
+                    className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left transition border ${selectedCam?.id === c.id ? 'border-violet-400 bg-violet-50' : 'border-slate-100 hover:bg-slate-50'}`}>
+                    <div className="flex items-center gap-2">
+                      <span className={`w-2.5 h-2.5 rounded-full ${c.status === 'online' ? 'bg-emerald-500' : 'bg-slate-300'}`}></span>
+                      <span className="text-sm font-medium">{c.id}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xs text-rose-500 font-semibold">{c.violations} violations</span>
+                      {c.hotspot && <span className="ml-1 text-xs">🔥</span>}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Hotspot summary */}
+            <div className="bg-gradient-to-br from-rose-50 to-orange-50 rounded-2xl border border-rose-200 p-4">
+              <h4 className="font-semibold text-sm text-rose-700 mb-2 flex items-center gap-2"><AlertTriangle className="w-4 h-4"/>Violation Summary</h4>
+              <div className="space-y-1.5 text-xs">
+                {[['Running Red Light','35%','rose'],['Over Speeding','28%','orange'],['Illegal Parking','22%','amber'],['No Helmet','15%','yellow']].map(([type,pct,color])=>(
+                  <div key={type} className="flex justify-between items-center">
+                    <span className="text-slate-600">{type}</span>
+                    <span className={`font-bold text-${color}-600`}>{pct}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ── REPORT PREVIEW MODAL ──────────────────────────────────────
+  const ReportPreviewModal = ({ report, period, onClose }) => {
+    const [printing, setPrinting] = useState(false);
+    const today = new Date().toLocaleDateString('en-PH', { year:'numeric', month:'long', day:'numeric' });
+
+    const handlePrint = () => {
+      setPrinting(true);
+      setTimeout(()=>{ setPrinting(false); setToast({ message: `${report.title} printed successfully!`, type: 'success' }); onClose(); }, 1800);
+    };
+
+    // ── VIOLATIONS REPORT content ──
+    const ViolationsReportBody = () => {
+      const rows = sampleViolations.slice(0, 8);
+      const totalFines = rows.reduce((a,b)=>a+b.fine,0);
+      const paidCount = rows.filter(v=>v.status==='paid').length;
+      const unpaidCount = rows.filter(v=>v.status==='unpaid').length;
+      const disputedCount = rows.filter(v=>v.status==='disputed').length;
+      return (
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[
+              { label: 'Total Violations', value: rows.length, color: 'violet' },
+              { label: 'Paid', value: paidCount, color: 'emerald' },
+              { label: 'Unpaid', value: unpaidCount, color: 'rose' },
+              { label: 'Disputed', value: disputedCount, color: 'amber' },
+            ].map(s => (
+              <div key={s.label} className={`bg-${s.color}-50 border border-${s.color}-200 rounded-xl p-3 text-center`}>
+                <p className={`text-xl font-bold text-${s.color}-700`}>{s.value}</p>
+                <p className={`text-xs text-${s.color}-500`}>{s.label}</p>
+              </div>
+            ))}
+          </div>
+          <div className="bg-slate-50 rounded-xl p-4 border">
+            <h4 className="font-semibold text-sm mb-3 text-slate-700">Violations by Type</h4>
+            <div className="space-y-2">
+              {[['Running Red Light',35,'rose'],['Over Speeding',28,'amber'],['Illegal Parking',22,'blue'],['No Helmet',15,'violet']].map(([type,pct,color])=>(
+                <div key={type} className="flex items-center gap-3">
+                  <span className="text-xs text-slate-600 w-36 shrink-0">{type}</span>
+                  <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
+                    <div className={`h-full bg-${color}-500 rounded-full`} style={{width:`${pct}%`}}></div>
+                  </div>
+                  <span className="text-xs font-semibold text-slate-600 w-8">{pct}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div>
+            <h4 className="font-semibold text-sm mb-2 text-slate-700">Violation Records</h4>
+            <div className="overflow-x-auto border rounded-xl">
+              <table className="w-full text-xs">
+                <thead className="bg-slate-50 border-b">
+                  <tr>{['ID','Type','Plate','Driver','Date','Fine','Status'].map(h=>(
+                    <th key={h} className="px-3 py-2 text-left font-semibold text-slate-600">{h}</th>
+                  ))}</tr>
+                </thead>
+                <tbody className="divide-y">
+                  {rows.map(v=>(
+                    <tr key={v.id} className="hover:bg-slate-50">
+                      <td className="px-3 py-2 font-mono text-slate-500">{v.id}</td>
+                      <td className="px-3 py-2">{v.image} {v.type}</td>
+                      <td className="px-3 py-2 font-medium">{v.plate}</td>
+                      <td className="px-3 py-2">{v.driver}</td>
+                      <td className="px-3 py-2 text-slate-500">{v.date}</td>
+                      <td className="px-3 py-2 font-medium">₱{v.fine.toLocaleString()}</td>
+                      <td className="px-3 py-2"><StatusBadge status={v.status}/></td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot className="bg-slate-50 border-t">
+                  <tr>
+                    <td colSpan="5" className="px-3 py-2 text-right font-semibold text-slate-600">Total Fines:</td>
+                    <td className="px-3 py-2 font-bold text-violet-700">₱{totalFines.toLocaleString()}</td>
+                    <td></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </>
+      );
+    };
+
+    // ── ENFORCER PERFORMANCE content ──
+    const EnforcerPerformanceBody = () => {
+      const enforcers = sampleUsers.filter(u => u.role === 'enforcer');
+      const topEnforcer = [...enforcers].sort((a,b) => b.apprehensions - a.apprehensions)[0];
+      const totalApprehensions = enforcers.reduce((a,b) => a + (b.apprehensions||0), 0);
+      return (
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {[
+              { label: 'Total Enforcers', value: enforcers.length, color: 'blue' },
+              { label: 'Total Apprehensions', value: totalApprehensions.toLocaleString(), color: 'violet' },
+              { label: 'Avg per Enforcer', value: Math.round(totalApprehensions / enforcers.length).toLocaleString(), color: 'emerald' },
+            ].map(s => (
+              <div key={s.label} className={`bg-${s.color}-50 border border-${s.color}-200 rounded-xl p-3 text-center`}>
+                <p className={`text-xl font-bold text-${s.color}-700`}>{s.value}</p>
+                <p className={`text-xs text-${s.color}-500`}>{s.label}</p>
+              </div>
+            ))}
+          </div>
+          {topEnforcer && (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center gap-4">
+              <div className="w-12 h-12 bg-amber-200 rounded-full flex items-center justify-center shrink-0">
+                <span className="font-bold text-amber-700 text-lg">{topEnforcer.name.charAt(0)}</span>
+              </div>
+              <div>
+                <p className="text-xs text-amber-600 font-semibold uppercase tracking-wide">Top Performer</p>
+                <p className="font-bold text-amber-800">{topEnforcer.name}</p>
+                <p className="text-xs text-amber-600">{topEnforcer.badge} · {topEnforcer.station} · {topEnforcer.apprehensions} apprehensions</p>
+              </div>
+            </div>
+          )}
+          <div className="bg-slate-50 rounded-xl p-4 border">
+            <h4 className="font-semibold text-sm mb-3 text-slate-700">Apprehensions per Enforcer</h4>
+            <div className="space-y-3">
+              {enforcers.map(e => {
+                const pct = Math.round(((e.apprehensions||0) / (topEnforcer?.apprehensions||1)) * 100);
+                return (
+                  <div key={e.id} className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
+                      <span className="text-xs font-bold text-blue-600">{e.name.charAt(0)}</span>
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="font-medium">{e.name} <span className="text-slate-400">({e.badge})</span></span>
+                        <span className="font-semibold text-blue-600">{e.apprehensions||0}</span>
+                      </div>
+                      <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+                        <div className="h-full bg-blue-500 rounded-full" style={{width:`${pct}%`}}></div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          <div>
+            <h4 className="font-semibold text-sm mb-2 text-slate-700">Enforcer Details</h4>
+            <div className="overflow-x-auto border rounded-xl">
+              <table className="w-full text-xs">
+                <thead className="bg-slate-50 border-b">
+                  <tr>{['Name','Badge','Station','Apprehensions','Status'].map(h=>(
+                    <th key={h} className="px-3 py-2 text-left font-semibold text-slate-600">{h}</th>
+                  ))}</tr>
+                </thead>
+                <tbody className="divide-y">
+                  {enforcers.map(e=>(
+                    <tr key={e.id} className="hover:bg-slate-50">
+                      <td className="px-3 py-2 font-medium">{e.name}</td>
+                      <td className="px-3 py-2 font-mono text-slate-500">{e.badge}</td>
+                      <td className="px-3 py-2">{e.station}</td>
+                      <td className="px-3 py-2 text-center font-bold text-blue-600">{e.apprehensions||0}</td>
+                      <td className="px-3 py-2"><StatusBadge status={e.status}/></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      );
+    };
+
+    // ── FINANCIAL SUMMARY content ──
+    const FinancialSummaryBody = () => {
+      const paid = sampleViolations.filter(v=>v.status==='paid');
+      const unpaid = sampleViolations.filter(v=>v.status==='unpaid');
+      const disputed = sampleViolations.filter(v=>v.status==='disputed');
+      const totalCollected = paid.reduce((a,b)=>a+(b.paidAmount||b.fine),0);
+      const totalPending = unpaid.reduce((a,b)=>a+b.fine,0);
+      const totalDisputed = disputed.reduce((a,b)=>a+b.fine,0);
+      const collectionRate = Math.round((paid.length / sampleViolations.length) * 100);
+      const byMethod = paid.reduce((acc,v)=>{
+        const m = v.paymentMethod || 'Cash'; acc[m]=(acc[m]||0)+(v.paidAmount||v.fine); return acc;
+      },{});
+      return (
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[
+              { label: 'Total Collected', value: `₱${totalCollected.toLocaleString()}`, color: 'emerald' },
+              { label: 'Pending Collection', value: `₱${totalPending.toLocaleString()}`, color: 'rose' },
+              { label: 'Under Dispute', value: `₱${totalDisputed.toLocaleString()}`, color: 'amber' },
+              { label: 'Collection Rate', value: `${collectionRate}%`, color: 'blue' },
+            ].map(s => (
+              <div key={s.label} className={`bg-${s.color}-50 border border-${s.color}-200 rounded-xl p-3 text-center`}>
+                <p className={`text-lg font-bold text-${s.color}-700`}>{s.value}</p>
+                <p className={`text-xs text-${s.color}-500`}>{s.label}</p>
+              </div>
+            ))}
+          </div>
+          <div className="bg-slate-50 rounded-xl p-4 border">
+            <h4 className="font-semibold text-sm mb-3 text-slate-700">Revenue Breakdown</h4>
+            <div className="space-y-2">
+              {[
+                { label: 'Collected', amount: totalCollected, total: totalCollected+totalPending+totalDisputed, color: 'emerald' },
+                { label: 'Pending', amount: totalPending, total: totalCollected+totalPending+totalDisputed, color: 'rose' },
+                { label: 'Disputed', amount: totalDisputed, total: totalCollected+totalPending+totalDisputed, color: 'amber' },
+              ].map(item => {
+                const pct = Math.round((item.amount/item.total)*100)||0;
+                return (
+                  <div key={item.label} className="flex items-center gap-3">
+                    <span className="text-xs text-slate-600 w-20 shrink-0">{item.label}</span>
+                    <div className="flex-1 h-3 bg-slate-200 rounded-full overflow-hidden">
+                      <div className={`h-full bg-${item.color}-500 rounded-full`} style={{width:`${pct}%`}}></div>
+                    </div>
+                    <span className="text-xs font-semibold text-slate-600 w-28 text-right">₱{item.amount.toLocaleString()} ({pct}%)</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          {Object.keys(byMethod).length > 0 && (
+            <div className="bg-slate-50 rounded-xl p-4 border">
+              <h4 className="font-semibold text-sm mb-3 text-slate-700">Payment Methods</h4>
+              <div className="space-y-2">
+                {Object.entries(byMethod).map(([method, amount]) => (
+                  <div key={method} className="flex items-center justify-between p-2 bg-white rounded-lg border">
+                    <span className="text-xs font-medium text-slate-700">{method}</span>
+                    <span className="text-xs font-bold text-emerald-600">₱{amount.toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          <div>
+            <h4 className="font-semibold text-sm mb-2 text-slate-700">Paid Violations</h4>
+            <div className="overflow-x-auto border rounded-xl">
+              <table className="w-full text-xs">
+                <thead className="bg-slate-50 border-b">
+                  <tr>{['ID','Type','Driver','Fine','Paid Date','Method'].map(h=>(
+                    <th key={h} className="px-3 py-2 text-left font-semibold text-slate-600">{h}</th>
+                  ))}</tr>
+                </thead>
+                <tbody className="divide-y">
+                  {paid.map(v=>(
+                    <tr key={v.id} className="hover:bg-slate-50">
+                      <td className="px-3 py-2 font-mono text-slate-500">{v.id}</td>
+                      <td className="px-3 py-2">{v.type}</td>
+                      <td className="px-3 py-2 font-medium">{v.driver}</td>
+                      <td className="px-3 py-2 font-bold text-emerald-600">₱{(v.paidAmount||v.fine).toLocaleString()}</td>
+                      <td className="px-3 py-2 text-slate-500">{v.paidDate||'—'}</td>
+                      <td className="px-3 py-2">{v.paymentMethod||'Cash'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot className="bg-slate-50 border-t">
+                  <tr>
+                    <td colSpan="3" className="px-3 py-2 text-right font-semibold text-slate-600">Total Collected:</td>
+                    <td className="px-3 py-2 font-bold text-emerald-700">₱{totalCollected.toLocaleString()}</td>
+                    <td colSpan="2"></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </>
+      );
+    };
+
+    const bodyMap = {
+      'Violations Report': <ViolationsReportBody />,
+      'Enforcer Performance': <EnforcerPerformanceBody />,
+      'Financial Summary': <FinancialSummaryBody />,
+    };
+
+    return (
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+        <div className="bg-white rounded-2xl w-full max-w-3xl shadow-2xl animate-scale-in my-4">
+          {/* Modal Header */}
+          <div className="flex items-center justify-between p-4 border-b bg-slate-50 rounded-t-2xl">
+            <div className="flex items-center gap-3">
+              <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-lg flex items-center gap-1 text-sm text-slate-600 font-medium">
+                <ChevronLeft className="w-4 h-4" />Back
+              </button>
+              <h3 className="font-bold text-lg flex items-center gap-2"><FileText className="w-5 h-5 text-violet-600"/>Report Preview</h3>
+            </div>
+            <button onClick={handlePrint} disabled={printing}
+              className="px-4 py-2 bg-violet-600 text-white rounded-xl text-sm font-medium hover:bg-violet-700 flex items-center gap-2">
+              {printing ? <><Loader2 className="w-4 h-4 animate-spin"/>Printing...</> : <><Printer className="w-4 h-4"/>Print / Export</>}
+            </button>
+          </div>
+
+          {/* Report Document */}
+          <div className="p-6 space-y-5 max-h-[75vh] overflow-y-auto">
+            {/* Letterhead */}
+            <div className="text-center border-b pb-4">
+              <div className={`w-14 h-14 ${report.bg} rounded-full flex items-center justify-center mx-auto mb-2`}>
+                <report.icon className={`w-7 h-7 ${report.color}`}/>
+              </div>
+              <h1 className="text-xl font-bold text-slate-800">Smart Traffic Violation Monitoring System</h1>
+              <p className="text-sm text-slate-500">City Traffic Management Office</p>
+              <div className="mt-3 inline-block bg-violet-50 border border-violet-200 rounded-xl px-4 py-2">
+                <p className="text-sm font-bold text-violet-700">{report.title}</p>
+                <p className="text-xs text-violet-500">Period: {period} &nbsp;|&nbsp; Generated: {today}</p>
+              </div>
+            </div>
+
+            {/* Report-specific body */}
+            {bodyMap[report.title] || <p className="text-slate-500 text-sm text-center py-8">No preview available for this report type.</p>}
+
+            {/* Footer */}
+            <div className="border-t pt-4 flex items-center justify-between text-xs text-slate-400">
+              <span>STVMS — Confidential Report</span>
+              <span>Generated: {today}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   const ReportsContent = () => {
+    const [reportPreview, setReportPreview] = useState(null);
     const reports = [
       { title: 'Violations Report', desc: 'Summary of all violations by type, location, and time period', icon: FileWarning, color: 'text-rose-500', bg: 'bg-rose-100' },
-      { title: 'Revenue Report', desc: 'Collection statistics and payment analysis', icon: DollarSign, color: 'text-emerald-500', bg: 'bg-emerald-100' },
       { title: 'Enforcer Performance', desc: 'Staff activity metrics and apprehension statistics', icon: UserCheck, color: 'text-blue-500', bg: 'bg-blue-100' },
+      { title: 'Financial Summary', desc: 'Fines collected, pending payments, and revenue breakdown', icon: FileText, color: 'text-emerald-500', bg: 'bg-emerald-100' },
     ];
     return (
       <div className="space-y-4">
-        {loading ? (
-          <div className="grid md:grid-cols-3 gap-4">
-            {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-40 rounded-xl" />)}
-          </div>
-        ) : (
+        {reportPreview && (
+          <ReportPreviewModal
+            report={reportPreview.report}
+            period={reportPreview.period}
+            onClose={() => setReportPreview(null)}
+          />
+        )}
+        {loading ? (<div className="grid md:grid-cols-3 gap-4">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-40 rounded-xl" />)}</div>) : (
           <div className="grid md:grid-cols-3 gap-4">
             {reports.map((report) => (
               <div key={report.title} className="bg-white rounded-xl p-6 shadow-sm border hover:shadow-md transition cursor-pointer" onClick={() => setShowReportModal(report)}>
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${report.bg} mb-3`}>
-                  <report.icon className={`w-5 h-5 ${report.color}`} />
-                </div>
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${report.bg} mb-3`}><report.icon className={`w-5 h-5 ${report.color}`} /></div>
                 <h3 className="font-bold mb-1">{report.title}</h3>
                 <p className="text-sm text-slate-500 mb-4">{report.desc}</p>
-                <button className="text-violet-600 text-sm flex items-center gap-1 hover:underline">
-                  <Printer className="w-4 h-4" />Generate Report
-                </button>
+                <button className="text-violet-600 text-sm flex items-center gap-1 hover:underline"><Printer className="w-4 h-4" />Generate Report</button>
               </div>
             ))}
           </div>
@@ -889,19 +1307,21 @@ const SupervisorDashboard = ({ onLogout }) => {
     );
   };
 
-  // ─────────────────────────────────────────────────────────────
-  // SETTINGS CONTENT
-  // ─────────────────────────────────────────────────────────────
-
   const SettingsContent = () => {
     const [saving, setSaving] = useState(false);
-    const [selectedCamera, setSelectedCameraForSettings] = useState(null);
+    const [selectedCamera, setSelectedCamera] = useState(null);
     const [cameraSettings, setCameraSettings] = useState({});
 
+    // Initialize camera settings
     useEffect(() => {
       const initialSettings = {};
       sampleDevices.forEach(device => {
-        initialSettings[device.id] = { speedLimit: 60, redLightGrace: 2, confidenceScore: 85, enabled: device.status === 'online' };
+        initialSettings[device.id] = {
+          speedLimit: 60,
+          redLightGrace: 2,
+          confidenceScore: 85,
+          enabled: device.status === 'online'
+        };
       });
       setCameraSettings(initialSettings);
     }, []);
@@ -910,26 +1330,32 @@ const SupervisorDashboard = ({ onLogout }) => {
       setSaving(true);
       setTimeout(() => {
         setSaving(false);
-        showToast(selectedCamera ? `Settings saved for ${selectedCamera}!` : 'Global settings saved!', 'success');
+        setToast({ message: selectedCamera ? `Settings saved for ${selectedCamera}!` : 'Global settings saved!', type: 'success' });
       }, 1500);
     };
 
     const handleCameraSettingChange = (cameraId, field, value) => {
-      setCameraSettings(prev => ({ ...prev, [cameraId]: { ...prev[cameraId], [field]: value } }));
+      setCameraSettings(prev => ({
+        ...prev,
+        [cameraId]: { ...prev[cameraId], [field]: value }
+      }));
     };
 
     return (
       <div className="space-y-6">
         {loading ? (<><Skeleton className="h-64 rounded-xl" /><Skeleton className="h-48 rounded-xl" /></>) : (
           <>
-            {/* Camera Detection Settings */}
+            {/* Camera Selection */}
             <div className="bg-white rounded-xl p-6 shadow-sm border">
               <h3 className="font-bold mb-4 flex items-center gap-2"><Camera className="w-5 h-5 text-violet-600" />Camera Detection Settings</h3>
               <p className="text-sm text-slate-500 mb-4">Select a camera to configure its detection parameters, or configure global defaults.</p>
 
               {/* Camera Grid */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-                <button onClick={() => setSelectedCameraForSettings(null)} className={`p-4 rounded-xl border-2 transition text-left ${selectedCamera === null ? 'border-violet-500 bg-violet-50' : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'}`}>
+                <button
+                  onClick={() => setSelectedCamera(null)}
+                  className={`p-4 rounded-xl border-2 transition text-left ${selectedCamera === null ? 'border-violet-500 bg-violet-50' : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'}`}
+                >
                   <div className="flex items-center gap-2 mb-2">
                     <Settings className="w-5 h-5 text-violet-600" />
                     <span className="font-semibold text-sm">Global Default</span>
@@ -938,7 +1364,11 @@ const SupervisorDashboard = ({ onLogout }) => {
                 </button>
 
                 {sampleDevices.map((device) => (
-                  <button key={device.id} onClick={() => setSelectedCameraForSettings(device.id)} className={`p-4 rounded-xl border-2 transition text-left ${selectedCamera === device.id ? 'border-violet-500 bg-violet-50' : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'}`}>
+                  <button
+                    key={device.id}
+                    onClick={() => setSelectedCamera(device.id)}
+                    className={`p-4 rounded-xl border-2 transition text-left ${selectedCamera === device.id ? 'border-violet-500 bg-violet-50' : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'}`}
+                  >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <Camera className={`w-5 h-5 ${device.status === 'online' ? 'text-emerald-600' : 'text-slate-400'}`} />
@@ -977,28 +1407,39 @@ const SupervisorDashboard = ({ onLogout }) => {
                       </>
                     )}
                   </div>
-                  {selectedCamera && <StatusBadge status={sampleDevices.find(d => d.id === selectedCamera)?.status} />}
+                  {selectedCamera && (
+                    <StatusBadge status={sampleDevices.find(d => d.id === selectedCamera)?.status} />
+                  )}
                 </div>
 
                 <div className="space-y-4">
                   <div className="grid md:grid-cols-3 gap-4">
                     <div>
                       <label className="text-sm font-medium text-slate-700 mb-1 block">Speed Limit (km/h)</label>
-                      <input type="number" value={selectedCamera ? cameraSettings[selectedCamera]?.speedLimit || 60 : 60}
+                      <input
+                        type="number"
+                        value={selectedCamera ? cameraSettings[selectedCamera]?.speedLimit || 60 : 60}
                         onChange={(e) => selectedCamera && handleCameraSettingChange(selectedCamera, 'speedLimit', parseInt(e.target.value))}
-                        className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white" />
+                        className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white"
+                      />
                     </div>
                     <div>
                       <label className="text-sm font-medium text-slate-700 mb-1 block">Red Light Grace (sec)</label>
-                      <input type="number" value={selectedCamera ? cameraSettings[selectedCamera]?.redLightGrace || 2 : 2}
+                      <input
+                        type="number"
+                        value={selectedCamera ? cameraSettings[selectedCamera]?.redLightGrace || 2 : 2}
                         onChange={(e) => selectedCamera && handleCameraSettingChange(selectedCamera, 'redLightGrace', parseInt(e.target.value))}
-                        className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white" />
+                        className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white"
+                      />
                     </div>
                     <div>
                       <label className="text-sm font-medium text-slate-700 mb-1 block">Confidence Score (%)</label>
-                      <input type="number" value={selectedCamera ? cameraSettings[selectedCamera]?.confidenceScore || 85 : 85}
+                      <input
+                        type="number"
+                        value={selectedCamera ? cameraSettings[selectedCamera]?.confidenceScore || 85 : 85}
                         onChange={(e) => selectedCamera && handleCameraSettingChange(selectedCamera, 'confidenceScore', parseInt(e.target.value))}
-                        className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white" />
+                        className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white"
+                      />
                     </div>
                   </div>
 
@@ -1011,8 +1452,10 @@ const SupervisorDashboard = ({ onLogout }) => {
                           <p className="text-xs text-slate-500">Enable or disable violation detection for this camera</p>
                         </div>
                       </div>
-                      <button onClick={() => handleCameraSettingChange(selectedCamera, 'enabled', !cameraSettings[selectedCamera]?.enabled)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition ${cameraSettings[selectedCamera]?.enabled ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+                      <button
+                        onClick={() => handleCameraSettingChange(selectedCamera, 'enabled', !cameraSettings[selectedCamera]?.enabled)}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition ${cameraSettings[selectedCamera]?.enabled ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                      >
                         {cameraSettings[selectedCamera]?.enabled ? 'Enabled' : 'Disabled'}
                       </button>
                     </div>
@@ -1023,12 +1466,15 @@ const SupervisorDashboard = ({ onLogout }) => {
                       {saving ? <><Loader2 className="w-4 h-4 animate-spin" />Saving...</> : <><Save className="w-4 h-4" />Save Settings</>}
                     </button>
                     {selectedCamera && (
-                      <button onClick={() => {
-                        handleCameraSettingChange(selectedCamera, 'speedLimit', 60);
-                        handleCameraSettingChange(selectedCamera, 'redLightGrace', 2);
-                        handleCameraSettingChange(selectedCamera, 'confidenceScore', 85);
-                        showToast('Reset to default values', 'info');
-                      }} className="px-6 py-2.5 border rounded-xl hover:bg-white transition flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          handleCameraSettingChange(selectedCamera, 'speedLimit', 60);
+                          handleCameraSettingChange(selectedCamera, 'redLightGrace', 2);
+                          handleCameraSettingChange(selectedCamera, 'confidenceScore', 85);
+                          setToast({ message: 'Reset to default values', type: 'info' });
+                        }}
+                        className="px-6 py-2.5 border rounded-xl hover:bg-white transition flex items-center gap-2"
+                      >
                         <RotateCcw className="w-4 h-4" />Reset to Default
                       </button>
                     )}
@@ -1066,7 +1512,7 @@ const SupervisorDashboard = ({ onLogout }) => {
                   <p className="text-sm font-medium text-emerald-700">LTO Database Connected</p>
                   <p className="text-xs text-emerald-600">Last synced: Today at 6:00 AM</p>
                 </div>
-                <button onClick={() => showToast('Database sync triggered!', 'info')} className="ml-auto text-xs text-emerald-700 border border-emerald-300 px-3 py-1 rounded-lg hover:bg-emerald-100 transition flex items-center gap-1">
+                <button onClick={() => setToast({ message: 'Database sync triggered!', type: 'info' })} className="ml-auto text-xs text-emerald-700 border border-emerald-300 px-3 py-1 rounded-lg hover:bg-emerald-100 transition flex items-center gap-1">
                   <RefreshCw className="w-3 h-3" />Sync Now
                 </button>
               </div>
@@ -1076,231 +1522,6 @@ const SupervisorDashboard = ({ onLogout }) => {
       </div>
     );
   };
-
-  // ─────────────────────────────────────────────────────────────
-  // MAP CONTENT
-  // ─────────────────────────────────────────────────────────────
-
-  const MapContent = () => (
-    <div className="space-y-6">
-      {/* Filter Buttons */}
-      <div className="flex gap-3">
-        {[
-          { id: 'all', label: 'All Locations', icon: MapPin },
-          { id: 'cctv', label: 'CCTV Cameras', icon: Camera },
-          { id: 'enforcers', label: 'Enforcers', icon: Shield },
-        ].map((filter) => (
-          <button
-            key={filter.id}
-            onClick={() => setMapFilter(filter.id)}
-            className={`flex-1 py-3 px-4 rounded-xl font-medium flex items-center justify-center gap-2 transition ${
-              mapFilter === filter.id 
-                ? 'bg-violet-600 text-white shadow-lg' 
-                : 'bg-white border hover:bg-slate-50'
-            }`}
-          >
-            <filter.icon className="w-5 h-5" />
-            {filter.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl p-4 border shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
-              <Camera className="w-6 h-6 text-emerald-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-emerald-600">{cctvLocations.filter(c => c.status === 'online').length}</p>
-              <p className="text-sm text-slate-500">CCTV Online</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-4 border shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-rose-100 rounded-xl flex items-center justify-center">
-              <WifiOff className="w-6 h-6 text-rose-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-rose-600">{cctvLocations.filter(c => c.status === 'offline').length}</p>
-              <p className="text-sm text-slate-500">CCTV Offline</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-4 border shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-              <Shield className="w-6 h-6 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-blue-600">{enforcerLocations.filter(e => e.status === 'active').length}</p>
-              <p className="text-sm text-slate-500">On Patrol</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-4 border shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
-              <Shield className="w-6 h-6 text-amber-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-amber-600">{enforcerLocations.filter(e => e.status === 'break').length}</p>
-              <p className="text-sm text-slate-500">On Break</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Map Placeholder */}
-      <div className="bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl h-96 flex items-center justify-center border-2 border-dashed border-slate-300 relative overflow-hidden">
-        {/* Simulated map grid */}
-        <div className="absolute inset-0 opacity-20">
-          <div className="grid grid-cols-12 grid-rows-8 h-full">
-            {[...Array(96)].map((_, i) => (
-              <div key={i} className="border border-slate-400"></div>
-            ))}
-          </div>
-        </div>
-        
-        {/* Map pins simulation */}
-        <div className="absolute inset-0">
-          {(mapFilter === 'all' || mapFilter === 'cctv') && cctvLocations.map((cam, i) => (
-            <div 
-              key={cam.id}
-              className={`absolute ${cam.status === 'online' ? 'text-emerald-500' : 'text-rose-500'}`}
-              style={{ top: `${15 + (i * 12)}%`, left: `${10 + (i * 14)}%` }}
-            >
-              <Camera className="w-6 h-6 drop-shadow-lg" />
-            </div>
-          ))}
-          {(mapFilter === 'all' || mapFilter === 'enforcers') && enforcerLocations.map((enf, i) => (
-            <div 
-              key={enf.id}
-              className="absolute text-blue-500"
-              style={{ top: `${25 + (i * 13)}%`, left: `${20 + (i * 15)}%` }}
-            >
-              <Shield className="w-6 h-6 drop-shadow-lg" />
-            </div>
-          ))}
-        </div>
-
-        <div className="text-center z-10 bg-white/90 backdrop-blur-sm px-6 py-4 rounded-xl shadow-lg">
-          <MapPin className="w-10 h-10 mx-auto text-violet-500 mb-2" />
-          <p className="text-lg text-slate-700 font-semibold">Interactive Map</p>
-          <p className="text-sm text-slate-500">Google Maps API Integration</p>
-        </div>
-      </div>
-
-      {/* Legend */}
-      <div className="flex flex-wrap gap-6 justify-center text-sm bg-white rounded-xl p-4 border">
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-emerald-500 rounded-full"></div>
-          <span className="text-slate-600">CCTV Online</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-rose-500 rounded-full"></div>
-          <span className="text-slate-600">CCTV Offline</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
-          <span className="text-slate-600">Enforcer On Patrol</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-amber-500 rounded-full"></div>
-          <span className="text-slate-600">Enforcer On Break</span>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-6">
-        {/* CCTV List */}
-        {(mapFilter === 'all' || mapFilter === 'cctv') && (
-          <div className="bg-white rounded-xl border shadow-sm">
-            <div className="p-4 border-b flex items-center justify-between">
-              <h3 className="font-semibold flex items-center gap-2">
-                <Camera className="w-5 h-5 text-violet-500" />
-                CCTV Cameras
-              </h3>
-              <span className="text-xs bg-slate-100 px-2 py-1 rounded-full">{cctvLocations.length} total</span>
-            </div>
-            <div className="divide-y max-h-80 overflow-y-auto">
-              {cctvLocations.map((cam) => (
-                <div key={cam.id} className="p-4 hover:bg-slate-50 transition">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${cam.status === 'online' ? 'bg-emerald-100' : 'bg-rose-100'}`}>
-                        <Camera className={`w-5 h-5 ${cam.status === 'online' ? 'text-emerald-600' : 'text-rose-600'}`} />
-                      </div>
-                      <div>
-                        <p className="font-medium">{cam.id}</p>
-                        <p className="text-sm text-slate-500">{cam.location}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="flex items-center gap-1">
-                        {cam.status === 'online' ? (
-                          <Wifi className="w-4 h-4 text-emerald-500" />
-                        ) : (
-                          <WifiOff className="w-4 h-4 text-rose-500" />
-                        )}
-                        <span className={`text-xs font-medium ${cam.status === 'online' ? 'text-emerald-600' : 'text-rose-600'}`}>
-                          {cam.status}
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-400">{cam.type}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Enforcers List */}
-        {(mapFilter === 'all' || mapFilter === 'enforcers') && (
-          <div className="bg-white rounded-xl border shadow-sm">
-            <div className="p-4 border-b flex items-center justify-between">
-              <h3 className="font-semibold flex items-center gap-2">
-                <Shield className="w-5 h-5 text-violet-500" />
-                Enforcers on Duty
-              </h3>
-              <span className="text-xs bg-slate-100 px-2 py-1 rounded-full">{enforcerLocations.length} total</span>
-            </div>
-            <div className="divide-y max-h-80 overflow-y-auto">
-              {enforcerLocations.map((enf) => (
-                <div key={enf.id} className="p-4 hover:bg-slate-50 transition">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${enf.status === 'active' ? 'bg-blue-100' : 'bg-amber-100'}`}>
-                        <Shield className={`w-5 h-5 ${enf.status === 'active' ? 'text-blue-600' : 'text-amber-600'}`} />
-                      </div>
-                      <div>
-                        <p className="font-medium">{enf.name}</p>
-                        <p className="text-sm text-slate-500 flex items-center gap-1">
-                          <MapPin className="w-3 h-3" />{enf.area}
-                        </p>
-                      </div>
-                    </div>
-                    <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      enf.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
-                    }`}>
-                      {enf.status === 'active' ? 'On Patrol' : 'On Break'}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-
-  // ─────────────────────────────────────────────────────────────
-  // RENDER CONTENT
-  // ─────────────────────────────────────────────────────────────
-
   const renderContent = () => {
     switch (activeSection) {
       case 'dashboard': return <DashboardContent />;
@@ -1315,67 +1536,54 @@ const SupervisorDashboard = ({ onLogout }) => {
     }
   };
 
-  // ─────────────────────────────────────────────────────────────
-  // MAIN RENDER
-  // ─────────────────────────────────────────────────────────────
-
   return (
     <div className="min-h-screen bg-slate-100">
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       {showConfirm && <ConfirmModal {...showConfirm} onCancel={() => setShowConfirm(null)} />}
-      {showFilter && <FilterModal onClose={() => setShowFilter(false)} onApply={(f) => showToast('Filters applied!', 'info')} />}
-      {showExport && <ExportModal onClose={() => setShowExport(false)} onExport={(fmt) => showToast(`Exported as ${fmt.toUpperCase()} successfully!`, 'success')} />}
-      {showReportModal && <ReportModal report={showReportModal} onClose={() => setShowReportModal(null)} onGenerate={(title, period) => showToast(`${title} for ${period} generated!`, 'success')} />}
+      {showFilter && <FilterModal onClose={() => setShowFilter(false)} onApply={(f) => setToast({ message: 'Filters applied!', type: 'info' })} />}
+      {showExport && <ExportModal onClose={() => setShowExport(false)} onExport={(fmt) => setToast({ message: `Exported as ${fmt.toUpperCase()} successfully!`, type: 'success' })} />}
+      {showReportModal && <ReportModal report={showReportModal} onClose={() => setShowReportModal(null)} onGenerate={(title, period) => { setShowReportModal(null); setShowReportPreview({ report: showReportModal, period }); }} />}
+      {showReportPreview && <ReportPreviewModal report={showReportPreview.report} period={showReportPreview.period} onClose={() => setShowReportPreview(null)} />}
       {showNotif && <NotificationPanel onClose={() => setShowNotif(false)} />}
-      
       {showViolationDetails && selectedViolation && (
         <ViolationDetailsModal violation={selectedViolation} userType="supervisor" onClose={() => setShowViolationDetails(false)}
-          onApprove={() => { setShowViolationDetails(false); showToast('Violation approved!', 'success'); }}
-          onReject={() => { setShowViolationDetails(false); showToast('Violation rejected.', 'warning'); }} />
+          onApprove={() => { setShowViolationDetails(false); setToast({ message: 'Violation approved!', type: 'success' }); }}
+          onReject={() => { setShowViolationDetails(false); setToast({ message: 'Violation rejected.', type: 'warning' }); }} />
       )}
       {showDisputeDetails && selectedDispute && (
         <DisputeDetailsModal dispute={selectedDispute} userType="supervisor" onClose={() => setShowDisputeDetails(false)}
-          onApprove={() => { setShowDisputeDetails(false); showToast('Dispute approved!', 'success'); }}
-          onReject={() => { setShowDisputeDetails(false); showToast('Dispute rejected.', 'warning'); }} />
+          onApprove={() => { setShowDisputeDetails(false); setToast({ message: 'Dispute approved!', type: 'success' }); }}
+          onReject={() => { setShowDisputeDetails(false); setToast({ message: 'Dispute rejected.', type: 'warning' }); }} />
       )}
       {showUserDetails && selectedUser && (
         <UserDetailsModal user={selectedUser} onClose={() => setShowUserDetails(false)}
-          onSuspend={(u) => { setShowUserDetails(false); setShowConfirm({ title: 'Suspend Account', message: `Suspend ${u.name}'s account? They will lose access to the portal.`, confirmText: 'Suspend', confirmColor: 'bg-rose-500 hover:bg-rose-600', onConfirm: () => { setShowConfirm(null); showToast(`${u.name}'s account suspended.`, 'warning'); } }); }}
-          onActivate={(u) => { setShowUserDetails(false); setShowConfirm({ title: 'Reactivate Account', message: `Reactivate ${u.name}'s account?`, confirmText: 'Reactivate', onConfirm: () => { setShowConfirm(null); showToast(`${u.name}'s account reactivated.`, 'success'); } }); }} />
+          onSuspend={(u) => { setShowUserDetails(false); setShowConfirm({ title: 'Suspend Account', message: `Suspend ${u.name}'s account? They will lose access to the portal.`, confirmText: 'Suspend', confirmColor: 'bg-rose-500 hover:bg-rose-600', onConfirm: () => { setShowConfirm(null); setToast({ message: `${u.name}'s account suspended.`, type: 'warning' }); } }); }}
+          onActivate={(u) => { setShowUserDetails(false); setShowConfirm({ title: 'Reactivate Account', message: `Reactivate ${u.name}'s account?`, confirmText: 'Reactivate', onConfirm: () => { setShowConfirm(null); setToast({ message: `${u.name}'s account reactivated.`, type: 'success' }); } }); }} />
       )}
       {showDeviceDetails && selectedDevice && (
         <DeviceDetailsModal device={selectedDevice} onClose={() => setShowDeviceDetails(false)}
-          onDiagnostic={(d) => showToast(`${d.id} diagnostic complete — all systems normal.`, 'info')}
-          onRestart={(d) => showToast(`${d.id} restarted successfully!`, 'success')} />
+          onDiagnostic={(d) => setToast({ message: `${d.id} diagnostic complete — all systems normal.`, type: 'info' })}
+          onRestart={(d) => setToast({ message: `${d.id} restarted successfully!`, type: 'success' })} />
       )}
-      
       <Sidebar />
       {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)}></div>}
-      
       <div className="lg:pl-64">
         <header className="bg-white border-b sticky top-0 z-30">
           <div className="flex items-center justify-between px-4 py-3">
             <div className="flex items-center gap-3">
-              <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 hover:bg-slate-100 rounded-lg transition">
-                <Menu className="w-5 h-5" />
-              </button>
+              <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 hover:bg-slate-100 rounded-lg transition"><Menu className="w-5 h-5" /></button>
               <h2 className="font-bold text-lg capitalize">{activeSection}</h2>
             </div>
             <div className="flex items-center gap-3">
               <button onClick={() => setShowNotif(!showNotif)} className="relative p-2 hover:bg-slate-100 rounded-lg transition">
-                <Bell className="w-5 h-5" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-rose-500 rounded-full"></span>
+                <Bell className="w-5 h-5" /><span className="absolute top-1 right-1 w-2 h-2 bg-rose-500 rounded-full"></span>
               </button>
-              <div className="w-8 h-8 bg-violet-100 rounded-full flex items-center justify-center">
-                <span className="text-sm font-medium text-violet-600">TC</span>
-              </div>
+              <div className="w-8 h-8 bg-violet-100 rounded-full flex items-center justify-center"><span className="text-sm font-medium text-violet-600">TC</span></div>
             </div>
           </div>
         </header>
         <main className="p-4 lg:p-6">{renderContent()}</main>
       </div>
-
-      {/* CSS Animations */}
       <style jsx global>{`
         @keyframes scale-in { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         @keyframes slide-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
