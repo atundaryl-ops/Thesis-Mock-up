@@ -1226,7 +1226,7 @@ const SupervisorDashboard = ({ onLogout }) => {
     const bodyMap = {
       'Violations Report': <ViolationsReportBody />,
       'Enforcer Performance': <EnforcerPerformanceBody />,
-      'Financial Summary': <FinancialSummaryBody />,
+
     };
 
     return (
