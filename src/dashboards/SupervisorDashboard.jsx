@@ -7,7 +7,7 @@ import {
   Power, Save, RotateCcw, Loader2, MapPin, Clock, Calendar
 } from 'lucide-react';
 import { Toast, Skeleton, TableSkeleton, StatusBadge, ConfirmModal } from '../components/UIComponents';
-import { ViolationDetailsModal, DisputeDetailsModal, UserDetailsModal, DeviceDetailsModal, FilterModal, ExportModal, NotificationPanel } from '../components/Modals';
+import { ViolationDetailsModal, DisputeDetailsModal, UserDetailsModal, DeviceDetailsModal, FilterModal, ExportModal, NotificationPanel, ReportModal } from '../components/Modals';
 import { sampleViolations, sampleDisputes, sampleUsers, sampleDevices, sampleDrivers } from '../data/sampleData';
 
 // ─────────────────────────────────────────────────────────────
@@ -1280,7 +1280,6 @@ const SupervisorDashboard = ({ onLogout }) => {
     const reports = [
       { title: 'Violations Report', desc: 'Summary of all violations by type, location, and time period', icon: FileWarning, color: 'text-rose-500', bg: 'bg-rose-100' },
       { title: 'Enforcer Performance', desc: 'Staff activity metrics and apprehension statistics', icon: UserCheck, color: 'text-blue-500', bg: 'bg-blue-100' },
-      { title: 'Financial Summary', desc: 'Fines collected, pending payments, and revenue breakdown', icon: FileText, color: 'text-emerald-500', bg: 'bg-emerald-100' },
     ];
     return (
       <div className="space-y-4">

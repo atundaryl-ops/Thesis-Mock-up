@@ -478,8 +478,134 @@ export const ExportModal = ({ onClose, onExport, title = 'Export Data' }) => {
   );
 };
 // ─────────────────────────────────────────────────────────────
+// REPORT MODAL
+// ─────────────────────────────────────────────────────────────
+
+export const ReportModal = ({ report, onClose, onGenerate }) => {
+  const [period, setPeriod] = useState('this_month');
+  const [generating, setGenerating] = useState(false);
+
+  const periods = [
+    { id: 'this_week',   label: 'This Week',      desc: 'Last 7 days' },
+    { id: 'this_month',  label: 'This Month',     desc: 'Last 30 days' },
+    { id: 'last_month',  label: 'Last Month',     desc: 'Previous calendar month' },
+    { id: 'this_quarter',label: 'This Quarter',   desc: 'Last 90 days' },
+    { id: 'this_year',   label: 'This Year',      desc: 'Current calendar year' },
+    { id: 'custom',      label: 'Custom Range',   desc: 'Pick a date range' },
+  ];
+
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+
+  const handleGenerate = () => {
+    setGenerating(true);
+    setTimeout(() => {
+      setGenerating(false);
+      onGenerate && onGenerate(report.title, period);
+    }, 1500);
+  };
+
+  const Icon = report?.icon;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl animate-scale-in">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b">
+          <div className="flex items-center gap-3">
+            {Icon && (
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${report.bg}`}>
+                <Icon className={`w-5 h-5 ${report.color}`} />
+              </div>
+            )}
+            <div>
+              <h3 className="text-lg font-bold">{report?.title}</h3>
+              <p className="text-xs text-slate-500">{report?.desc}</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-lg">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="p-4 space-y-4">
+          <div>
+            <label className="text-sm font-medium text-slate-700 mb-2 block">
+              Select Report Period
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {periods.map(p => (
+                <button
+                  key={p.id}
+                  onClick={() => setPeriod(p.id)}
+                  className={`p-3 rounded-xl border text-left transition ${
+                    period === p.id
+                      ? 'border-violet-500 bg-violet-50'
+                      : 'hover:bg-slate-50 border-slate-200'
+                  }`}
+                >
+                  <p className="text-sm font-medium">{p.label}</p>
+                  <p className="text-xs text-slate-400">{p.desc}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {period === 'custom' && (
+            <div>
+              <label className="text-sm font-medium text-slate-700 mb-2 block">Date Range</label>
+              <div className="flex gap-2">
+                <input
+                  type="date"
+                  value={dateFrom}
+                  onChange={e => setDateFrom(e.target.value)}
+                  className="flex-1 p-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+                />
+                <input
+                  type="date"
+                  value={dateTo}
+                  onChange={e => setDateTo(e.target.value)}
+                  className="flex-1 p-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="bg-slate-50 border rounded-xl p-3 flex items-start gap-3">
+            <FileText className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
+            <p className="text-xs text-slate-500">
+              The generated report will include charts, tables, and a printable summary for the selected period.
+            </p>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="p-4 border-t bg-slate-50 rounded-b-2xl flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 py-2.5 border rounded-xl text-sm font-medium hover:bg-slate-100 transition"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleGenerate}
+            disabled={generating || (period === 'custom' && (!dateFrom || !dateTo))}
+            className="flex-1 py-2.5 bg-violet-600 text-white rounded-xl text-sm font-medium hover:bg-violet-700 transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {generating
+              ? <><Loader2 className="w-4 h-4 animate-spin" />Generating...</>
+              : <><FileText className="w-4 h-4" />Generate Report</>
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────
 // NOTIFICATION PANEL
-// Add this to the END of your src/components/Modals.jsx file
 // ─────────────────────────────────────────────────────────────
 
 export const NotificationPanel = ({ onClose }) => {
