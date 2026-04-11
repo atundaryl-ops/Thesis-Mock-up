@@ -1,90 +1,109 @@
 @import "tailwindcss";
 
 :root {
-  /* Primary Colors - Black */
-  --primary-50: #F9F9F9;
-  --primary-100: #F0F0F0;
-  --primary-200: #D9D9D9;
-  --primary-300: #BDBDBD;
-  --primary-400: #9E9E9E;
-  --primary-500: #757575;
-  --primary-600: #424242;
-  --primary-700: #303030;
-  --primary-800: #1A1A1A;
-  --primary-900: #0A0A0A;
+  /* ============================================
+     STVMS COLOR PALETTE - Option 3: Modern Government Blue
+     Change these values to update the entire app theme
+     ============================================ */
 
-  /* Secondary - Light Gray */
-  --secondary-50: #FAFAFA;
-  --secondary-100: #F5F5F5;
-  --secondary-200: #EEEEEE;
-  --secondary-300: #E0E0E0;
-  --secondary-400: #BDBDBD;
-  --secondary-500: #9E9E9E;
-  --secondary-600: #757575;
-  --secondary-700: #616161;
-  --secondary-800: #424242;
-  --secondary-900: #212121;
+  /* PRIMARY - Main brand color (buttons, headers, links)
+     Default: Navy Blue */
+  --primary-50: #EFF6FF;
+  --primary-100: #DBEAFE;
+  --primary-200: #BFDBFE;
+  --primary-300: #93C5FD;
+  --primary-400: #60A5FA;
+  --primary-500: #3B82F6;
+  --primary-600: #1E40AF;
+  --primary-700: #1E3A8A;
+  --primary-800: #1E3A5F;
+  --primary-900: #0F172A;
 
-  /* Accent - Dark Gray */
-  --accent-50: #FAFAFA;
-  --accent-100: #F5F5F5;
-  --accent-200: #EEEEEE;
-  --accent-300: #E0E0E0;
-  --accent-400: #BDBDBD;
-  --accent-500: #9E9E9E;
-  --accent-600: #757575;
-  --accent-700: #616161;
-  --accent-800: #424242;
-  --accent-900: #212121;
+  /* SECONDARY - Supporting color (secondary buttons, highlights)
+     Default: Sky Blue */
+  --secondary-50: #F0F9FF;
+  --secondary-100: #E0F2FE;
+  --secondary-200: #BAE6FD;
+  --secondary-300: #7DD3FC;
+  --secondary-400: #38BDF8;
+  --secondary-500: #0EA5E9;
+  --secondary-600: #0284C7;
+  --secondary-700: #0369A1;
+  --secondary-800: #075985;
+  --secondary-900: #0C4A6E;
 
-  /* Danger - Dark Gray */
-  --danger-50: #FAFAFA;
-  --danger-100: #F5F5F5;
-  --danger-200: #EEEEEE;
-  --danger-300: #E0E0E0;
-  --danger-400: #BDBDBD;
-  --danger-500: #757575;
-  --danger-600: #616161;
-  --danger-700: #424242;
-  --danger-800: #303030;
-  --danger-900: #1A1A1A;
+  /* ACCENT - Highlights, warnings, enforcer theme
+     Default: Gold/Amber */
+  --accent-50: #FFFBEB;
+  --accent-100: #FEF3C7;
+  --accent-200: #FDE68A;
+  --accent-300: #FCD34D;
+  --accent-400: #FBBF24;
+  --accent-500: #F59E0B;
+  --accent-600: #D97706;
+  --accent-700: #B45309;
+  --accent-800: #92400E;
+  --accent-900: #78350F;
 
-  /* Success - Medium Gray */
-  --success-50: #FAFAFA;
-  --success-100: #F5F5F5;
-  --success-200: #EEEEEE;
-  --success-300: #E0E0E0;
-  --success-400: #BDBDBD;
-  --success-500: #9E9E9E;
-  --success-600: #757575;
-  --success-700: #616161;
-  --success-800: #424242;
-  --success-900: #212121;
+  /* DANGER - Errors, unpaid, alerts, destructive actions
+     Default: Rose/Red */
+  --danger-50: #FFF1F2;
+  --danger-100: #FFE4E6;
+  --danger-200: #FECDD3;
+  --danger-300: #FDA4AF;
+  --danger-400: #FB7185;
+  --danger-500: #F43F5E;
+  --danger-600: #E11D48;
+  --danger-700: #BE123C;
+  --danger-800: #9F1239;
+  --danger-900: #881337;
 
-  /* Warning - Mid-Dark Gray */
-  --warning-50: #FAFAFA;
-  --warning-100: #F5F5F5;
-  --warning-200: #EEEEEE;
-  --warning-300: #E0E0E0;
-  --warning-400: #BDBDBD;
-  --warning-500: #9E9E9E;
-  --warning-600: #757575;
-  --warning-700: #616161;
-  --warning-800: #424242;
-  --warning-900: #212121;
+  /* SUCCESS - Paid, online, approved, positive states
+     Default: Emerald/Green */
+  --success-50: #ECFDF5;
+  --success-100: #D1FAE5;
+  --success-200: #A7F3D0;
+  --success-300: #6EE7B7;
+  --success-400: #34D399;
+  --success-500: #10B981;
+  --success-600: #059669;
+  --success-700: #047857;
+  --success-800: #065F46;
+  --success-900: #064E3B;
 
-  /* Neutral - Grayscale */
-  --neutral-50: #FAFAFA;
-  --neutral-100: #F5F5F5;
-  --neutral-200: #EEEEEE;
-  --neutral-300: #E0E0E0;
-  --neutral-400: #BDBDBD;
-  --neutral-500: #9E9E9E;
-  --neutral-600: #757575;
-  --neutral-700: #616161;
-  --neutral-800: #424242;
-  --neutral-900: #212121;
+  /* NEUTRAL - Backgrounds, borders, text
+     Default: Slate/Gray */
+  --neutral-50: #F8FAFC;
+  --neutral-100: #F1F5F9;
+  --neutral-200: #E2E8F0;
+  --neutral-300: #CBD5E1;
+  --neutral-400: #94A3B8;
+  --neutral-500: #64748B;
+  --neutral-600: #475569;
+  --neutral-700: #334155;
+  --neutral-800: #1E293B;
+  --neutral-900: #0F172A;
 }
+
+/* ============================================
+   DARK MODE (optional - uncomment to enable)
+   ============================================ */
+/*
+@media (prefers-color-scheme: dark) {
+  :root {
+    --neutral-50: #0F172A;
+    --neutral-100: #1E293B;
+    --neutral-200: #334155;
+    --neutral-300: #475569;
+    --neutral-400: #64748B;
+    --neutral-500: #94A3B8;
+    --neutral-600: #CBD5E1;
+    --neutral-700: #E2E8F0;
+    --neutral-800: #F1F5F9;
+    --neutral-900: #F8FAFC;
+  }
+}
+*/
 
 /* Base Styles */
 body {
