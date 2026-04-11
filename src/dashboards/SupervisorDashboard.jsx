@@ -7,7 +7,7 @@ import {
   Power, Save, RotateCcw, Loader2, MapPin, Clock, Calendar
 } from 'lucide-react';
 import { Toast, Skeleton, TableSkeleton, StatusBadge, ConfirmModal } from '../components/UIComponents';
-import { ViolationDetailsModal, DisputeDetailsModal, UserDetailsModal, DeviceDetailsModal, FilterModal, ExportModal } from '../components/Modals';
+import { ViolationDetailsModal, DisputeDetailsModal, UserDetailsModal, DeviceDetailsModal, FilterModal, ExportModal, NotificationPanel } from '../components/Modals';
 import { sampleViolations, sampleDisputes, sampleUsers, sampleDevices, sampleDrivers } from '../data/sampleData';
 
 // ─────────────────────────────────────────────────────────────

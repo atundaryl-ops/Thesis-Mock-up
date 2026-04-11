@@ -477,3 +477,49 @@ export const ExportModal = ({ onClose, onExport, title = 'Export Data' }) => {
     </div>
   );
 };
+// ─────────────────────────────────────────────────────────────
+// NOTIFICATION PANEL
+// Add this to the END of your src/components/Modals.jsx file
+// ─────────────────────────────────────────────────────────────
+
+export const NotificationPanel = ({ onClose }) => {
+  const notifications = [
+    { id: 1, type: 'dispute', message: 'New dispute filed by Juan Dela Cruz', time: '2 mins ago', read: false },
+    { id: 2, type: 'payment', message: 'Payment received: ₱2,500 from Pedro Reyes', time: '15 mins ago', read: false },
+    { id: 3, type: 'device', message: 'CAM-003 went offline at EDSA Northbound', time: '2 hours ago', read: true },
+    { id: 4, type: 'violation', message: 'New violation recorded: VIO-2024-008', time: '3 hours ago', read: true },
+  ];
+  
+  const PesoIcon = ({ className }) => <span className={`font-bold flex items-center justify-center ${className}`}>₱</span>;
+  const icons = { dispute: Gavel, payment: PesoIcon, device: Camera, violation: AlertTriangle };
+  const colors = { dispute: 'text-amber-500 bg-amber-100', payment: 'text-emerald-500 bg-emerald-100', device: 'text-slate-500 bg-slate-100', violation: 'text-rose-500 bg-rose-100' };
+
+  return (
+    <div className="fixed inset-0 z-50" onClick={onClose}>
+      <div className="absolute top-14 right-4 bg-white rounded-2xl shadow-2xl border w-80 animate-scale-in" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between p-4 border-b">
+          <h3 className="font-bold">Notifications</h3>
+          <span className="text-xs text-violet-600 font-medium cursor-pointer hover:underline">Mark all read</span>
+        </div>
+        <div className="max-h-96 overflow-y-auto">
+          {notifications.map(n => {
+            const Icon = icons[n.type];
+            return (
+              <div key={n.id} className={`flex gap-3 p-4 border-b hover:bg-slate-50 transition cursor-pointer ${!n.read ? 'bg-violet-50/40' : ''}`}>
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${colors[n.type]}`}>
+                  <Icon className="w-4 h-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm">{n.message}</p>
+                  <p className="text-xs text-slate-400 mt-0.5">{n.time}</p>
+                </div>
+                {!n.read && <div className="w-2 h-2 bg-violet-500 rounded-full mt-1.5 shrink-0"></div>}
+              </div>
+            );
+          })}
+        </div>
+        <div className="p-3 text-center"><button className="text-sm text-violet-600 hover:underline">View all notifications</button></div>
+      </div>
+    </div>
+  );
+};
