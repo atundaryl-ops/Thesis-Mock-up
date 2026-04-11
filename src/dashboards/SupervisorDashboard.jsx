@@ -4,7 +4,7 @@ import {
   FileText, DollarSign, TrendingUp, Users, Settings, BarChart3, 
   FileWarning, Gavel, Car, Download, Plus, Edit, Wifi, WifiOff,
   Activity, Printer, UserCheck, RefreshCw, AlertTriangle, Database, 
-  Power, Save, RotateCcw, Loader2, MapPin, Clock, Calendar
+  Power, Save, RotateCcw, Loader2, MapPin, Clock, Calendar, ChevronLeft,
 } from 'lucide-react';
 import { Toast, Skeleton, TableSkeleton, StatusBadge, ConfirmModal } from '../components/UIComponents';
 import { ViolationDetailsModal, DisputeDetailsModal, UserDetailsModal, DeviceDetailsModal, FilterModal, ExportModal, NotificationPanel, ReportModal } from '../components/Modals';
