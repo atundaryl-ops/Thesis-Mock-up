@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Shield, Camera, Bell, LogOut, Search, Users, X, FileWarning, 
-  Info, Loader2, Upload, MapPin, Calendar
+  Info, Loader2, Upload, MapPin, Calendar, Car, CheckCircle
 } from 'lucide-react';
 import { Toast, Skeleton, StatusBadge } from '../components/UIComponents';
 import { sampleViolations, sampleDrivers } from '../data/sampleData';
@@ -20,6 +20,8 @@ const EnforcerDashboard = ({ onLogout }) => {
   const [selectedDriverForViolation, setSelectedDriverForViolation] = useState(null);
   const [myApprehensions, setMyApprehensions] = useState([]);
   const [violationForm, setViolationForm] = useState({ plate: '', license: '', type: '', location: '', notes: '' });
+  const [selectedDriver, setSelectedDriver] = useState(null);
+  const [showDriverDetails, setShowDriverDetails] = useState(false);
 
   useEffect(() => { const t = setTimeout(() => setLoading(false), 1200); return () => clearTimeout(t); }, []);
 
@@ -251,6 +253,7 @@ const EnforcerDashboard = ({ onLogout }) => {
     <div className="min-h-screen bg-slate-50">
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       {showRecordModal && <RecordViolationModal />}
+      {showDriverDetails && selectedDriver && <DriverDetailsModal />}
       
       {/* Notification Dropdown */}
       {showNotif && (
