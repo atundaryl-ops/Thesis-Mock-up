@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Shield, Camera, Bell, LogOut, Search, Users, X, FileWarning, 
-  Info, Loader2, Upload, MapPin
+  Info, Loader2, Upload, MapPin, Calendar
 } from 'lucide-react';
 import { Toast, Skeleton, StatusBadge } from '../components/UIComponents';
 import { sampleViolations, sampleDrivers } from '../data/sampleData';
