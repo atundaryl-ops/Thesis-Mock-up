@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { 
+import {
   Shield, Camera, Bell, LogOut, Search, Filter, Eye, Menu, X,
-  FileText, DollarSign, TrendingUp, Users, Settings, BarChart3, 
+  FileText, DollarSign, TrendingUp, Users, Settings, BarChart3,
   FileWarning, Gavel, Car, Download, Plus, Edit, Wifi, WifiOff,
-  Activity, Printer, UserCheck, RefreshCw, AlertTriangle, Database, 
+  Activity, Printer, UserCheck, RefreshCw, AlertTriangle, Database,
   Power, Save, RotateCcw, Loader2, MapPin, Clock, Calendar, ChevronLeft,
 } from 'lucide-react';
 import { Toast, Skeleton, TableSkeleton, StatusBadge, ConfirmModal } from '../components/UIComponents';
@@ -60,6 +60,10 @@ const SupervisorDashboard = ({ onLogout }) => {
   );
   const [searchQuery, setSearchQuery] = useState('');
   const [userFilter, setUserFilter] = useState('All');
+  const [showDeployModal, setShowDeployModal] = useState(false);
+  const [deployTarget, setDeployTarget] = useState(null);
+  const [deployForm, setDeployForm] = useState({ area: '', shift: '', date: '' });
+  const [deploying, setDeploying] = useState(false);
 
   useEffect(() => { setLoading(true); const t = setTimeout(() => setLoading(false), 1000); return () => clearTimeout(t); }, [activeSection]);
 
@@ -225,57 +229,56 @@ const SupervisorDashboard = ({ onLogout }) => {
       disputeFilter === 'all' ? true : d.status === disputeFilter
     );
     return (
-    <div className="space-y-4">
-      {/* Filter bar */}
-      <div className="flex gap-2 flex-wrap">
-        {[
-          { id: 'all', label: 'All', count: sampleDisputes.length },
-          { id: 'pending', label: 'Pending', count: sampleDisputes.filter(d => d.status === 'pending').length },
-          { id: 'approved', label: 'Approved', count: sampleDisputes.filter(d => d.status === 'approved').length },
-          { id: 'rejected', label: 'Rejected', count: sampleDisputes.filter(d => d.status === 'rejected').length },
-        ].map(f => (
-          <button key={f.id} onClick={() => setDisputeFilter(f.id)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 ${
-              disputeFilter === f.id
+      <div className="space-y-4">
+        {/* Filter bar */}
+        <div className="flex gap-2 flex-wrap">
+          {[
+            { id: 'all', label: 'All', count: sampleDisputes.length },
+            { id: 'pending', label: 'Pending', count: sampleDisputes.filter(d => d.status === 'pending').length },
+            { id: 'approved', label: 'Approved', count: sampleDisputes.filter(d => d.status === 'approved').length },
+            { id: 'rejected', label: 'Rejected', count: sampleDisputes.filter(d => d.status === 'rejected').length },
+          ].map(f => (
+            <button key={f.id} onClick={() => setDisputeFilter(f.id)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 ${disputeFilter === f.id
                 ? f.id === 'pending' ? 'bg-amber-500 text-white'
-                : f.id === 'approved' ? 'bg-emerald-500 text-white'
-                : f.id === 'rejected' ? 'bg-rose-500 text-white'
-                : 'bg-violet-600 text-white'
+                  : f.id === 'approved' ? 'bg-emerald-500 text-white'
+                    : f.id === 'rejected' ? 'bg-rose-500 text-white'
+                      : 'bg-violet-600 text-white'
                 : 'bg-white border hover:bg-slate-50'
-            }`}>
-            <Filter className="w-3.5 h-3.5" />{f.label}
-            <span className={`px-1.5 py-0.5 rounded-full text-xs ${disputeFilter === f.id ? 'bg-white/20' : 'bg-slate-100'}`}>{f.count}</span>
-          </button>
-        ))}
-      </div>
-      {loading ? (<div className="grid md:grid-cols-3 gap-4">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-48 rounded-xl" />)}</div>) : (
-        filteredDisputes.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-xl border shadow-sm">
-            <Gavel className="w-12 h-12 mx-auto text-slate-200 mb-3" />
-            <p className="text-slate-500">No {disputeFilter !== 'all' ? disputeFilter : ''} disputes found</p>
-          </div>
-        ) : (
-        <div className="grid md:grid-cols-3 gap-4">
-          {filteredDisputes.map((d) => (
-            <div key={d.id} className="bg-white rounded-xl p-4 shadow-sm border hover:shadow-md transition">
-              <div className="flex justify-between items-start mb-3"><div><p className="font-semibold">{d.id}</p><p className="text-sm text-slate-500">{d.driver}</p></div><StatusBadge status={d.status} /></div>
-              <p className="text-sm text-slate-600 mb-3 line-clamp-2">{d.reason}</p>
-              <p className="text-xs text-slate-400 mb-3">For: {d.violationId}</p>
-              <button onClick={() => { setSelectedDispute(d); setShowDisputeDetails(true); }} className="w-full py-2 text-sm border rounded-lg hover:bg-slate-50 transition">View Details</button>
-              {d.status === 'pending' && (
-                <div className="flex gap-2 mt-2">
-                  <button onClick={() => setShowConfirm({ title: 'Approve Dispute', message: `Approve ${d.id} and dismiss the related violation?`, onConfirm: () => { setShowConfirm(null); setToast({ message: 'Dispute approved! Violation dismissed.', type: 'success' }); } })}
-                    className="flex-1 py-2 text-sm bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition">Approve</button>
-                  <button onClick={() => setShowConfirm({ title: 'Reject Dispute', message: `Reject ${d.id}? The driver will be notified.`, confirmText: 'Reject', confirmColor: 'bg-rose-500 hover:bg-rose-600', onConfirm: () => { setShowConfirm(null); setToast({ message: 'Dispute rejected. Driver notified.', type: 'warning' }); } })}
-                    className="flex-1 py-2 text-sm bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition">Reject</button>
-                </div>
-              )}
-            </div>
+                }`}>
+              <Filter className="w-3.5 h-3.5" />{f.label}
+              <span className={`px-1.5 py-0.5 rounded-full text-xs ${disputeFilter === f.id ? 'bg-white/20' : 'bg-slate-100'}`}>{f.count}</span>
+            </button>
           ))}
         </div>
-        )
-      )}
-    </div>
+        {loading ? (<div className="grid md:grid-cols-3 gap-4">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-48 rounded-xl" />)}</div>) : (
+          filteredDisputes.length === 0 ? (
+            <div className="text-center py-16 bg-white rounded-xl border shadow-sm">
+              <Gavel className="w-12 h-12 mx-auto text-slate-200 mb-3" />
+              <p className="text-slate-500">No {disputeFilter !== 'all' ? disputeFilter : ''} disputes found</p>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-3 gap-4">
+              {filteredDisputes.map((d) => (
+                <div key={d.id} className="bg-white rounded-xl p-4 shadow-sm border hover:shadow-md transition">
+                  <div className="flex justify-between items-start mb-3"><div><p className="font-semibold">{d.id}</p><p className="text-sm text-slate-500">{d.driver}</p></div><StatusBadge status={d.status} /></div>
+                  <p className="text-sm text-slate-600 mb-3 line-clamp-2">{d.reason}</p>
+                  <p className="text-xs text-slate-400 mb-3">For: {d.violationId}</p>
+                  <button onClick={() => { setSelectedDispute(d); setShowDisputeDetails(true); }} className="w-full py-2 text-sm border rounded-lg hover:bg-slate-50 transition">View Details</button>
+                  {d.status === 'pending' && (
+                    <div className="flex gap-2 mt-2">
+                      <button onClick={() => setShowConfirm({ title: 'Approve Dispute', message: `Approve ${d.id} and dismiss the related violation?`, onConfirm: () => { setShowConfirm(null); setToast({ message: 'Dispute approved! Violation dismissed.', type: 'success' }); } })}
+                        className="flex-1 py-2 text-sm bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition">Approve</button>
+                      <button onClick={() => setShowConfirm({ title: 'Reject Dispute', message: `Reject ${d.id}? The driver will be notified.`, confirmText: 'Reject', confirmColor: 'bg-rose-500 hover:bg-rose-600', onConfirm: () => { setShowConfirm(null); setToast({ message: 'Dispute rejected. Driver notified.', type: 'warning' }); } })}
+                        className="flex-1 py-2 text-sm bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition">Reject</button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )
+        )}
+      </div>
     );
   };
 
@@ -321,27 +324,27 @@ const SupervisorDashboard = ({ onLogout }) => {
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium mb-1 block">Full Name *</label>
-              <input type="text" value={newEnforcer.name} onChange={e => setNewEnforcer(f => ({...f, name: e.target.value}))}
+              <input type="text" value={newEnforcer.name} onChange={e => setNewEnforcer(f => ({ ...f, name: e.target.value }))}
                 placeholder="Officer Name" className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500" />
             </div>
             <div>
               <label className="text-sm font-medium mb-1 block">Badge Number *</label>
-              <input type="text" value={newEnforcer.badge} onChange={e => setNewEnforcer(f => ({...f, badge: e.target.value.toUpperCase()}))}
+              <input type="text" value={newEnforcer.badge} onChange={e => setNewEnforcer(f => ({ ...f, badge: e.target.value.toUpperCase() }))}
                 placeholder="ENF-XXX" className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 font-mono" />
             </div>
             <div>
               <label className="text-sm font-medium mb-1 block">Email *</label>
-              <input type="email" value={newEnforcer.email} onChange={e => setNewEnforcer(f => ({...f, email: e.target.value}))}
+              <input type="email" value={newEnforcer.email} onChange={e => setNewEnforcer(f => ({ ...f, email: e.target.value }))}
                 placeholder="officer@lto.gov.ph" className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500" />
             </div>
             <div>
               <label className="text-sm font-medium mb-1 block">Phone Number</label>
-              <input type="tel" value={newEnforcer.phone} onChange={e => setNewEnforcer(f => ({...f, phone: e.target.value}))}
+              <input type="tel" value={newEnforcer.phone} onChange={e => setNewEnforcer(f => ({ ...f, phone: e.target.value }))}
                 placeholder="09XX XXX XXXX" className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500" />
             </div>
             <div>
               <label className="text-sm font-medium mb-1 block">Assigned Station *</label>
-              <select value={newEnforcer.station} onChange={e => setNewEnforcer(f => ({...f, station: e.target.value}))}
+              <select value={newEnforcer.station} onChange={e => setNewEnforcer(f => ({ ...f, station: e.target.value }))}
                 className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500">
                 <option value="">Select Station</option>
                 <option value="District 1">District 1</option>
@@ -361,11 +364,72 @@ const SupervisorDashboard = ({ onLogout }) => {
         </div>
       </div>
     );
-
+    const DeployEnforcerModal = () => (
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl animate-scale-in">
+          <div className="flex items-center justify-between p-4 border-b">
+            <div>
+              <h3 className="text-lg font-bold flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-violet-600" />Deploy Enforcer
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">{deployTarget?.name} — {deployTarget?.badge}</p>
+            </div>
+            <button onClick={() => setShowDeployModal(false)} className="p-2 hover:bg-slate-100 rounded-lg">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          <div className="p-4 space-y-3">
+            <div>
+              <label className="text-sm font-medium text-slate-700 mb-1 block">Deployment Area *</label>
+              <select value={deployForm.area} onChange={e => setDeployForm(f => ({ ...f, area: e.target.value }))}
+                className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 text-sm">
+                <option value="">Select area</option>
+                {['Ermita, Manila', 'Quiapo, Manila', 'Binondo, Manila', 'Tondo, Manila',
+                  'Malate, Manila', 'Paco, Manila', 'Sampaloc, Manila', 'Santa Ana, Manila'].map(a => (
+                    <option key={a}>{a}</option>
+                  ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-slate-700 mb-1 block">Shift *</label>
+              <div className="grid grid-cols-3 gap-2">
+                {['Morning', 'Afternoon', 'Night'].map(s => (
+                  <button key={s} onClick={() => setDeployForm(f => ({ ...f, shift: s }))}
+                    className={`py-2 rounded-xl text-sm font-medium border transition ${deployForm.shift === s ? 'bg-violet-600 text-white border-violet-600' : 'hover:bg-slate-50 border-slate-200'
+                      }`}>{s}</button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-slate-700 mb-1 block">Date *</label>
+              <input type="date" value={deployForm.date} onChange={e => setDeployForm(f => ({ ...f, date: e.target.value }))}
+                className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 text-sm" />
+            </div>
+          </div>
+          <div className="p-4 border-t flex gap-3">
+            <button onClick={() => setShowDeployModal(false)} className="flex-1 py-2.5 border rounded-xl text-sm font-medium hover:bg-slate-50">Cancel</button>
+            <button
+              disabled={!deployForm.area || !deployForm.shift || !deployForm.date || deploying}
+              onClick={() => {
+                setDeploying(true);
+                setTimeout(() => {
+                  setDeploying(false);
+                  setShowDeployModal(false);
+                  setDeployForm({ area: '', shift: '', date: '' });
+                  setToast({ message: `${deployTarget.name} deployed to ${deployForm.area} (${deployForm.shift} shift)`, type: 'success' });
+                }, 1500);
+              }}
+              className="flex-1 py-2.5 bg-violet-600 text-white rounded-xl text-sm font-medium hover:bg-violet-700 transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+              {deploying ? <><Loader2 className="w-4 h-4 animate-spin" />Deploying...</> : <><MapPin className="w-4 h-4" />Deploy</>}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
     return (
       <div className="space-y-4">
         {showAddEnforcer && <AddEnforcerModal />}
-
+        {showDeployModal && deployTarget && <DeployEnforcerModal />}
         {/* Tab Switcher */}
         <div className="flex justify-between items-center flex-wrap gap-3">
           <div className="flex gap-2">
@@ -497,6 +561,10 @@ const SupervisorDashboard = ({ onLogout }) => {
                             </button>
                             <button onClick={() => showToast('Edit enforcer', 'info')} className="text-slate-500 hover:text-slate-700">
                               <Edit className="w-4 h-4" />
+                            </button>
+                            <button onClick={() => { setDeployTarget(u); setShowDeployModal(true); }}
+                              className="text-emerald-600 hover:text-emerald-700 text-sm flex items-center gap-1">
+                              <MapPin className="w-4 h-4" />Deploy
                             </button>
                           </div>
                         </td>
@@ -733,45 +801,44 @@ const SupervisorDashboard = ({ onLogout }) => {
               const enabled = cameraEnabled[d.id] ?? false;
               const displayStatus = enabled ? (d.status === 'online' ? 'online' : 'online') : 'offline';
               return (
-              <div key={d.id} className={`bg-white rounded-xl p-4 shadow-sm border transition group ${!enabled ? 'opacity-60' : 'hover:shadow-md'}`}>
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex items-center gap-3 cursor-pointer" onClick={() => { setSelectedDevice(d); setShowDeviceDetails(true); }}>
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition ${enabled ? 'bg-emerald-100' : 'bg-slate-100'}`}>
-                      <Camera className={`w-6 h-6 ${enabled ? 'text-emerald-600' : 'text-slate-400'}`} />
+                <div key={d.id} className={`bg-white rounded-xl p-4 shadow-sm border transition group ${!enabled ? 'opacity-60' : 'hover:shadow-md'}`}>
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex items-center gap-3 cursor-pointer" onClick={() => { setSelectedDevice(d); setShowDeviceDetails(true); }}>
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition ${enabled ? 'bg-emerald-100' : 'bg-slate-100'}`}>
+                        <Camera className={`w-6 h-6 ${enabled ? 'text-emerald-600' : 'text-slate-400'}`} />
+                      </div>
+                      <div>
+                        <p className="font-semibold">{d.id}</p>
+                        <p className="text-xs text-slate-500">{d.location}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-semibold">{d.id}</p>
-                      <p className="text-xs text-slate-500">{d.location}</p>
+                    <StatusBadge status={displayStatus} />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-sm mb-3">
+                    <div className="bg-slate-50 rounded-lg p-2">
+                      <p className="text-xs text-slate-500">Captures</p>
+                      <p className="font-semibold">{(d.captures || 0).toLocaleString()}</p>
+                    </div>
+                    <div className="bg-slate-50 rounded-lg p-2">
+                      <p className="text-xs text-slate-500">Last Active</p>
+                      <p className="font-semibold text-xs">{d.lastActive}</p>
                     </div>
                   </div>
-                  <StatusBadge status={displayStatus} />
-                </div>
 
-                <div className="grid grid-cols-2 gap-2 text-sm mb-3">
-                  <div className="bg-slate-50 rounded-lg p-2">
-                    <p className="text-xs text-slate-500">Captures</p>
-                    <p className="font-semibold">{(d.captures || 0).toLocaleString()}</p>
-                  </div>
-                  <div className="bg-slate-50 rounded-lg p-2">
-                    <p className="text-xs text-slate-500">Last Active</p>
-                    <p className="font-semibold text-xs">{d.lastActive}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between pt-3 border-t">
-                  <span className="text-xs text-slate-400 font-mono">{d.ipAddress}</span>
-                  <button
-                    onClick={() => toggleCamera(d.id)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
-                      enabled
+                  <div className="flex items-center justify-between pt-3 border-t">
+                    <span className="text-xs text-slate-400 font-mono">{d.ipAddress}</span>
+                    <button
+                      onClick={() => toggleCamera(d.id)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${enabled
                         ? 'bg-rose-100 text-rose-700 hover:bg-rose-200'
                         : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
-                    }`}>
-                    <Power className="w-3 h-3" />
-                    {enabled ? 'Disable' : 'Enable'}
-                  </button>
+                        }`}>
+                      <Power className="w-3 h-3" />
+                      {enabled ? 'Disable' : 'Enable'}
+                    </button>
+                  </div>
                 </div>
-              </div>
               );
             })}
 
@@ -801,22 +868,22 @@ const SupervisorDashboard = ({ onLogout }) => {
     const cameras = [
       { ...sampleDevices[0], x: 28, y: 35, violations: 312, hotspot: true },
       { ...sampleDevices[1], x: 68, y: 22, violations: 198, hotspot: false },
-      { ...sampleDevices[2], x: 55, y: 62, violations: 87,  hotspot: false },
+      { ...sampleDevices[2], x: 55, y: 62, violations: 87, hotspot: false },
       { ...sampleDevices[3], x: 18, y: 72, violations: 241, hotspot: true },
     ];
 
     const violationHotspots = [
       { x: 30, y: 37, radius: 14, label: 'High — 312 violations', color: 'rgba(239,68,68,0.18)', border: '#ef4444' },
       { x: 20, y: 74, radius: 11, label: 'High — 241 violations', color: 'rgba(249,115,22,0.15)', border: '#f97316' },
-      { x: 68, y: 24, radius: 9,  label: 'Medium — 198 violations', color: 'rgba(234,179,8,0.13)', border: '#eab308' },
-      { x: 55, y: 64, radius: 7,  label: 'Low — 87 violations', color: 'rgba(34,197,94,0.12)', border: '#22c55e' },
+      { x: 68, y: 24, radius: 9, label: 'Medium — 198 violations', color: 'rgba(234,179,8,0.13)', border: '#eab308' },
+      { x: 55, y: 64, radius: 7, label: 'Low — 87 violations', color: 'rgba(34,197,94,0.12)', border: '#22c55e' },
     ];
 
     const filtered = cameras.filter(c =>
       mapFilter === 'all' ? true :
-      mapFilter === 'online' ? c.status === 'online' :
-      mapFilter === 'offline' ? c.status === 'offline' :
-      c.hotspot
+        mapFilter === 'online' ? c.status === 'online' :
+          mapFilter === 'offline' ? c.status === 'offline' :
+            c.hotspot
     );
 
     return (
@@ -835,9 +902,8 @@ const SupervisorDashboard = ({ onLogout }) => {
               { id: 'hotspot', label: '🔥 Hotspots' },
             ].map(f => (
               <button key={f.id} onClick={() => setMapFilter(f.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition border ${
-                  mapFilter === f.id ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
-                }`}>{f.label}</button>
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition border ${mapFilter === f.id ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                  }`}>{f.label}</button>
             ))}
           </div>
         </div>
@@ -846,17 +912,17 @@ const SupervisorDashboard = ({ onLogout }) => {
           {/* SVG Map */}
           <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border overflow-hidden">
             <div className="relative">
-              <svg viewBox="0 0 100 90" className="w-full" style={{height: '420px', background: 'linear-gradient(135deg,#e8f4fd 0%,#dbeafe 100%)'}}>
+              <svg viewBox="0 0 100 90" className="w-full" style={{ height: '420px', background: 'linear-gradient(135deg,#e8f4fd 0%,#dbeafe 100%)' }}>
                 {/* Road grid */}
-                {[15,35,55,75].map(x => <line key={`vr${x}`} x1={x} y1="0" x2={x} y2="90" stroke="#cbd5e1" strokeWidth="2.5"/>)}
-                {[20,40,60,80].map(y => <line key={`hr${y}`} x1="0" y1={y} x2="100" y2={y} stroke="#cbd5e1" strokeWidth="2.5"/>)}
+                {[15, 35, 55, 75].map(x => <line key={`vr${x}`} x1={x} y1="0" x2={x} y2="90" stroke="#cbd5e1" strokeWidth="2.5" />)}
+                {[20, 40, 60, 80].map(y => <line key={`hr${y}`} x1="0" y1={y} x2="100" y2={y} stroke="#cbd5e1" strokeWidth="2.5" />)}
                 {/* City blocks */}
-                {[[0,0,14,19],[16,0,18,19],[36,0,18,19],[56,0,18,19],[0,21,14,18],[16,21,18,18],[36,21,18,18],[56,21,18,18],[76,21,23,18],[0,41,14,18],[16,41,18,18],[36,41,18,18],[56,41,18,18],[0,61,14,18],[16,61,18,18],[36,61,18,18],[56,61,18,18],[76,61,23,18]].map(([x,y,w,h],i) => (
-                  <rect key={i} x={x} y={y} width={w} height={h} rx="0.8" fill="#f1f5f9" stroke="#e2e8f0" strokeWidth="0.3"/>
+                {[[0, 0, 14, 19], [16, 0, 18, 19], [36, 0, 18, 19], [56, 0, 18, 19], [0, 21, 14, 18], [16, 21, 18, 18], [36, 21, 18, 18], [56, 21, 18, 18], [76, 21, 23, 18], [0, 41, 14, 18], [16, 41, 18, 18], [36, 41, 18, 18], [56, 41, 18, 18], [0, 61, 14, 18], [16, 61, 18, 18], [36, 61, 18, 18], [56, 61, 18, 18], [76, 61, 23, 18]].map(([x, y, w, h], i) => (
+                  <rect key={i} x={x} y={y} width={w} height={h} rx="0.8" fill="#f1f5f9" stroke="#e2e8f0" strokeWidth="0.3" />
                 ))}
                 {/* Building blocks inside city areas */}
-                {[[2,2,4,4],[7,2,5,4],[2,7,4,6],[7,7,5,6],[17,2,6,5],[25,2,7,5],[17,8,6,4],[25,8,7,4]].map(([x,y,w,h],i)=>(
-                  <rect key={`b${i}`} x={x} y={y} width={w} height={h} rx="0.5" fill="#dde4ef" stroke="none"/>
+                {[[2, 2, 4, 4], [7, 2, 5, 4], [2, 7, 4, 6], [7, 7, 5, 6], [17, 2, 6, 5], [25, 2, 7, 5], [17, 8, 6, 4], [25, 8, 7, 4]].map(([x, y, w, h], i) => (
+                  <rect key={`b${i}`} x={x} y={y} width={w} height={h} rx="0.5" fill="#dde4ef" stroke="none" />
                 ))}
                 {/* Labels */}
                 <text x="34" y="19" textAnchor="middle" fontSize="1.8" fill="#94a3b8" fontWeight="600">Rizal Ave</text>
@@ -866,7 +932,7 @@ const SupervisorDashboard = ({ onLogout }) => {
                 {/* Violation hotspot circles */}
                 {violationHotspots.map((h, i) => (
                   <g key={`hs${i}`}>
-                    <circle cx={h.x} cy={h.y} r={h.radius} fill={h.color} stroke={h.border} strokeWidth="0.5" strokeDasharray="1,0.5"/>
+                    <circle cx={h.x} cy={h.y} r={h.radius} fill={h.color} stroke={h.border} strokeWidth="0.5" strokeDasharray="1,0.5" />
                   </g>
                 ))}
                 {/* Camera markers */}
@@ -874,11 +940,11 @@ const SupervisorDashboard = ({ onLogout }) => {
                   const isOnline = cam.status === 'online';
                   const isSelected = selectedCam?.id === cam.id;
                   return (
-                    <g key={cam.id} onClick={() => setSelectedCam(selectedCam?.id === cam.id ? null : cam)} style={{cursor:'pointer'}}>
+                    <g key={cam.id} onClick={() => setSelectedCam(selectedCam?.id === cam.id ? null : cam)} style={{ cursor: 'pointer' }}>
                       <circle cx={cam.x} cy={cam.y} r={isSelected ? 4.5 : 3.5}
                         fill={isOnline ? '#22c55e' : '#94a3b8'}
                         stroke="white" strokeWidth="1"
-                        style={{filter: isSelected ? 'drop-shadow(0 0 3px rgba(0,0,0,0.4))' : 'none'}}/>
+                        style={{ filter: isSelected ? 'drop-shadow(0 0 3px rgba(0,0,0,0.4))' : 'none' }} />
                       <text x={cam.x} y={cam.y + 0.6} textAnchor="middle" fontSize="2" fill="white" fontWeight="bold">📷</text>
                       <text x={cam.x} y={cam.y - 4.5} textAnchor="middle" fontSize="1.8" fill="#1e293b" fontWeight="700">{cam.id}</text>
                     </g>
@@ -903,14 +969,14 @@ const SupervisorDashboard = ({ onLogout }) => {
               <div className="bg-white rounded-2xl shadow-sm border p-4 animate-scale-in">
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="font-bold text-slate-800">{selectedCam.id}</h4>
-                  <button onClick={() => setSelectedCam(null)} className="p-1 hover:bg-slate-100 rounded-lg"><X className="w-4 h-4 text-slate-400"/></button>
+                  <button onClick={() => setSelectedCam(null)} className="p-1 hover:bg-slate-100 rounded-lg"><X className="w-4 h-4 text-slate-400" /></button>
                 </div>
                 <StatusBadge status={selectedCam.status} />
                 <div className="mt-3 space-y-2 text-sm">
-                  <div className="flex items-start gap-2"><MapPin className="w-4 h-4 text-slate-400 mt-0.5 shrink-0"/><span className="text-slate-600">{selectedCam.location}</span></div>
-                  <div className="flex items-center gap-2"><Activity className="w-4 h-4 text-slate-400"/><span className="text-slate-600">{selectedCam.captures?.toLocaleString()} total captures</span></div>
-                  <div className="flex items-center gap-2"><Clock className="w-4 h-4 text-slate-400"/><span className="text-slate-600">Last active: {selectedCam.lastActive}</span></div>
-                  <div className="flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-rose-400"/><span className="text-slate-600">{selectedCam.violations} violations recorded</span></div>
+                  <div className="flex items-start gap-2"><MapPin className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" /><span className="text-slate-600">{selectedCam.location}</span></div>
+                  <div className="flex items-center gap-2"><Activity className="w-4 h-4 text-slate-400" /><span className="text-slate-600">{selectedCam.captures?.toLocaleString()} total captures</span></div>
+                  <div className="flex items-center gap-2"><Clock className="w-4 h-4 text-slate-400" /><span className="text-slate-600">Last active: {selectedCam.lastActive}</span></div>
+                  <div className="flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-rose-400" /><span className="text-slate-600">{selectedCam.violations} violations recorded</span></div>
                 </div>
                 <div className={`mt-3 rounded-xl p-3 text-xs font-medium ${selectedCam.hotspot ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-slate-50 text-slate-600'}`}>
                   {selectedCam.hotspot ? '🔥 High violation hotspot area' : '✅ Normal violation rate'}
@@ -947,9 +1013,9 @@ const SupervisorDashboard = ({ onLogout }) => {
 
             {/* Hotspot summary */}
             <div className="bg-gradient-to-br from-rose-50 to-orange-50 rounded-2xl border border-rose-200 p-4">
-              <h4 className="font-semibold text-sm text-rose-700 mb-2 flex items-center gap-2"><AlertTriangle className="w-4 h-4"/>Violation Summary</h4>
+              <h4 className="font-semibold text-sm text-rose-700 mb-2 flex items-center gap-2"><AlertTriangle className="w-4 h-4" />Violation Summary</h4>
               <div className="space-y-1.5 text-xs">
-                {[['Running Red Light','35%','rose'],['Over Speeding','28%','orange'],['Illegal Parking','22%','amber'],['No Helmet','15%','yellow']].map(([type,pct,color])=>(
+                {[['Running Red Light', '35%', 'rose'], ['Over Speeding', '28%', 'orange'], ['Illegal Parking', '22%', 'amber'], ['No Helmet', '15%', 'yellow']].map(([type, pct, color]) => (
                   <div key={type} className="flex justify-between items-center">
                     <span className="text-slate-600">{type}</span>
                     <span className={`font-bold text-${color}-600`}>{pct}</span>
@@ -966,20 +1032,20 @@ const SupervisorDashboard = ({ onLogout }) => {
   // ── REPORT PREVIEW MODAL ──────────────────────────────────────
   const ReportPreviewModal = ({ report, period, onClose }) => {
     const [printing, setPrinting] = useState(false);
-    const today = new Date().toLocaleDateString('en-PH', { year:'numeric', month:'long', day:'numeric' });
+    const today = new Date().toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' });
 
     const handlePrint = () => {
       setPrinting(true);
-      setTimeout(()=>{ setPrinting(false); setToast({ message: `${report.title} printed successfully!`, type: 'success' }); onClose(); }, 1800);
+      setTimeout(() => { setPrinting(false); setToast({ message: `${report.title} printed successfully!`, type: 'success' }); onClose(); }, 1800);
     };
 
     // ── VIOLATIONS REPORT content ──
     const ViolationsReportBody = () => {
       const rows = sampleViolations.slice(0, 8);
-      const totalFines = rows.reduce((a,b)=>a+b.fine,0);
-      const paidCount = rows.filter(v=>v.status==='paid').length;
-      const unpaidCount = rows.filter(v=>v.status==='unpaid').length;
-      const disputedCount = rows.filter(v=>v.status==='disputed').length;
+      const totalFines = rows.reduce((a, b) => a + b.fine, 0);
+      const paidCount = rows.filter(v => v.status === 'paid').length;
+      const unpaidCount = rows.filter(v => v.status === 'unpaid').length;
+      const disputedCount = rows.filter(v => v.status === 'disputed').length;
       return (
         <>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -998,11 +1064,11 @@ const SupervisorDashboard = ({ onLogout }) => {
           <div className="bg-slate-50 rounded-xl p-4 border">
             <h4 className="font-semibold text-sm mb-3 text-slate-700">Violations by Type</h4>
             <div className="space-y-2">
-              {[['Running Red Light',35,'rose'],['Over Speeding',28,'amber'],['Illegal Parking',22,'blue'],['No Helmet',15,'violet']].map(([type,pct,color])=>(
+              {[['Running Red Light', 35, 'rose'], ['Over Speeding', 28, 'amber'], ['Illegal Parking', 22, 'blue'], ['No Helmet', 15, 'violet']].map(([type, pct, color]) => (
                 <div key={type} className="flex items-center gap-3">
                   <span className="text-xs text-slate-600 w-36 shrink-0">{type}</span>
                   <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
-                    <div className={`h-full bg-${color}-500 rounded-full`} style={{width:`${pct}%`}}></div>
+                    <div className={`h-full bg-${color}-500 rounded-full`} style={{ width: `${pct}%` }}></div>
                   </div>
                   <span className="text-xs font-semibold text-slate-600 w-8">{pct}%</span>
                 </div>
@@ -1014,12 +1080,12 @@ const SupervisorDashboard = ({ onLogout }) => {
             <div className="overflow-x-auto border rounded-xl">
               <table className="w-full text-xs">
                 <thead className="bg-slate-50 border-b">
-                  <tr>{['ID','Type','Plate','Driver','Date','Fine','Status'].map(h=>(
+                  <tr>{['ID', 'Type', 'Plate', 'Driver', 'Date', 'Fine', 'Status'].map(h => (
                     <th key={h} className="px-3 py-2 text-left font-semibold text-slate-600">{h}</th>
                   ))}</tr>
                 </thead>
                 <tbody className="divide-y">
-                  {rows.map(v=>(
+                  {rows.map(v => (
                     <tr key={v.id} className="hover:bg-slate-50">
                       <td className="px-3 py-2 font-mono text-slate-500">{v.id}</td>
                       <td className="px-3 py-2">{v.image} {v.type}</td>
@@ -1027,7 +1093,7 @@ const SupervisorDashboard = ({ onLogout }) => {
                       <td className="px-3 py-2">{v.driver}</td>
                       <td className="px-3 py-2 text-slate-500">{v.date}</td>
                       <td className="px-3 py-2 font-medium">₱{v.fine.toLocaleString()}</td>
-                      <td className="px-3 py-2"><StatusBadge status={v.status}/></td>
+                      <td className="px-3 py-2"><StatusBadge status={v.status} /></td>
                     </tr>
                   ))}
                 </tbody>
@@ -1048,8 +1114,8 @@ const SupervisorDashboard = ({ onLogout }) => {
     // ── ENFORCER PERFORMANCE content ──
     const EnforcerPerformanceBody = () => {
       const enforcers = sampleUsers.filter(u => u.role === 'enforcer');
-      const topEnforcer = [...enforcers].sort((a,b) => b.apprehensions - a.apprehensions)[0];
-      const totalApprehensions = enforcers.reduce((a,b) => a + (b.apprehensions||0), 0);
+      const topEnforcer = [...enforcers].sort((a, b) => b.apprehensions - a.apprehensions)[0];
+      const totalApprehensions = enforcers.reduce((a, b) => a + (b.apprehensions || 0), 0);
       return (
         <>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -1080,7 +1146,7 @@ const SupervisorDashboard = ({ onLogout }) => {
             <h4 className="font-semibold text-sm mb-3 text-slate-700">Apprehensions per Enforcer</h4>
             <div className="space-y-3">
               {enforcers.map(e => {
-                const pct = Math.round(((e.apprehensions||0) / (topEnforcer?.apprehensions||1)) * 100);
+                const pct = Math.round(((e.apprehensions || 0) / (topEnforcer?.apprehensions || 1)) * 100);
                 return (
                   <div key={e.id} className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
@@ -1089,10 +1155,10 @@ const SupervisorDashboard = ({ onLogout }) => {
                     <div className="flex-1">
                       <div className="flex justify-between text-xs mb-1">
                         <span className="font-medium">{e.name} <span className="text-slate-400">({e.badge})</span></span>
-                        <span className="font-semibold text-blue-600">{e.apprehensions||0}</span>
+                        <span className="font-semibold text-blue-600">{e.apprehensions || 0}</span>
                       </div>
                       <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
-                        <div className="h-full bg-blue-500 rounded-full" style={{width:`${pct}%`}}></div>
+                        <div className="h-full bg-blue-500 rounded-full" style={{ width: `${pct}%` }}></div>
                       </div>
                     </div>
                   </div>
@@ -1105,18 +1171,18 @@ const SupervisorDashboard = ({ onLogout }) => {
             <div className="overflow-x-auto border rounded-xl">
               <table className="w-full text-xs">
                 <thead className="bg-slate-50 border-b">
-                  <tr>{['Name','Badge','Station','Apprehensions','Status'].map(h=>(
+                  <tr>{['Name', 'Badge', 'Station', 'Apprehensions', 'Status'].map(h => (
                     <th key={h} className="px-3 py-2 text-left font-semibold text-slate-600">{h}</th>
                   ))}</tr>
                 </thead>
                 <tbody className="divide-y">
-                  {enforcers.map(e=>(
+                  {enforcers.map(e => (
                     <tr key={e.id} className="hover:bg-slate-50">
                       <td className="px-3 py-2 font-medium">{e.name}</td>
                       <td className="px-3 py-2 font-mono text-slate-500">{e.badge}</td>
                       <td className="px-3 py-2">{e.station}</td>
-                      <td className="px-3 py-2 text-center font-bold text-blue-600">{e.apprehensions||0}</td>
-                      <td className="px-3 py-2"><StatusBadge status={e.status}/></td>
+                      <td className="px-3 py-2 text-center font-bold text-blue-600">{e.apprehensions || 0}</td>
+                      <td className="px-3 py-2"><StatusBadge status={e.status} /></td>
                     </tr>
                   ))}
                 </tbody>
@@ -1129,16 +1195,16 @@ const SupervisorDashboard = ({ onLogout }) => {
 
     // ── FINANCIAL SUMMARY content ──
     const FinancialSummaryBody = () => {
-      const paid = sampleViolations.filter(v=>v.status==='paid');
-      const unpaid = sampleViolations.filter(v=>v.status==='unpaid');
-      const disputed = sampleViolations.filter(v=>v.status==='disputed');
-      const totalCollected = paid.reduce((a,b)=>a+(b.paidAmount||b.fine),0);
-      const totalPending = unpaid.reduce((a,b)=>a+b.fine,0);
-      const totalDisputed = disputed.reduce((a,b)=>a+b.fine,0);
+      const paid = sampleViolations.filter(v => v.status === 'paid');
+      const unpaid = sampleViolations.filter(v => v.status === 'unpaid');
+      const disputed = sampleViolations.filter(v => v.status === 'disputed');
+      const totalCollected = paid.reduce((a, b) => a + (b.paidAmount || b.fine), 0);
+      const totalPending = unpaid.reduce((a, b) => a + b.fine, 0);
+      const totalDisputed = disputed.reduce((a, b) => a + b.fine, 0);
       const collectionRate = Math.round((paid.length / sampleViolations.length) * 100);
-      const byMethod = paid.reduce((acc,v)=>{
-        const m = v.paymentMethod || 'Cash'; acc[m]=(acc[m]||0)+(v.paidAmount||v.fine); return acc;
-      },{});
+      const byMethod = paid.reduce((acc, v) => {
+        const m = v.paymentMethod || 'Cash'; acc[m] = (acc[m] || 0) + (v.paidAmount || v.fine); return acc;
+      }, {});
       return (
         <>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -1158,16 +1224,16 @@ const SupervisorDashboard = ({ onLogout }) => {
             <h4 className="font-semibold text-sm mb-3 text-slate-700">Revenue Breakdown</h4>
             <div className="space-y-2">
               {[
-                { label: 'Collected', amount: totalCollected, total: totalCollected+totalPending+totalDisputed, color: 'emerald' },
-                { label: 'Pending', amount: totalPending, total: totalCollected+totalPending+totalDisputed, color: 'rose' },
-                { label: 'Disputed', amount: totalDisputed, total: totalCollected+totalPending+totalDisputed, color: 'amber' },
+                { label: 'Collected', amount: totalCollected, total: totalCollected + totalPending + totalDisputed, color: 'emerald' },
+                { label: 'Pending', amount: totalPending, total: totalCollected + totalPending + totalDisputed, color: 'rose' },
+                { label: 'Disputed', amount: totalDisputed, total: totalCollected + totalPending + totalDisputed, color: 'amber' },
               ].map(item => {
-                const pct = Math.round((item.amount/item.total)*100)||0;
+                const pct = Math.round((item.amount / item.total) * 100) || 0;
                 return (
                   <div key={item.label} className="flex items-center gap-3">
                     <span className="text-xs text-slate-600 w-20 shrink-0">{item.label}</span>
                     <div className="flex-1 h-3 bg-slate-200 rounded-full overflow-hidden">
-                      <div className={`h-full bg-${item.color}-500 rounded-full`} style={{width:`${pct}%`}}></div>
+                      <div className={`h-full bg-${item.color}-500 rounded-full`} style={{ width: `${pct}%` }}></div>
                     </div>
                     <span className="text-xs font-semibold text-slate-600 w-28 text-right">₱{item.amount.toLocaleString()} ({pct}%)</span>
                   </div>
@@ -1193,19 +1259,19 @@ const SupervisorDashboard = ({ onLogout }) => {
             <div className="overflow-x-auto border rounded-xl">
               <table className="w-full text-xs">
                 <thead className="bg-slate-50 border-b">
-                  <tr>{['ID','Type','Driver','Fine','Paid Date','Method'].map(h=>(
+                  <tr>{['ID', 'Type', 'Driver', 'Fine', 'Paid Date', 'Method'].map(h => (
                     <th key={h} className="px-3 py-2 text-left font-semibold text-slate-600">{h}</th>
                   ))}</tr>
                 </thead>
                 <tbody className="divide-y">
-                  {paid.map(v=>(
+                  {paid.map(v => (
                     <tr key={v.id} className="hover:bg-slate-50">
                       <td className="px-3 py-2 font-mono text-slate-500">{v.id}</td>
                       <td className="px-3 py-2">{v.type}</td>
                       <td className="px-3 py-2 font-medium">{v.driver}</td>
-                      <td className="px-3 py-2 font-bold text-emerald-600">₱{(v.paidAmount||v.fine).toLocaleString()}</td>
-                      <td className="px-3 py-2 text-slate-500">{v.paidDate||'—'}</td>
-                      <td className="px-3 py-2">{v.paymentMethod||'Cash'}</td>
+                      <td className="px-3 py-2 font-bold text-emerald-600">₱{(v.paidAmount || v.fine).toLocaleString()}</td>
+                      <td className="px-3 py-2 text-slate-500">{v.paidDate || '—'}</td>
+                      <td className="px-3 py-2">{v.paymentMethod || 'Cash'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -1238,11 +1304,11 @@ const SupervisorDashboard = ({ onLogout }) => {
               <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-lg flex items-center gap-1 text-sm text-slate-600 font-medium">
                 <ChevronLeft className="w-4 h-4" />Back
               </button>
-              <h3 className="font-bold text-lg flex items-center gap-2"><FileText className="w-5 h-5 text-violet-600"/>Report Preview</h3>
+              <h3 className="font-bold text-lg flex items-center gap-2"><FileText className="w-5 h-5 text-violet-600" />Report Preview</h3>
             </div>
             <button onClick={handlePrint} disabled={printing}
               className="px-4 py-2 bg-violet-600 text-white rounded-xl text-sm font-medium hover:bg-violet-700 flex items-center gap-2">
-              {printing ? <><Loader2 className="w-4 h-4 animate-spin"/>Printing...</> : <><Printer className="w-4 h-4"/>Print / Export</>}
+              {printing ? <><Loader2 className="w-4 h-4 animate-spin" />Printing...</> : <><Printer className="w-4 h-4" />Print / Export</>}
             </button>
           </div>
 
@@ -1251,7 +1317,7 @@ const SupervisorDashboard = ({ onLogout }) => {
             {/* Letterhead */}
             <div className="text-center border-b pb-4">
               <div className={`w-14 h-14 ${report.bg} rounded-full flex items-center justify-center mx-auto mb-2`}>
-                <report.icon className={`w-7 h-7 ${report.color}`}/>
+                <report.icon className={`w-7 h-7 ${report.color}`} />
               </div>
               <h1 className="text-xl font-bold text-slate-800">Smart Traffic Violation Monitoring System</h1>
               <p className="text-sm text-slate-500">City Traffic Management Office</p>
