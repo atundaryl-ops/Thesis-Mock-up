@@ -24,6 +24,8 @@ const EnforcerDashboard = ({ onLogout }) => {
   const [showDriverDetails, setShowDriverDetails] = useState(false);
   const [modalStep, setModalStep] = useState(1); // 1 = search, 2 = form
   const [driverSearch, setDriverSearch] = useState('');
+  const [showCitationModal, setShowCitationModal] = useState(false);
+  const [issuedCitation, setIssuedCitation] = useState(null);
 
   useEffect(() => { const t = setTimeout(() => setLoading(false), 1200); return () => clearTimeout(t); }, []);
 
@@ -73,7 +75,8 @@ const EnforcerDashboard = ({ onLogout }) => {
       setDriverSearch('');;
       setSelectedDriverForViolation(null);
       setViolationForm({ plate: '', license: '', type: '', location: '', notes: '' });
-      setToast({ message: 'Citation issued successfully! Violation has been recorded.', type: 'success' });
+      setIssuedCitation(newViolation);
+      setShowCitationModal(true);
     }, 2000);
   };
 
@@ -345,12 +348,93 @@ const EnforcerDashboard = ({ onLogout }) => {
       </div>
     );
   };
+  const CitationModal = () => (
+  <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl animate-scale-in overflow-hidden">
+      
+      {/* Header */}
+      <div className="bg-gradient-to-r from-orange-500 to-red-500 p-5 text-white text-center">
+        <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-2">
+          <CheckCircle className="w-8 h-8" />
+        </div>
+        <h3 className="text-lg font-bold">Citation Issued</h3>
+        <p className="text-xs text-white/80 mt-1">Official Traffic Violation Notice</p>
+      </div>
+
+      {/* Citation Details */}
+      <div className="p-5 space-y-3">
+        <div className="bg-slate-50 rounded-xl p-4 border border-dashed border-slate-300 space-y-2">
+          <div className="flex justify-between text-sm">
+            <span className="text-slate-500">Citation No.</span>
+            <span className="font-mono font-bold">{issuedCitation?.id}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-slate-500">Driver</span>
+            <span className="font-medium">{issuedCitation?.driver}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-slate-500">Plate No.</span>
+            <span className="font-medium">{issuedCitation?.plate}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-slate-500">Violation</span>
+            <span className="font-medium text-rose-600">{issuedCitation?.type}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-slate-500">Location</span>
+            <span className="font-medium text-right max-w-[55%]">{issuedCitation?.location}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-slate-500">Date & Time</span>
+            <span className="font-medium">{issuedCitation?.date} {issuedCitation?.time}</span>
+          </div>
+          <div className="border-t pt-2 flex justify-between">
+            <span className="text-slate-500 font-medium">Fine Amount</span>
+            <span className="font-bold text-lg text-rose-600">₱{issuedCitation?.fine.toLocaleString()}</span>
+          </div>
+        </div>
+
+        {issuedCitation?.notes && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm text-amber-800">
+            <p className="font-medium mb-0.5">Notes</p>
+            <p className="text-xs">{issuedCitation.notes}</p>
+          </div>
+        )}
+
+        <p className="text-xs text-slate-400 text-center">
+          Issued by Officer Garcia (ENF-001)
+        </p>
+      </div>
+
+      {/* Actions */}
+      <div className="px-5 pb-5 flex gap-3">
+        <button
+          onClick={() => setShowCitationModal(false)}
+          className="flex-1 py-2.5 border rounded-xl text-sm font-medium hover:bg-slate-50 transition"
+        >
+          Close
+        </button>
+        <button
+          onClick={() => {
+            setShowCitationModal(false);
+            setToast({ message: 'Citation printed successfully!', type: 'success' });
+          }}
+          className="flex-1 py-2.5 bg-orange-500 text-white rounded-xl text-sm font-medium hover:bg-orange-600 transition flex items-center justify-center gap-2"
+        >
+          <Upload className="w-4 h-4" />Print / Share
+        </button>
+      </div>
+
+    </div>
+  </div>
+);
 
   return (
     <div className="min-h-screen bg-slate-50">
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       {showRecordModal && <RecordViolationModal />}
       {showDriverDetails && selectedDriver && <DriverDetailsModal />}
+      {showCitationModal && issuedCitation && <CitationModal />}
 
       {/* Notification Dropdown */}
       {showNotif && (
@@ -442,11 +526,11 @@ const EnforcerDashboard = ({ onLogout }) => {
             ].map(f => (
               <button key={f.id} onClick={() => setSearchQuery(f.id === 'all' ? '' : f.id)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition border ${(f.id === 'all' && searchQuery === '') || searchQuery === f.id
-                    ? f.id === 'unpaid' ? 'bg-rose-500 text-white border-rose-500'
-                      : f.id === 'paid' ? 'bg-emerald-500 text-white border-emerald-500'
-                        : f.id === 'disputed' ? 'bg-amber-500 text-white border-amber-500'
-                          : 'bg-orange-500 text-white border-orange-500'
-                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                  ? f.id === 'unpaid' ? 'bg-rose-500 text-white border-rose-500'
+                    : f.id === 'paid' ? 'bg-emerald-500 text-white border-emerald-500'
+                      : f.id === 'disputed' ? 'bg-amber-500 text-white border-amber-500'
+                        : 'bg-orange-500 text-white border-orange-500'
+                  : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
                   }`}>
                 {f.label} <span className="opacity-80">({f.count})</span>
               </button>
