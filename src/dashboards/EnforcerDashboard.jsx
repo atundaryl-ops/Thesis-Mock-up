@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Shield, Camera, Bell, LogOut, Search, Users, X, FileWarning, 
+import {
+  Shield, Camera, Bell, LogOut, Search, Users, X, FileWarning,
   Info, Loader2, Upload, MapPin, Calendar, Car, CheckCircle
 } from 'lucide-react';
 import { Toast, Skeleton, StatusBadge } from '../components/UIComponents';
@@ -22,6 +22,8 @@ const EnforcerDashboard = ({ onLogout }) => {
   const [violationForm, setViolationForm] = useState({ plate: '', license: '', type: '', location: '', notes: '' });
   const [selectedDriver, setSelectedDriver] = useState(null);
   const [showDriverDetails, setShowDriverDetails] = useState(false);
+  const [modalStep, setModalStep] = useState(1); // 1 = search, 2 = form
+  const [driverSearch, setDriverSearch] = useState('');
 
   useEffect(() => { const t = setTimeout(() => setLoading(false), 1200); return () => clearTimeout(t); }, []);
 
@@ -67,7 +69,8 @@ const EnforcerDashboard = ({ onLogout }) => {
       setMyApprehensions(prev => [newViolation, ...prev]);
       sampleViolations.unshift(newViolation);
       setRecordLoading(false);
-      setShowRecordModal(false);
+      setModalStep(1);
+      setDriverSearch('');;
       setSelectedDriverForViolation(null);
       setViolationForm({ plate: '', license: '', type: '', location: '', notes: '' });
       setToast({ message: 'Citation issued successfully! Violation has been recorded.', type: 'success' });
@@ -75,84 +78,178 @@ const EnforcerDashboard = ({ onLogout }) => {
   };
 
   // Record Violation Modal
-  const RecordViolationModal = () => (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto animate-scale-in">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold">Record Apprehension</h3>
-          <button onClick={() => { setShowRecordModal(false); setSelectedDriverForViolation(null); setViolationForm({ plate: '', license: '', type: '', location: '', notes: '' }); }} className="p-2 hover:bg-slate-100 rounded-lg">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+  const RecordViolationModal = () => {
+    const searchResults = driverSearch.trim().length > 1
+      ? sampleDrivers.filter(d =>
+        d.name.toLowerCase().includes(driverSearch.toLowerCase()) ||
+        d.plate.toLowerCase().includes(driverSearch.toLowerCase()) ||
+        d.license.toLowerCase().includes(driverSearch.toLowerCase())
+      ).slice(0, 5)
+      : [];
 
-        {/* Pre-filled driver info if selected */}
-        {selectedDriverForViolation && (
-          <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-orange-200 rounded-full flex items-center justify-center">
-                <span className="font-bold text-orange-700">{selectedDriverForViolation.name.charAt(0)}</span>
-              </div>
-              <div>
-                <p className="font-semibold">{selectedDriverForViolation.name}</p>
-                <p className="text-sm text-slate-600">{selectedDriverForViolation.plate} • {selectedDriverForViolation.license}</p>
-              </div>
+    return (
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto animate-scale-in">
+
+          {/* Header */}
+          <div className="flex items-center justify-between p-5 border-b">
+            <div>
+              <h3 className="text-xl font-bold">Record Apprehension</h3>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Step {modalStep} of 2 — {modalStep === 1 ? 'Find Driver' : 'Violation Details'}
+              </p>
             </div>
+            <button onClick={() => {
+              setShowRecordModal(false);
+              setSelectedDriverForViolation(null);
+              setViolationForm({ plate: '', license: '', type: '', location: '', notes: '' });
+              setModalStep(1);
+              setDriverSearch('');
+            }} className="p-2 hover:bg-slate-100 rounded-lg">
+              <X className="w-5 h-5" />
+            </button>
           </div>
-        )}
 
-        <div className="space-y-4">
-          {!selectedDriverForViolation && (
-            <>
-              <div>
-                <label className="text-sm font-medium text-slate-700 mb-1 block">Plate Number *</label>
-                <input type="text" value={violationForm.plate} onChange={e => setViolationForm(f => ({...f, plate: e.target.value}))} placeholder="ABC 1234" className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500" />
+          {/* Step indicators */}
+          <div className="flex gap-2 px-5 pt-4">
+            {[1, 2].map(s => (
+              <div key={s} className={`flex-1 h-1.5 rounded-full transition-all ${s <= modalStep ? 'bg-orange-500' : 'bg-slate-200'}`} />
+            ))}
+          </div>
+
+          {/* STEP 1: Search Driver */}
+          {modalStep === 1 && (
+            <div className="p-5 space-y-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <input
+                  autoFocus
+                  type="text"
+                  value={driverSearch}
+                  onChange={e => setDriverSearch(e.target.value)}
+                  placeholder="Search by name, plate, or license..."
+                  className="w-full pl-9 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                />
               </div>
-              <div>
-                <label className="text-sm font-medium text-slate-700 mb-1 block">Driver's License (if available)</label>
-                <input type="text" value={violationForm.license} onChange={e => setViolationForm(f => ({...f, license: e.target.value}))} placeholder="N01-12-345678" className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500" />
-              </div>
-            </>
+
+              {driverSearch.trim().length > 1 && searchResults.length === 0 && (
+                <div className="text-center py-8 bg-slate-50 rounded-xl">
+                  <Users className="w-8 h-8 mx-auto text-slate-300 mb-2" />
+                  <p className="text-sm text-slate-500">No driver found</p>
+                  <p className="text-xs text-slate-400 mt-1">Check the plate or license number</p>
+                </div>
+              )}
+
+              {searchResults.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Select Driver</p>
+                  {searchResults.map(d => (
+                    <button
+                      key={d.id}
+                      onClick={() => {
+                        setSelectedDriverForViolation(d);
+                        setModalStep(2);
+                      }}
+                      className="w-full flex items-center gap-3 p-3 border rounded-xl hover:bg-orange-50 hover:border-orange-300 transition text-left"
+                    >
+                      <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center shrink-0">
+                        <span className="font-bold text-orange-600">{d.name.charAt(0)}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm">{d.name}</p>
+                        <p className="text-xs text-slate-500">{d.plate} • {d.license}</p>
+                      </div>
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${d.violations > 2 ? 'bg-rose-100 text-rose-600' : 'bg-slate-100 text-slate-500'}`}>
+                        {d.violations} violations
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {driverSearch.trim().length <= 1 && (
+                <div className="text-center py-8 text-slate-400">
+                  <Search className="w-10 h-10 mx-auto mb-2 opacity-30" />
+                  <p className="text-sm">Type at least 2 characters to search</p>
+                </div>
+              )}
+            </div>
           )}
-          
-          <div>
-            <label className="text-sm font-medium text-slate-700 mb-1 block">Violation Type *</label>
-            <select value={violationForm.type} onChange={e => setViolationForm(f => ({...f, type: e.target.value}))} className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500">
-              <option value="">Select violation type</option>
-              {['Running Red Light', 'Illegal Parking', 'Over Speeding', 'No Helmet', 'Counterflow', 'No License', 'Illegal U-Turn', 'No Seatbelt', 'Reckless Driving', 'Expired Registration'].map(v => <option key={v}>{v}</option>)}
-            </select>
-          </div>
-          
-          <div>
-            <label className="text-sm font-medium text-slate-700 mb-1 block">Location *</label>
-            <input type="text" value={violationForm.location} onChange={e => setViolationForm(f => ({...f, location: e.target.value}))} placeholder="e.g., Rizal Ave & Main St" className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500" />
-          </div>
-          
-          <div>
-            <label className="text-sm font-medium text-slate-700 mb-1 block">Photo Evidence *</label>
-            <div className="border-2 border-dashed rounded-xl p-6 text-center hover:bg-slate-50 cursor-pointer transition">
-              <Camera className="w-8 h-8 mx-auto text-slate-400 mb-2" />
-              <p className="text-sm text-slate-500">Take photo or upload</p>
-              <p className="text-xs text-slate-400 mt-1">JPG, PNG up to 10MB</p>
+
+          {/* STEP 2: Violation Form */}
+          {modalStep === 2 && (
+            <div className="p-5 space-y-4">
+              {/* Selected driver card */}
+              {selectedDriverForViolation && (
+                <div className="bg-orange-50 border border-orange-200 rounded-xl p-3 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 bg-orange-200 rounded-full flex items-center justify-center">
+                      <span className="font-bold text-orange-700 text-sm">{selectedDriverForViolation.name.charAt(0)}</span>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm">{selectedDriverForViolation.name}</p>
+                      <p className="text-xs text-slate-500">{selectedDriverForViolation.plate} • {selectedDriverForViolation.license}</p>
+                    </div>
+                  </div>
+                  <button onClick={() => { setSelectedDriverForViolation(null); setModalStep(1); setDriverSearch(''); }}
+                    className="text-xs text-orange-600 hover:underline">Change</button>
+                </div>
+              )}
+
+              <div>
+                <label className="text-sm font-medium text-slate-700 mb-1 block">Violation Type *</label>
+                <select value={violationForm.type} onChange={e => setViolationForm(f => ({ ...f, type: e.target.value }))}
+                  className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500">
+                  <option value="">Select violation type</option>
+                  {['Running Red Light', 'Illegal Parking', 'Over Speeding', 'No Helmet', 'Counterflow',
+                    'No License', 'Illegal U-Turn', 'No Seatbelt', 'Reckless Driving', 'Expired Registration'].map(v => (
+                      <option key={v}>{v}</option>
+                    ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-slate-700 mb-1 block">Location *</label>
+                <input type="text" value={violationForm.location}
+                  onChange={e => setViolationForm(f => ({ ...f, location: e.target.value }))}
+                  placeholder="e.g., Rizal Ave & Main St"
+                  className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500" />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-slate-700 mb-1 block">Photo Evidence</label>
+                <div className="border-2 border-dashed rounded-xl p-6 text-center hover:bg-slate-50 cursor-pointer transition">
+                  <Camera className="w-8 h-8 mx-auto text-slate-400 mb-2" />
+                  <p className="text-sm text-slate-500">Take photo or upload</p>
+                  <p className="text-xs text-slate-400 mt-1">JPG, PNG up to 10MB</p>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-slate-700 mb-1 block">Notes (optional)</label>
+                <textarea rows={3} value={violationForm.notes}
+                  onChange={e => setViolationForm(f => ({ ...f, notes: e.target.value }))}
+                  placeholder="Additional details..."
+                  className="w-full p-3 border rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-orange-500" />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button onClick={() => { setModalStep(1); setDriverSearch(''); }} disabled={recordLoading}
+                  className="flex-1 py-3 border rounded-xl font-medium hover:bg-slate-50 transition">Back</button>
+                <button onClick={handleRecordViolation} disabled={recordLoading}
+                  className="flex-1 py-3 bg-orange-500 text-white rounded-xl font-medium hover:bg-orange-600 transition flex items-center justify-center gap-2">
+                  {recordLoading
+                    ? <><Loader2 className="w-5 h-5 animate-spin" />Issuing...</>
+                    : <><FileWarning className="w-5 h-5" />Issue Citation</>}
+                </button>
+              </div>
             </div>
-          </div>
-          
-          <div>
-            <label className="text-sm font-medium text-slate-700 mb-1 block">Notes (optional)</label>
-            <textarea rows={3} value={violationForm.notes} onChange={e => setViolationForm(f => ({...f, notes: e.target.value}))} placeholder="Additional details about the apprehension..." className="w-full p-3 border rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-orange-500"></textarea>
-          </div>
+          )}
 
-
-        </div>
-        
-        <div className="flex gap-3 mt-6">
-          <button onClick={() => { setShowRecordModal(false); setSelectedDriverForViolation(null); setViolationForm({ plate: '', license: '', type: '', location: '', notes: '' }); }} disabled={recordLoading} className="flex-1 py-3 border rounded-xl font-medium hover:bg-slate-50 transition">Cancel</button>
-          <button onClick={handleRecordViolation} disabled={recordLoading} className="flex-1 py-3 bg-orange-500 text-white rounded-xl font-medium hover:bg-orange-600 transition flex items-center justify-center gap-2">
-            {recordLoading ? <><Loader2 className="w-5 h-5 animate-spin" />Issuing...</> : <><FileWarning className="w-5 h-5" />Issue Citation</>}
-          </button>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // Driver Details Modal
   const DriverDetailsModal = () => {
@@ -233,12 +330,12 @@ const EnforcerDashboard = ({ onLogout }) => {
           </div>
 
           <div className="p-4 border-t bg-slate-50">
-            <button 
-              onClick={() => { 
-                setShowDriverDetails(false); 
+            <button
+              onClick={() => {
+                setShowDriverDetails(false);
                 setSelectedDriverForViolation(selectedDriver);
-                setShowRecordModal(true); 
-              }} 
+                setShowRecordModal(true);
+              }}
               className="w-full py-3 bg-orange-500 text-white rounded-xl font-medium hover:bg-orange-600 transition flex items-center justify-center gap-2"
             >
               <FileWarning className="w-5 h-5" />Record Violation for This Driver
@@ -254,7 +351,7 @@ const EnforcerDashboard = ({ onLogout }) => {
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       {showRecordModal && <RecordViolationModal />}
       {showDriverDetails && selectedDriver && <DriverDetailsModal />}
-      
+
       {/* Notification Dropdown */}
       {showNotif && (
         <div className="fixed inset-0 z-50" onClick={() => setShowNotif(false)}>
@@ -344,14 +441,13 @@ const EnforcerDashboard = ({ onLogout }) => {
               { id: 'disputed', label: 'Disputed', count: myApprehensions.filter(v => v.status === 'disputed').length },
             ].map(f => (
               <button key={f.id} onClick={() => setSearchQuery(f.id === 'all' ? '' : f.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition border ${
-                  (f.id === 'all' && searchQuery === '') || searchQuery === f.id
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition border ${(f.id === 'all' && searchQuery === '') || searchQuery === f.id
                     ? f.id === 'unpaid' ? 'bg-rose-500 text-white border-rose-500'
-                    : f.id === 'paid' ? 'bg-emerald-500 text-white border-emerald-500'
-                    : f.id === 'disputed' ? 'bg-amber-500 text-white border-amber-500'
-                    : 'bg-orange-500 text-white border-orange-500'
+                      : f.id === 'paid' ? 'bg-emerald-500 text-white border-emerald-500'
+                        : f.id === 'disputed' ? 'bg-amber-500 text-white border-amber-500'
+                          : 'bg-orange-500 text-white border-orange-500'
                     : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
-                }`}>
+                  }`}>
                 {f.label} <span className="opacity-80">({f.count})</span>
               </button>
             ))}
@@ -408,7 +504,7 @@ const EnforcerDashboard = ({ onLogout }) => {
 
       {/* Floating Action Button */}
       <div className="fixed bottom-6 right-6">
-        <button 
+        <button
           onClick={() => setShowRecordModal(true)}
           className="w-14 h-14 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full shadow-lg shadow-orange-500/40 flex items-center justify-center hover:scale-105 transition"
         >
