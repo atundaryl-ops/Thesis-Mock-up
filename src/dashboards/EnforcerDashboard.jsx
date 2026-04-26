@@ -256,76 +256,144 @@ const EnforcerDashboard = ({ onLogout }) => {
   const CitationModal = () => (
   <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
     <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl animate-scale-in overflow-hidden">
-      
-      {/* Header */}
-      <div className="bg-gradient-to-r from-orange-500 to-red-500 p-5 text-white text-center">
-        <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-2">
-          <CheckCircle className="w-8 h-8" />
+
+      {/* LTO Header */}
+      <div className="bg-[#1a3a6b] text-white px-5 pt-5 pb-4">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            {/* LTO Seal placeholder */}
+            <div className="w-10 h-10 rounded-full bg-white/20 border-2 border-white/40 flex items-center justify-center">
+              <Shield className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="text-[10px] font-semibold tracking-widest uppercase opacity-80">Republic of the Philippines</p>
+              <p className="text-sm font-bold leading-tight">Land Transportation Office</p>
+            </div>
+          </div>
+          <button onClick={() => setShowCitationModal(false)} className="p-1 hover:bg-white/20 rounded-lg">
+            <X className="w-4 h-4" />
+          </button>
         </div>
-        <h3 className="text-lg font-bold">Citation Issued</h3>
-        <p className="text-xs text-white/80 mt-1">Official Traffic Violation Notice</p>
+        <div className="border-t border-white/30 pt-3 flex items-center justify-between">
+          <div>
+            <p className="text-[10px] tracking-widest uppercase opacity-70">Traffic Citation Ticket (TCT)</p>
+            <p className="text-lg font-bold font-mono tracking-wide">
+              TVR-{new Date().getFullYear()}-{issuedCitation?.id?.split('-')[1] ?? '000000'}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-[10px] opacity-70 uppercase">Status</p>
+            <span className="text-xs font-bold bg-red-500 px-2 py-0.5 rounded-full">UNPAID</span>
+          </div>
+        </div>
       </div>
 
-      {/* Citation Details */}
-      <div className="p-5 space-y-3">
-        <div className="bg-slate-50 rounded-xl p-4 border border-dashed border-slate-300 space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-slate-500">Citation No.</span>
-            <span className="font-mono font-bold">{issuedCitation?.id}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-slate-500">Driver</span>
-            <span className="font-medium">{issuedCitation?.driver}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-slate-500">Plate No.</span>
-            <span className="font-medium">{issuedCitation?.plate}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-slate-500">Violation</span>
-            <span className="font-medium text-rose-600">{issuedCitation?.type}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-slate-500">Location</span>
-            <span className="font-medium text-right max-w-[55%]">{issuedCitation?.location}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-slate-500">Date & Time</span>
-            <span className="font-medium">{issuedCitation?.date} {issuedCitation?.time}</span>
-          </div>
-          <div className="border-t pt-2 flex justify-between">
-            <span className="text-slate-500 font-medium">Fine Amount</span>
-            <span className="font-bold text-lg text-rose-600">₱{issuedCitation?.fine.toLocaleString()}</span>
+      {/* Pink slip body */}
+      <div className="bg-[#fff8f0] px-5 py-4 space-y-3 border-b-2 border-dashed border-slate-300">
+
+        {/* Violator Info */}
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">Violator Information</p>
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <div>
+              <p className="text-[10px] text-slate-400 uppercase">Name</p>
+              <p className="font-semibold">{issuedCitation?.driver}</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-slate-400 uppercase">Plate No.</p>
+              <p className="font-semibold font-mono">{issuedCitation?.plate}</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-slate-400 uppercase">License No.</p>
+              <p className="font-semibold font-mono">{issuedCitation?.license ?? '—'}</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-slate-400 uppercase">Vehicle Type</p>
+              <p className="font-semibold">Motor Vehicle</p>
+            </div>
           </div>
         </div>
 
-        {issuedCitation?.notes && (
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm text-amber-800">
-            <p className="font-medium mb-0.5">Notes</p>
-            <p className="text-xs">{issuedCitation.notes}</p>
-          </div>
-        )}
+        <div className="border-t border-slate-200" />
 
-        <p className="text-xs text-slate-400 text-center">
-          Issued by Officer Garcia (ENF-001)
+        {/* Violation Info */}
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">Violation Details</p>
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <div className="col-span-2">
+              <p className="text-[10px] text-slate-400 uppercase">Violation</p>
+              <p className="font-bold text-red-700">{issuedCitation?.type}</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-slate-400 uppercase">Date</p>
+              <p className="font-semibold">{issuedCitation?.date}</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-slate-400 uppercase">Time</p>
+              <p className="font-semibold">{issuedCitation?.time}</p>
+            </div>
+            <div className="col-span-2">
+              <p className="text-[10px] text-slate-400 uppercase">Place of Apprehension</p>
+              <p className="font-semibold">{issuedCitation?.location}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-slate-200" />
+
+        {/* Apprehending Officer */}
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">Apprehending Officer</p>
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <div>
+              <p className="text-[10px] text-slate-400 uppercase">Name</p>
+              <p className="font-semibold">Officer Garcia</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-slate-400 uppercase">Badge No.</p>
+              <p className="font-semibold font-mono">ENF-001</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-slate-400 uppercase">Station</p>
+              <p className="font-semibold">District I</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-slate-200" />
+
+        {/* Fine */}
+        <div className="flex items-center justify-between bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+          <div>
+            <p className="text-[10px] text-red-400 uppercase font-bold">Total Fine Amount</p>
+            <p className="text-xs text-red-500">Payable within 15 days</p>
+          </div>
+          <p className="text-2xl font-bold text-red-600">₱{issuedCitation?.fine.toLocaleString()}</p>
+        </div>
+
+        {/* Legal notice */}
+        <p className="text-[9px] text-slate-400 leading-relaxed text-center">
+          Pursuant to R.A. 4136 (Land Transportation and Traffic Code). Failure to pay within 15 days shall result in surcharges and possible suspension of driving privileges. Pay at any authorized LTO office or via portal.lto.gov.ph.
         </p>
       </div>
 
+      {/* Driver copy label */}
+      <div className="bg-pink-100 px-5 py-2 flex items-center justify-between">
+        <p className="text-[10px] font-bold text-pink-600 uppercase tracking-widest">Driver's Copy (Pink)</p>
+        <p className="text-[10px] text-pink-500">Present upon license redemption</p>
+      </div>
+
       {/* Actions */}
-      <div className="px-5 pb-5 flex gap-3">
-        <button
-          onClick={() => setShowCitationModal(false)}
-          className="flex-1 py-2.5 border rounded-xl text-sm font-medium hover:bg-slate-50 transition"
-        >
+      <div className="px-5 py-4 flex gap-3 bg-white">
+        <button onClick={() => setShowCitationModal(false)}
+          className="flex-1 py-2.5 border rounded-xl text-sm font-medium hover:bg-slate-50 transition">
           Close
         </button>
-        <button
-          onClick={() => {
+        <button onClick={() => {
             setShowCitationModal(false);
-            setToast({ message: 'Citation printed successfully!', type: 'success' });
+            setToast({ message: 'Citation ready to print!', type: 'success' });
           }}
-          className="flex-1 py-2.5 bg-orange-500 text-white rounded-xl text-sm font-medium hover:bg-orange-600 transition flex items-center justify-center gap-2"
-        >
+          className="flex-1 py-2.5 bg-[#1a3a6b] text-white rounded-xl text-sm font-medium hover:bg-[#15306b] transition flex items-center justify-center gap-2">
           <Upload className="w-4 h-4" />Print / Share
         </button>
       </div>
