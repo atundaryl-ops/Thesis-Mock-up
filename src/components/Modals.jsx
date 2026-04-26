@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  X, Eye, CheckCircle, XCircle, Clock, Calendar, MapPin, DollarSign, 
-  Camera, Users, Car, Image, Download, Mail, Phone, Hash, Info, 
+import {
+  X, Eye, CheckCircle, XCircle, Clock, Calendar, MapPin, DollarSign,
+  Camera, Users, Car, Image, Download, Mail, Phone, Hash, Info,
   FileText, Gavel, Shield, AlertTriangle, Lock, Unlock, Database,
   Wifi, WifiOff, Activity, RefreshCw, Loader2, Search, FileWarning,
-  CreditCard
+  CreditCard, Upload, Printer
 } from 'lucide-react';
 import { LoadingSpinner, StatusBadge } from './UIComponents';
 import { sampleViolations, sampleDrivers } from '../data/sampleData';
@@ -16,6 +16,7 @@ import { sampleViolations, sampleDrivers } from '../data/sampleData';
 export const ViolationDetailsModal = ({ violation, onClose, userType, onPayment, onDispute, onApprove, onReject }) => {
   const [loading, setLoading] = useState(true);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [showCitation, setShowCitation] = useState(false);
   useEffect(() => { const t = setTimeout(() => setLoading(false), 800); return () => clearTimeout(t); }, []);
 
   if (loading) return (
@@ -114,6 +115,10 @@ export const ViolationDetailsModal = ({ violation, onClose, userType, onPayment,
                 <button onClick={() => { onClose(); onApprove && onApprove(violation); }} className="flex-1 py-2.5 bg-emerald-500 text-white rounded-xl font-medium hover:bg-emerald-600 transition flex items-center justify-center gap-2"><CheckCircle className="w-4 h-4" />Approve</button>
               </>
             )}
+            <button onClick={() => setShowCitation(true)}
+              className="px-4 py-2.5 border border-[#1a3a6b] text-[#1a3a6b] rounded-xl font-medium hover:bg-blue-50 transition flex items-center gap-2">
+              <FileText className="w-4 h-4" />View Citation
+            </button>
             <button onClick={onClose} className="px-6 py-2.5 border rounded-xl font-medium hover:bg-slate-100 transition">Close</button>
           </div>
         </div>
@@ -486,12 +491,12 @@ export const ReportModal = ({ report, onClose, onGenerate }) => {
   const [generating, setGenerating] = useState(false);
 
   const periods = [
-    { id: 'this_week',   label: 'This Week',      desc: 'Last 7 days' },
-    { id: 'this_month',  label: 'This Month',     desc: 'Last 30 days' },
-    { id: 'last_month',  label: 'Last Month',     desc: 'Previous calendar month' },
-    { id: 'this_quarter',label: 'This Quarter',   desc: 'Last 90 days' },
-    { id: 'this_year',   label: 'This Year',      desc: 'Current calendar year' },
-    { id: 'custom',      label: 'Custom Range',   desc: 'Pick a date range' },
+    { id: 'this_week', label: 'This Week', desc: 'Last 7 days' },
+    { id: 'this_month', label: 'This Month', desc: 'Last 30 days' },
+    { id: 'last_month', label: 'Last Month', desc: 'Previous calendar month' },
+    { id: 'this_quarter', label: 'This Quarter', desc: 'Last 90 days' },
+    { id: 'this_year', label: 'This Year', desc: 'Current calendar year' },
+    { id: 'custom', label: 'Custom Range', desc: 'Pick a date range' },
   ];
 
   const [dateFrom, setDateFrom] = useState('');
@@ -539,11 +544,10 @@ export const ReportModal = ({ report, onClose, onGenerate }) => {
                 <button
                   key={p.id}
                   onClick={() => setPeriod(p.id)}
-                  className={`p-3 rounded-xl border text-left transition ${
-                    period === p.id
+                  className={`p-3 rounded-xl border text-left transition ${period === p.id
                       ? 'border-violet-500 bg-violet-50'
                       : 'hover:bg-slate-50 border-slate-200'
-                  }`}
+                    }`}
                 >
                   <p className="text-sm font-medium">{p.label}</p>
                   <p className="text-xs text-slate-400">{p.desc}</p>
@@ -603,7 +607,152 @@ export const ReportModal = ({ report, onClose, onGenerate }) => {
     </div>
   );
 };
+// ─────────────────────────────────────────────────────────────
+// CITATION MODAL
+// ─────────────────────────────────────────────────────────────
 
+export const CitationModal = ({ violation, onClose }) => (
+  <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl animate-scale-in overflow-hidden">
+
+      {/* LTO Header */}
+      <div className="bg-[#1a3a6b] text-white px-5 pt-5 pb-4">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <div className="w-10 h-10 rounded-full bg-white/20 border-2 border-white/40 flex items-center justify-center">
+              <Shield className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="text-[10px] font-semibold tracking-widest uppercase opacity-80">Republic of the Philippines</p>
+              <p className="text-sm font-bold leading-tight">Land Transportation Office</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-1 hover:bg-white/20 rounded-lg">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+        <div className="border-t border-white/30 pt-3 flex items-center justify-between">
+          <div>
+            <p className="text-[10px] tracking-widest uppercase opacity-70">Traffic Citation Ticket (TCT)</p>
+            <p className="text-lg font-bold font-mono tracking-wide">
+              TVR-{new Date().getFullYear()}-{violation?.id?.replace(/\D/g, '').slice(0, 6) ?? '000000'}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-[10px] opacity-70 uppercase">Status</p>
+            <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${violation?.status === 'paid' ? 'bg-emerald-500' :
+                violation?.status === 'disputed' ? 'bg-amber-500' : 'bg-red-500'
+              }`}>
+              {violation?.status?.toUpperCase()}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Pink slip body */}
+      <div className="bg-[#fff8f0] px-5 py-4 space-y-3 border-b-2 border-dashed border-slate-300">
+
+        {/* Violator Info */}
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">Violator Information</p>
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <div>
+              <p className="text-[10px] text-slate-400 uppercase">Name</p>
+              <p className="font-semibold">{violation?.driver}</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-slate-400 uppercase">Plate No.</p>
+              <p className="font-semibold font-mono">{violation?.plate}</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-slate-400 uppercase">License No.</p>
+              <p className="font-semibold font-mono">{violation?.license ?? '—'}</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-slate-400 uppercase">Vehicle Type</p>
+              <p className="font-semibold">Motor Vehicle</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-slate-200" />
+
+        {/* Violation Info */}
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">Violation Details</p>
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <div className="col-span-2">
+              <p className="text-[10px] text-slate-400 uppercase">Violation</p>
+              <p className="font-bold text-red-700">{violation?.type}</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-slate-400 uppercase">Date</p>
+              <p className="font-semibold">{violation?.date}</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-slate-400 uppercase">Time</p>
+              <p className="font-semibold">{violation?.time}</p>
+            </div>
+            <div className="col-span-2">
+              <p className="text-[10px] text-slate-400 uppercase">Place of Apprehension</p>
+              <p className="font-semibold">{violation?.location}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-slate-200" />
+
+        {/* Apprehending Officer */}
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">Apprehending Officer</p>
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <div>
+              <p className="text-[10px] text-slate-400 uppercase">Badge No.</p>
+              <p className="font-semibold font-mono">{violation?.capturedBy ?? '—'}</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-slate-400 uppercase">Station</p>
+              <p className="font-semibold">District I</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-slate-200" />
+
+        {/* Fine */}
+        <div className="flex items-center justify-between bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+          <div>
+            <p className="text-[10px] text-red-400 uppercase font-bold">Total Fine Amount</p>
+            <p className="text-xs text-red-500">Payable within 15 days</p>
+          </div>
+          <p className="text-2xl font-bold text-red-600">₱{violation?.fine?.toLocaleString()}</p>
+        </div>
+
+        <p className="text-[9px] text-slate-400 leading-relaxed text-center">
+          Pursuant to R.A. 4136 (Land Transportation and Traffic Code). Failure to pay within 15 days shall result in surcharges and possible suspension of driving privileges. Pay at any authorized LTO office or via portal.lto.gov.ph.
+        </p>
+      </div>
+
+      {/* Driver copy label */}
+      <div className="bg-pink-100 px-5 py-2 flex items-center justify-between">
+        <p className="text-[10px] font-bold text-pink-600 uppercase tracking-widest">Driver's Copy (Pink)</p>
+        <p className="text-[10px] text-pink-500">Present upon license redemption</p>
+      </div>
+
+      {/* Actions */}
+      <div className="px-5 py-4 flex gap-3 bg-white">
+        <button onClick={onClose}
+          className="flex-1 py-2.5 border rounded-xl text-sm font-medium hover:bg-slate-50 transition">
+          Close
+        </button>
+        <button onClick={onClose}
+          className="flex-1 py-2.5 bg-[#1a3a6b] text-white rounded-xl text-sm font-medium hover:opacity-90 transition flex items-center justify-center gap-2">
+          <Download className="w-4 h-4" />Print / Save
+        </button>
+      </div>
+    </div>
+  </div>
+);
 // ─────────────────────────────────────────────────────────────
 // NOTIFICATION PANEL
 // ─────────────────────────────────────────────────────────────
@@ -615,7 +764,7 @@ export const NotificationPanel = ({ onClose }) => {
     { id: 3, type: 'device', message: 'CAM-003 went offline at EDSA Northbound', time: '2 hours ago', read: true },
     { id: 4, type: 'violation', message: 'New violation recorded: VIO-2024-008', time: '3 hours ago', read: true },
   ];
-  
+
   const PesoIcon = ({ className }) => <span className={`font-bold flex items-center justify-center ${className}`}>₱</span>;
   const icons = { dispute: Gavel, payment: PesoIcon, device: Camera, violation: AlertTriangle };
   const colors = { dispute: 'text-amber-500 bg-amber-100', payment: 'text-emerald-500 bg-emerald-100', device: 'text-slate-500 bg-slate-100', violation: 'text-rose-500 bg-rose-100' };
