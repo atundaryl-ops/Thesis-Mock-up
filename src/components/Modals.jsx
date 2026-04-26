@@ -123,6 +123,7 @@ export const ViolationDetailsModal = ({ violation, onClose, userType, onPayment,
           </div>
         </div>
       </div>
+      {showCitation && <CitationModal violation={violation} onClose={() => setShowCitation(false)} />}
     </div>
   );
 };
