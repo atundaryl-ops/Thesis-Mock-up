@@ -934,7 +934,7 @@ const SupervisorDashboard = ({ onLogout }) => {
               <MapContainer
                 center={[10.6970, 122.5644]}
                 zoom={15}
-                style={{ height: '100%', width: '100%', borderRadius: '1rem' }}
+                style={{ height: '420px', width: '100%', borderRadius: '1rem' }}
                 scrollWheelZoom={true}
               >
                 <TileLayer
