@@ -19,7 +19,7 @@ const EnforcerDashboard = ({ onLogout }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDriverForViolation, setSelectedDriverForViolation] = useState(null);
   const [myApprehensions, setMyApprehensions] = useState([]);
-  const [violationForm, setViolationForm] = useState({ plate: '', license: '', type: '', location: '', notes: '' });
+  const [violationForm, setViolationForm] = useState({ plate: '', license: '', type: '', otherType: '', location: '', notes: '' });
   const [selectedDriver, setSelectedDriver] = useState(null);
   const [showDriverDetails, setShowDriverDetails] = useState(false);
   const [modalStep, setModalStep] = useState(1); // 1 = search, 2 = form
@@ -35,7 +35,7 @@ const EnforcerDashboard = ({ onLogout }) => {
   // Handle recording violation
   const handleRecordViolation = () => {
     const plate = selectedDriverForViolation ? selectedDriverForViolation.plate : violationForm.plate;
-    const type = violationForm.type;
+    const type = violationForm.type === 'Other' ? (violationForm.otherType || 'Other') : violationForm.type;
     const location = violationForm.location;
     if (!plate || !type || !location) {
       setToast({ message: 'Please fill in all required fields.', type: 'warning' });
@@ -46,12 +46,20 @@ const EnforcerDashboard = ({ onLogout }) => {
       const fineMap = {
         'Running Red Light': 1500, 'Illegal Parking': 500, 'Over Speeding': 2000,
         'No Helmet': 1000, 'Counterflow': 2500, 'No License': 1500,
-        'Illegal U-Turn': 1000, 'No Seatbelt': 1000, 'Reckless Driving': 3000, 'Expired Registration': 1500,
+        'Illegal U-Turn': 1000, 'No Seatbelt': 1000, 'Reckless Driving': 3000, 'Expired Registration': 1500, 'Obstruction': 1000, 'Illegal Loading/Unloading': 1000,
+        'Driving Without Plate': 2000, 'Colorum': 5000,
+        'No OR/CR': 1500, 'Defective Accessories': 500,
+        'Smoke Belching': 2000, 'Improper Overtaking': 1500,
+        'Failure to Yield': 1000, 'Other': 1000,
       };
       const imageMap = {
         'Running Red Light': '🚦', 'Illegal Parking': '🅿️', 'Over Speeding': '⚡',
         'No Helmet': '⛑️', 'Counterflow': '↩️', 'No License': '📋',
-        'Illegal U-Turn': '🔄', 'No Seatbelt': '🔒', 'Reckless Driving': '⚠️', 'Expired Registration': '📅',
+        'Illegal U-Turn': '🔄', 'No Seatbelt': '🔒', 'Reckless Driving': '⚠️', 'Expired Registration': '📅', 'Obstruction': '🚧', 'Illegal Loading/Unloading': '🚌',
+        'Driving Without Plate': '🔲', 'Colorum': '🚫',
+        'No OR/CR': '📄', 'Defective Accessories': '🔧',
+        'Smoke Belching': '💨', 'Improper Overtaking': '🏎️',
+        'Failure to Yield': '⛔', 'Other': '⚠️',
       };
       const newViolation = {
         id: `VIO-${Date.now()}`,
@@ -74,7 +82,7 @@ const EnforcerDashboard = ({ onLogout }) => {
       setModalStep(1);
       setDriverSearch('');;
       setSelectedDriverForViolation(null);
-      setViolationForm({ plate: '', license: '', type: '', location: '', notes: '' });
+      setViolationForm({ plate: '', license: '', type: '',otherType: '', location: '', notes: '' });
       setIssuedCitation(newViolation);
       setShowCitationModal(true);
     }, 2000);
@@ -105,7 +113,7 @@ const EnforcerDashboard = ({ onLogout }) => {
             <button onClick={() => {
               setShowRecordModal(false);
               setSelectedDriverForViolation(null);
-              setViolationForm({ plate: '', license: '', type: '', location: '', notes: '' });
+              setViolationForm({ plate: '', license: '', type: '', otherType: '', location: '', notes: '' });
               setModalStep(1);
               setDriverSearch('');
             }} className="p-2 hover:bg-slate-100 rounded-lg">
@@ -201,14 +209,31 @@ const EnforcerDashboard = ({ onLogout }) => {
 
               <div>
                 <label className="text-sm font-medium text-slate-700 mb-1 block">Violation Type *</label>
-                <select value={violationForm.type} onChange={e => setViolationForm(f => ({ ...f, type: e.target.value }))}
+                <select value={violationForm.type} onChange={e => setViolationForm(f => ({ ...f, type: e.target.value, otherType: '' }))}
                   className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500">
                   <option value="">Select violation type</option>
-                  {['Running Red Light', 'Illegal Parking', 'Over Speeding', 'No Helmet', 'Counterflow',
-                    'No License', 'Illegal U-Turn', 'No Seatbelt', 'Reckless Driving', 'Expired Registration'].map(v => (
-                      <option key={v}>{v}</option>
-                    ))}
+                  <optgroup label="Speed & Movement">
+                    {['Over Speeding', 'Running Red Light', 'Counterflow', 'Improper Overtaking', 'Failure to Yield', 'Illegal U-Turn', 'Reckless Driving'].map(v => <option key={v}>{v}</option>)}
+                  </optgroup>
+                  <optgroup label="Documents & Registration">
+                    {['No License', 'Expired Registration', 'No OR/CR', 'Driving Without Plate', 'Colorum'].map(v => <option key={v}>{v}</option>)}
+                  </optgroup>
+                  <optgroup label="Safety">
+                    {['No Helmet', 'No Seatbelt', 'Defective Accessories', 'Smoke Belching'].map(v => <option key={v}>{v}</option>)}
+                  </optgroup>
+                  <optgroup label="Parking & Loading">
+                    {['Illegal Parking', 'Obstruction', 'Illegal Loading/Unloading'].map(v => <option key={v}>{v}</option>)}
+                  </optgroup>
+                  <optgroup label="Other">
+                    <option>Other</option>
+                  </optgroup>
                 </select>
+                {violationForm.type === 'Other' && (
+                  <input type="text" value={violationForm.otherType || ''}
+                    onChange={e => setViolationForm(f => ({ ...f, otherType: e.target.value }))}
+                    placeholder="Specify violation..."
+                    className="w-full mt-2 p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm" />
+                )}
               </div>
 
               <div>
@@ -254,153 +279,153 @@ const EnforcerDashboard = ({ onLogout }) => {
     );
   };
   const CitationModal = () => (
-  <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-    <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl animate-scale-in overflow-hidden">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl animate-scale-in overflow-hidden">
 
-      {/* LTO Header */}
-      <div className="bg-[#1a3a6b] text-white px-5 pt-5 pb-4">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            {/* LTO Seal placeholder */}
-            <div className="w-10 h-10 rounded-full bg-white/20 border-2 border-white/40 flex items-center justify-center">
-              <Shield className="w-5 h-5 text-white" />
+        {/* LTO Header */}
+        <div className="bg-[#1a3a6b] text-white px-5 pt-5 pb-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              {/* LTO Seal placeholder */}
+              <div className="w-10 h-10 rounded-full bg-white/20 border-2 border-white/40 flex items-center justify-center">
+                <Shield className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold tracking-widest uppercase opacity-80">Republic of the Philippines</p>
+                <p className="text-sm font-bold leading-tight">Land Transportation Office</p>
+              </div>
             </div>
+            <button onClick={() => setShowCitationModal(false)} className="p-1 hover:bg-white/20 rounded-lg">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="border-t border-white/30 pt-3 flex items-center justify-between">
             <div>
-              <p className="text-[10px] font-semibold tracking-widest uppercase opacity-80">Republic of the Philippines</p>
-              <p className="text-sm font-bold leading-tight">Land Transportation Office</p>
+              <p className="text-[10px] tracking-widest uppercase opacity-70">Traffic Citation Ticket (TCT)</p>
+              <p className="text-lg font-bold font-mono tracking-wide">
+                TVR-{new Date().getFullYear()}-{issuedCitation?.id?.split('-')[1] ?? '000000'}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] opacity-70 uppercase">Status</p>
+              <span className="text-xs font-bold bg-red-500 px-2 py-0.5 rounded-full">UNPAID</span>
             </div>
           </div>
-          <button onClick={() => setShowCitationModal(false)} className="p-1 hover:bg-white/20 rounded-lg">
-            <X className="w-4 h-4" />
+        </div>
+
+        {/* Pink slip body */}
+        <div className="bg-[#fff8f0] px-5 py-4 space-y-3 border-b-2 border-dashed border-slate-300">
+
+          {/* Violator Info */}
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">Violator Information</p>
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div>
+                <p className="text-[10px] text-slate-400 uppercase">Name</p>
+                <p className="font-semibold">{issuedCitation?.driver}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-slate-400 uppercase">Plate No.</p>
+                <p className="font-semibold font-mono">{issuedCitation?.plate}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-slate-400 uppercase">License No.</p>
+                <p className="font-semibold font-mono">{issuedCitation?.license ?? '—'}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-slate-400 uppercase">Vehicle Type</p>
+                <p className="font-semibold">Motor Vehicle</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t border-slate-200" />
+
+          {/* Violation Info */}
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">Violation Details</p>
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div className="col-span-2">
+                <p className="text-[10px] text-slate-400 uppercase">Violation</p>
+                <p className="font-bold text-red-700">{issuedCitation?.type}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-slate-400 uppercase">Date</p>
+                <p className="font-semibold">{issuedCitation?.date}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-slate-400 uppercase">Time</p>
+                <p className="font-semibold">{issuedCitation?.time}</p>
+              </div>
+              <div className="col-span-2">
+                <p className="text-[10px] text-slate-400 uppercase">Place of Apprehension</p>
+                <p className="font-semibold">{issuedCitation?.location}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t border-slate-200" />
+
+          {/* Apprehending Officer */}
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">Apprehending Officer</p>
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div>
+                <p className="text-[10px] text-slate-400 uppercase">Name</p>
+                <p className="font-semibold">Officer Garcia</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-slate-400 uppercase">Badge No.</p>
+                <p className="font-semibold font-mono">ENF-001</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-slate-400 uppercase">Station</p>
+                <p className="font-semibold">District I</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t border-slate-200" />
+
+          {/* Fine */}
+          <div className="flex items-center justify-between bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+            <div>
+              <p className="text-[10px] text-red-400 uppercase font-bold">Total Fine Amount</p>
+              <p className="text-xs text-red-500">Payable within 15 days</p>
+            </div>
+            <p className="text-2xl font-bold text-red-600">₱{issuedCitation?.fine.toLocaleString()}</p>
+          </div>
+
+          {/* Legal notice */}
+          <p className="text-[9px] text-slate-400 leading-relaxed text-center">
+            Pursuant to R.A. 4136 (Land Transportation and Traffic Code). Failure to pay within 15 days shall result in surcharges and possible suspension of driving privileges. Pay at any authorized LTO office or via portal.lto.gov.ph.
+          </p>
+        </div>
+
+        {/* Driver copy label */}
+        <div className="bg-pink-100 px-5 py-2 flex items-center justify-between">
+          <p className="text-[10px] font-bold text-pink-600 uppercase tracking-widest">Driver's Copy (Pink)</p>
+          <p className="text-[10px] text-pink-500">Present upon license redemption</p>
+        </div>
+
+        {/* Actions */}
+        <div className="px-5 py-4 flex gap-3 bg-white">
+          <button onClick={() => setShowCitationModal(false)}
+            className="flex-1 py-2.5 border rounded-xl text-sm font-medium hover:bg-slate-50 transition">
+            Close
           </button>
-        </div>
-        <div className="border-t border-white/30 pt-3 flex items-center justify-between">
-          <div>
-            <p className="text-[10px] tracking-widest uppercase opacity-70">Traffic Citation Ticket (TCT)</p>
-            <p className="text-lg font-bold font-mono tracking-wide">
-              TVR-{new Date().getFullYear()}-{issuedCitation?.id?.split('-')[1] ?? '000000'}
-            </p>
-          </div>
-          <div className="text-right">
-            <p className="text-[10px] opacity-70 uppercase">Status</p>
-            <span className="text-xs font-bold bg-red-500 px-2 py-0.5 rounded-full">UNPAID</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Pink slip body */}
-      <div className="bg-[#fff8f0] px-5 py-4 space-y-3 border-b-2 border-dashed border-slate-300">
-
-        {/* Violator Info */}
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">Violator Information</p>
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <div>
-              <p className="text-[10px] text-slate-400 uppercase">Name</p>
-              <p className="font-semibold">{issuedCitation?.driver}</p>
-            </div>
-            <div>
-              <p className="text-[10px] text-slate-400 uppercase">Plate No.</p>
-              <p className="font-semibold font-mono">{issuedCitation?.plate}</p>
-            </div>
-            <div>
-              <p className="text-[10px] text-slate-400 uppercase">License No.</p>
-              <p className="font-semibold font-mono">{issuedCitation?.license ?? '—'}</p>
-            </div>
-            <div>
-              <p className="text-[10px] text-slate-400 uppercase">Vehicle Type</p>
-              <p className="font-semibold">Motor Vehicle</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="border-t border-slate-200" />
-
-        {/* Violation Info */}
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">Violation Details</p>
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <div className="col-span-2">
-              <p className="text-[10px] text-slate-400 uppercase">Violation</p>
-              <p className="font-bold text-red-700">{issuedCitation?.type}</p>
-            </div>
-            <div>
-              <p className="text-[10px] text-slate-400 uppercase">Date</p>
-              <p className="font-semibold">{issuedCitation?.date}</p>
-            </div>
-            <div>
-              <p className="text-[10px] text-slate-400 uppercase">Time</p>
-              <p className="font-semibold">{issuedCitation?.time}</p>
-            </div>
-            <div className="col-span-2">
-              <p className="text-[10px] text-slate-400 uppercase">Place of Apprehension</p>
-              <p className="font-semibold">{issuedCitation?.location}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="border-t border-slate-200" />
-
-        {/* Apprehending Officer */}
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">Apprehending Officer</p>
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <div>
-              <p className="text-[10px] text-slate-400 uppercase">Name</p>
-              <p className="font-semibold">Officer Garcia</p>
-            </div>
-            <div>
-              <p className="text-[10px] text-slate-400 uppercase">Badge No.</p>
-              <p className="font-semibold font-mono">ENF-001</p>
-            </div>
-            <div>
-              <p className="text-[10px] text-slate-400 uppercase">Station</p>
-              <p className="font-semibold">District I</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="border-t border-slate-200" />
-
-        {/* Fine */}
-        <div className="flex items-center justify-between bg-red-50 border border-red-200 rounded-xl px-4 py-3">
-          <div>
-            <p className="text-[10px] text-red-400 uppercase font-bold">Total Fine Amount</p>
-            <p className="text-xs text-red-500">Payable within 15 days</p>
-          </div>
-          <p className="text-2xl font-bold text-red-600">₱{issuedCitation?.fine.toLocaleString()}</p>
-        </div>
-
-        {/* Legal notice */}
-        <p className="text-[9px] text-slate-400 leading-relaxed text-center">
-          Pursuant to R.A. 4136 (Land Transportation and Traffic Code). Failure to pay within 15 days shall result in surcharges and possible suspension of driving privileges. Pay at any authorized LTO office or via portal.lto.gov.ph.
-        </p>
-      </div>
-
-      {/* Driver copy label */}
-      <div className="bg-pink-100 px-5 py-2 flex items-center justify-between">
-        <p className="text-[10px] font-bold text-pink-600 uppercase tracking-widest">Driver's Copy (Pink)</p>
-        <p className="text-[10px] text-pink-500">Present upon license redemption</p>
-      </div>
-
-      {/* Actions */}
-      <div className="px-5 py-4 flex gap-3 bg-white">
-        <button onClick={() => setShowCitationModal(false)}
-          className="flex-1 py-2.5 border rounded-xl text-sm font-medium hover:bg-slate-50 transition">
-          Close
-        </button>
-        <button onClick={() => {
+          <button onClick={() => {
             setShowCitationModal(false);
             setToast({ message: 'Citation ready to print!', type: 'success' });
           }}
-          className="flex-1 py-2.5 bg-[#1a3a6b] text-white rounded-xl text-sm font-medium hover:bg-[#15306b] transition flex items-center justify-center gap-2">
-          <Upload className="w-4 h-4" />Print / Share
-        </button>
-      </div>
+            className="flex-1 py-2.5 bg-[#1a3a6b] text-white rounded-xl text-sm font-medium hover:bg-[#15306b] transition flex items-center justify-center gap-2">
+            <Upload className="w-4 h-4" />Print / Share
+          </button>
+        </div>
 
+      </div>
     </div>
-  </div>
-);
+  );
 
   // Driver Details Modal
   const DriverDetailsModal = () => {
@@ -496,7 +521,7 @@ const EnforcerDashboard = ({ onLogout }) => {
       </div>
     );
   };
-  
+
 
   return (
     <div className="min-h-screen bg-slate-50">

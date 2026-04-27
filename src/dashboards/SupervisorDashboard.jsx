@@ -123,10 +123,6 @@ const SupervisorDashboard = ({ onLogout }) => {
               <div className="flex items-center justify-between mb-2"><FileWarning className="w-8 h-8 text-violet-500" /><span className="text-xs text-emerald-500 font-medium flex items-center gap-1"><TrendingUp className="w-3 h-3" />+12%</span></div>
               <p className="text-2xl font-bold">1,234</p><p className="text-sm text-slate-500">Total Violations</p>
             </div>
-            <div className="bg-white rounded-xl p-4 shadow-sm border hover:shadow-md transition cursor-pointer">
-              <div className="flex items-center justify-between mb-2"><span className="w-8 h-8 text-emerald-500 font-bold text-2xl flex items-center">₱</span><span className="text-xs text-emerald-500 font-medium flex items-center gap-1"><TrendingUp className="w-3 h-3" />+8%</span></div>
-              <p className="text-2xl font-bold">₱2.4M</p><p className="text-sm text-slate-500">Fines Collected</p>
-            </div>
             <div className="bg-white rounded-xl p-4 shadow-sm border hover:shadow-md transition cursor-pointer" onClick={() => setActiveSection('disputes')}>
               <div className="flex items-center justify-between mb-2"><Gavel className="w-8 h-8 text-amber-500" /><span className="text-xs text-amber-500 font-medium">+5 new</span></div>
               <p className="text-2xl font-bold">23</p><p className="text-sm text-slate-500">Pending Disputes</p>
