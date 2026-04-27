@@ -3,6 +3,7 @@ import LoginScreen from './dashboards/LoginScreen';
 import VehicleOwnerPortal from './dashboards/VehicleOwnerPortal';
 import EnforcerDashboard from './dashboards/EnforcerDashboard';
 import SupervisorDashboard from './dashboards/SupervisorDashboard';
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
 // ─────────────────────────────────────────────────────────────
 // MAIN APP

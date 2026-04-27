@@ -9,6 +9,8 @@ import {
 import { Toast, Skeleton, TableSkeleton, StatusBadge, ConfirmModal } from '../components/UIComponents';
 import { ViolationDetailsModal, DisputeDetailsModal, UserDetailsModal, DeviceDetailsModal, FilterModal, ExportModal, NotificationPanel, ReportModal } from '../components/Modals';
 import { sampleViolations, sampleDisputes, sampleUsers, sampleDevices, sampleDrivers } from '../data/sampleData';
+import { MapContainer, TileLayer, Circle, Marker, Popup, useMap } from 'react-leaflet';
+import L from 'leaflet';
 
 // ─────────────────────────────────────────────────────────────
 // SUPERVISOR / ADMIN DASHBOARD
@@ -862,17 +864,17 @@ const SupervisorDashboard = ({ onLogout }) => {
 
     // Simulated camera positions on a stylized SVG city grid
     const cameras = [
-      { ...sampleDevices[0], x: 28, y: 35, violations: 312, hotspot: true },
-      { ...sampleDevices[1], x: 68, y: 22, violations: 198, hotspot: false },
-      { ...sampleDevices[2], x: 55, y: 62, violations: 87, hotspot: false },
-      { ...sampleDevices[3], x: 18, y: 72, violations: 241, hotspot: true },
+      { ...sampleDevices[0], coords: [10.6970, 122.5644], violations: 312, hotspot: true },  // Iznart St & Quezon St
+      { ...sampleDevices[1], coords: [10.7020, 122.5621], violations: 198, hotspot: false }, // Jaro Plaza area
+      { ...sampleDevices[2], coords: [10.6951, 122.5698], violations: 87, hotspot: false }, // SM City Iloilo
+      { ...sampleDevices[3], coords: [10.6890, 122.5601], violations: 241, hotspot: true },  // Molo Plaza area
     ];
 
     const violationHotspots = [
-      { x: 30, y: 37, radius: 14, label: 'High — 312 violations', color: 'rgba(239,68,68,0.18)', border: '#ef4444' },
-      { x: 20, y: 74, radius: 11, label: 'High — 241 violations', color: 'rgba(249,115,22,0.15)', border: '#f97316' },
-      { x: 68, y: 24, radius: 9, label: 'Medium — 198 violations', color: 'rgba(234,179,8,0.13)', border: '#eab308' },
-      { x: 55, y: 64, radius: 7, label: 'Low — 87 violations', color: 'rgba(34,197,94,0.12)', border: '#22c55e' },
+      { coords: [10.6970, 122.5644], radius: 150, border: '#ef4444' }, // Iznart-Quezon intersection
+      { coords: [10.6890, 122.5601], radius: 120, border: '#f97316' }, // Molo
+      { coords: [10.7020, 122.5621], radius: 100, border: '#eab308' }, // Jaro
+      { coords: [10.6951, 122.5698], radius: 80, border: '#22c55e' }, // SM area
     ];
 
     const filtered = cameras.filter(c =>
@@ -908,45 +910,40 @@ const SupervisorDashboard = ({ onLogout }) => {
           {/* SVG Map */}
           <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border overflow-hidden">
             <div className="relative">
-              <svg viewBox="0 0 100 90" className="w-full" style={{ height: '420px', background: 'linear-gradient(135deg,#e8f4fd 0%,#dbeafe 100%)' }}>
-                {/* Road grid */}
-                {[15, 35, 55, 75].map(x => <line key={`vr${x}`} x1={x} y1="0" x2={x} y2="90" stroke="#cbd5e1" strokeWidth="2.5" />)}
-                {[20, 40, 60, 80].map(y => <line key={`hr${y}`} x1="0" y1={y} x2="100" y2={y} stroke="#cbd5e1" strokeWidth="2.5" />)}
-                {/* City blocks */}
-                {[[0, 0, 14, 19], [16, 0, 18, 19], [36, 0, 18, 19], [56, 0, 18, 19], [0, 21, 14, 18], [16, 21, 18, 18], [36, 21, 18, 18], [56, 21, 18, 18], [76, 21, 23, 18], [0, 41, 14, 18], [16, 41, 18, 18], [36, 41, 18, 18], [56, 41, 18, 18], [0, 61, 14, 18], [16, 61, 18, 18], [36, 61, 18, 18], [56, 61, 18, 18], [76, 61, 23, 18]].map(([x, y, w, h], i) => (
-                  <rect key={i} x={x} y={y} width={w} height={h} rx="0.8" fill="#f1f5f9" stroke="#e2e8f0" strokeWidth="0.3" />
-                ))}
-                {/* Building blocks inside city areas */}
-                {[[2, 2, 4, 4], [7, 2, 5, 4], [2, 7, 4, 6], [7, 7, 5, 6], [17, 2, 6, 5], [25, 2, 7, 5], [17, 8, 6, 4], [25, 8, 7, 4]].map(([x, y, w, h], i) => (
-                  <rect key={`b${i}`} x={x} y={y} width={w} height={h} rx="0.5" fill="#dde4ef" stroke="none" />
-                ))}
-                {/* Labels */}
-                <text x="34" y="19" textAnchor="middle" fontSize="1.8" fill="#94a3b8" fontWeight="600">Rizal Ave</text>
-                <text x="55" y="19" textAnchor="middle" fontSize="1.8" fill="#94a3b8" fontWeight="600">Main St</text>
-                <text x="5" y="55" textAnchor="middle" fontSize="1.6" fill="#94a3b8" fontWeight="600" transform="rotate(-90,5,55)">Highway 54</text>
-                <text x="50" y="89" textAnchor="middle" fontSize="1.8" fill="#94a3b8" fontWeight="600">Quezon Blvd</text>
-                {/* Violation hotspot circles */}
-                {violationHotspots.map((h, i) => (
-                  <g key={`hs${i}`}>
-                    <circle cx={h.x} cy={h.y} r={h.radius} fill={h.color} stroke={h.border} strokeWidth="0.5" strokeDasharray="1,0.5" />
-                  </g>
-                ))}
-                {/* Camera markers */}
-                {filtered.map((cam) => {
-                  const isOnline = cam.status === 'online';
-                  const isSelected = selectedCam?.id === cam.id;
-                  return (
-                    <g key={cam.id} onClick={() => setSelectedCam(selectedCam?.id === cam.id ? null : cam)} style={{ cursor: 'pointer' }}>
-                      <circle cx={cam.x} cy={cam.y} r={isSelected ? 4.5 : 3.5}
-                        fill={isOnline ? '#22c55e' : '#94a3b8'}
-                        stroke="white" strokeWidth="1"
-                        style={{ filter: isSelected ? 'drop-shadow(0 0 3px rgba(0,0,0,0.4))' : 'none' }} />
-                      <text x={cam.x} y={cam.y + 0.6} textAnchor="middle" fontSize="2" fill="white" fontWeight="bold">📷</text>
-                      <text x={cam.x} y={cam.y - 4.5} textAnchor="middle" fontSize="1.8" fill="#1e293b" fontWeight="700">{cam.id}</text>
-                    </g>
-                  );
-                })}
-              </svg>
+              <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border overflow-hidden" style={{ height: '420px' }}>
+                <MapContainer
+                  center={[10.6970, 122.5644]}
+                  zoom={15}
+                  style={{ height: '100%', width: '100%', borderRadius: '1rem' }}
+                  scrollWheelZoom={true}
+                >
+                  <TileLayer
+                    attribution='&copy; OpenStreetMap contributors'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  />
+
+                  {/* Violation hotspot circles */}
+                  {violationHotspots.map((h, i) => (
+                    <Circle
+                      key={i}
+                      center={h.coords} // change x,y to [lat, lng]
+                      radius={h.radius * 20}
+                      pathOptions={{ color: h.border, fillColor: h.border, fillOpacity: 0.2 }}
+                    />
+                  ))}
+
+                  {/* Camera markers */}
+                  {filtered.map(cam => (
+                    <Marker
+                      key={cam.id}
+                      position={cam.coords} // change x,y to [lat, lng]
+                      eventHandlers={{ click: () => setSelectedCam(cam) }}
+                    >
+                      <Popup>{cam.id} — {cam.location}</Popup>
+                    </Marker>
+                  ))}
+                </MapContainer>
+              </div>
               {/* Legend */}
               <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur rounded-xl px-3 py-2 shadow text-xs space-y-1 border">
                 <p className="font-semibold text-slate-700 mb-1">Legend</p>
