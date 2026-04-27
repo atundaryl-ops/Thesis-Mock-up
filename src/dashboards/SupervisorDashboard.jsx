@@ -11,6 +11,13 @@ import { ViolationDetailsModal, DisputeDetailsModal, UserDetailsModal, DeviceDet
 import { sampleViolations, sampleDisputes, sampleUsers, sampleDevices, sampleDrivers } from '../data/sampleData';
 import { MapContainer, TileLayer, Circle, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+});
 
 // ─────────────────────────────────────────────────────────────
 // SUPERVISOR / ADMIN DASHBOARD
@@ -910,7 +917,7 @@ const SupervisorDashboard = ({ onLogout }) => {
           {/* SVG Map */}
           <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border overflow-hidden">
             <div className="relative">
-              <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border overflow-hidden" style={{ height: '420px' }}>
+              <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border overflow-hidden" style={{ height: '420px', width: '100%' }}>
                 <MapContainer
                   center={[10.6970, 122.5644]}
                   zoom={15}
