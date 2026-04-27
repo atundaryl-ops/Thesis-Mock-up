@@ -930,52 +930,48 @@ const SupervisorDashboard = ({ onLogout }) => {
         <div className="grid lg:grid-cols-3 gap-4">
           {/* SVG Map */}
           <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border overflow-hidden" style={{ height: '420px', width: '100%' }}>
-            <div className="relative">
-              <MapContainer
-                center={[10.6970, 122.5644]}
-                zoom={15}
-                style={{ height: '420px', width: '100%', borderRadius: '1rem' }}
-                scrollWheelZoom={true}
-              >
-                <TileLayer
-                  attribution='&copy; OpenStreetMap contributors'
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                />
+            <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border overflow-hidden" style={{ height: '420px', width: '100%', position: 'relative' }}>
+  <MapContainer
+    center={[10.6970, 122.5644]}
+    zoom={15}
+    style={{ height: '100%', width: '100%' }}
+    scrollWheelZoom={true}
+  >
+    <TileLayer
+      attribution='&copy; OpenStreetMap contributors'
+      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+    />
+    {violationHotspots.map((h, i) => (
+      <Circle
+        key={i}
+        center={h.coords}
+        radius={h.radius * 20}
+        pathOptions={{ color: h.border, fillColor: h.border, fillOpacity: 0.2 }}
+      />
+    ))}
+    {filtered.map(cam => (
+      <Marker
+        key={cam.id}
+        position={cam.coords}
+        icon={cameraIcon(cam.status === 'online')}
+        eventHandlers={{ click: () => setSelectedCam(cam) }}
+      >
+        <Popup>{cam.id} — {cam.location}</Popup>
+      </Marker>
+    ))}
+  </MapContainer>
 
-                {/* Violation hotspot circles */}
-                {violationHotspots.map((h, i) => (
-                  <Circle
-                    key={i}
-                    center={h.coords} // change x,y to [lat, lng]
-                    radius={h.radius * 20}
-                    pathOptions={{ color: h.border, fillColor: h.border, fillOpacity: 0.2 }}
-                  />
-                ))}
-
-                {/* Camera markers */}
-                {filtered.map(cam => (
-                  <Marker
-                    key={cam.id}
-                    position={cam.coords}
-                    icon={cameraIcon(cam.status === 'online')}
-                    eventHandlers={{ click: () => setSelectedCam(cam) }}
-                  >
-                    <Popup>{cam.id} — {cam.location}</Popup>
-                  </Marker>
-                ))}
-              </MapContainer>
-            </div>
-            {/* Legend */}
-            <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur rounded-xl px-3 py-2 shadow text-xs space-y-1 border">
-              <p className="font-semibold text-slate-700 mb-1">Legend</p>
-              <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>Online Camera</div>
-              <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-slate-400 inline-block"></span>Offline Camera</div>
-              <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-rose-400/40 border border-rose-400 inline-block"></span>High Violations</div>
-              <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-amber-400/30 border border-amber-400 inline-block"></span>Medium Violations</div>
-              <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-emerald-400/20 border border-emerald-400 inline-block"></span>Low Violations</div>
-            </div>
-          </div>
-
+  {/* Legend */}
+  <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur rounded-xl px-3 py-2 shadow text-xs space-y-1 border z-[1000]">
+    <p className="font-semibold text-slate-700 mb-1">Legend</p>
+    <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>Online Camera</div>
+    <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-slate-400 inline-block"></span>Offline Camera</div>
+    <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-rose-400/40 border border-rose-400 inline-block"></span>High Violations</div>
+    <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-amber-400/30 border border-amber-400 inline-block"></span>Medium Violations</div>
+    <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-emerald-400/20 border border-emerald-400 inline-block"></span>Low Violations</div>
+  </div>
+</div>
+</div>
 
           {/* Side Panel */}
           <div className="space-y-3">
