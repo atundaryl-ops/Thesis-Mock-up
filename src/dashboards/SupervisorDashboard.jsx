@@ -1044,7 +1044,6 @@ const SupervisorDashboard = ({ onLogout }) => {
 
         <div className="grid lg:grid-cols-3 gap-4">
           {/* SVG Map */}
-          <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border overflow-hidden" style={{ height: '420px', width: '100%' }}>
             <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border overflow-hidden" style={{ height: '420px', width: '100%', position: 'relative' }}>
               <MapContainer
                 center={[10.6970, 122.5644]}
@@ -1061,7 +1060,7 @@ const SupervisorDashboard = ({ onLogout }) => {
                   <Marker
                     key={cam.id}
                     position={cam.coords}
-                    icon={cameraIcon(cam.status === 'online')} z
+                    icon={cameraIcon(cam.status === 'online')}
                     eventHandlers={{ click: () => setSelectedCam(cam) }}
                   >
                     <Popup>
@@ -1081,7 +1080,7 @@ const SupervisorDashboard = ({ onLogout }) => {
                 <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-emerald-400/20 border border-emerald-400 inline-block"></span>Low Violations</div>
               </div>
             </div>
-          </div>
+          
 
           {/* Side Panel */}
           <div className="space-y-3">
