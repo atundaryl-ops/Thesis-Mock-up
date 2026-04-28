@@ -14,7 +14,7 @@ import L from 'leaflet';
 
 
 // ─────────────────────────────────────────────────────────────
-// SUPERVISOR / ADMIN DASHBOARD
+// SUPERVISOR / ADMIN DASHBOARDnpm run dev
 // ─────────────────────────────────────────────────────────────
 
 // Enforcer locations data
@@ -979,29 +979,36 @@ const SupervisorDashboard = ({ onLogout }) => {
     const [mapFilter, setMapFilter] = useState('all');
 
     // Simulated camera positions on a stylized SVG city grid
+
     const cameras = [
-      { ...sampleDevices[0], coords: [10.6970, 122.5644], violations: 312, hotspot: true },  // Iznart St & Quezon St
-      { ...sampleDevices[1], coords: [10.7020, 122.5621], violations: 198, hotspot: false }, // Jaro Plaza area
-      { ...sampleDevices[2], coords: [10.6951, 122.5698], violations: 87, hotspot: false }, // SM City Iloilo
-      { ...sampleDevices[3], coords: [10.6890, 122.5601], violations: 241, hotspot: true },  // Molo Plaza area
+      { ...sampleDevices[0], coords: [10.6972, 122.5640], violations: 312, hotspot: true, location: sampleDevices[0].location }, // Iznart & Quezon
+      { ...sampleDevices[1], coords: [10.7203, 122.5621], violations: 198, hotspot: false, location: sampleDevices[1].location }, // Jaro Church area
+      { ...sampleDevices[2], coords: [10.6917, 122.5765], violations: 87, hotspot: false, location: sampleDevices[2].location }, // SM City Iloilo
+      { ...sampleDevices[3], coords: [10.6889, 122.5536], violations: 241, hotspot: true,  location: sampleDevices[3].location }, // Molo Church — moved inland
+{ ...sampleDevices[4], coords: [10.7045, 122.5569], violations: 175, hotspot: false, location: sampleDevices[4].location }, // Mandurriao — moved inland
+      { ...sampleDevices[5], coords: [10.6955, 122.5702], violations: 290, hotspot: true, location: sampleDevices[5].location }, // Diversion Road
+      { ...sampleDevices[6], coords: [10.7089, 122.5679], violations: 134, hotspot: false, location: sampleDevices[6].location }, // Dungon area
     ];
+
 
     const violationHotspots = [
-      { coords: [10.6970, 122.5644], radius: 150, border: '#ef4444' }, // Iznart-Quezon intersection
-      { coords: [10.6890, 122.5601], radius: 120, border: '#f97316' }, // Molo
-      { coords: [10.7020, 122.5621], radius: 100, border: '#eab308' }, // Jaro
-      { coords: [10.6951, 122.5698], radius: 80, border: '#22c55e' }, // SM area
+      { coords: [10.6972, 122.5640], radius: 150, border: '#ef4444' }, // Iznart & Quezon — high
+      { coords: [10.6840, 122.5608], radius: 120, border: '#f97316' }, // Molo — high
+      { coords: [10.6955, 122.5702], radius: 130, border: '#ef4444' }, // Diversion Road — high
+      { coords: [10.7203, 122.5621], radius: 100, border: '#eab308' }, // Jaro — medium
+      { coords: [10.6917, 122.5765], radius: 80, border: '#22c55e' }, // SM — low
     ];
+  
 
-    const filtered = cameras.filter(c =>
-      mapFilter === 'all' ? true :
-        mapFilter === 'online' ? c.status === 'online' :
-          mapFilter === 'offline' ? c.status === 'offline' :
-            c.hotspot
-    );
-    const cameraIcon = (isOnline) => L.divIcon({
-      className: '',
-      html: `<div style="
+const filtered = cameras.filter(c =>
+  mapFilter === 'all' ? true :
+    mapFilter === 'online' ? c.status === 'online' :
+      mapFilter === 'offline' ? c.status === 'offline' :
+        c.hotspot
+);
+const cameraIcon = (isOnline) => L.divIcon({
+  className: '',
+  html: `<div style="
     width:34px;height:34px;
     background:${isOnline ? '#22c55e' : '#94a3b8'};
     border:3px solid white;
@@ -1010,766 +1017,766 @@ const SupervisorDashboard = ({ onLogout }) => {
     display:flex;align-items:center;justify-content:center;
     font-size:15px;
   ">📷</div>`,
-      iconSize: [34, 34],
-      iconAnchor: [17, 17],
-      popupAnchor: [0, -20],
-    });
-    return (
-      <div className="space-y-4">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-          <div>
-            <h3 className="font-semibold text-lg">Camera & Violation Map</h3>
-            <p className="text-sm text-slate-500">Live camera locations, status, and violation hotspots</p>
+  iconSize: [34, 34],
+  iconAnchor: [17, 17],
+  popupAnchor: [0, -20],
+});
+return (
+  <div className="space-y-4">
+    {/* Header */}
+    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+      <div>
+        <h3 className="font-semibold text-lg">Camera & Violation Map</h3>
+        <p className="text-sm text-slate-500">Live camera locations, status, and violation hotspots</p>
+      </div>
+      <div className="flex gap-2 flex-wrap">
+        {[
+          { id: 'all', label: 'All Cameras' },
+          { id: 'online', label: 'Online' },
+          { id: 'offline', label: 'Offline' },
+          { id: 'hotspot', label: '🔥 Hotspots' },
+        ].map(f => (
+          <button key={f.id} onClick={() => setMapFilter(f.id)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition border ${mapFilter === f.id ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+              }`}>{f.label}</button>
+        ))}
+      </div>
+    </div>
+
+    <div className="grid lg:grid-cols-3 gap-4">
+      {/* SVG Map */}
+      <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border overflow-hidden" style={{ height: '420px', width: '100%', position: 'relative' }}>
+        <MapContainer
+          center={[10.6970, 122.5644]}
+          zoom={15}
+          style={{ height: '100%', width: '100%' }}
+          scrollWheelZoom={true}
+        >
+          <TileLayer
+            attribution='&copy; OpenStreetMap contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+
+          {filtered.map(cam => (
+            <Marker
+              key={cam.id}
+              position={cam.coords}
+              icon={cameraIcon(cam.status === 'online')}
+              eventHandlers={{ click: () => setSelectedCam(cam) }}
+            >
+              <Popup>
+                <span>{cam.id} — {cam.location}</span>
+              </Popup>
+            </Marker>
+          ))}
+        </MapContainer>
+
+        {/* Legend */}
+        <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur rounded-xl px-3 py-2 shadow text-xs space-y-1 border z-[1000]">
+          <p className="font-semibold text-slate-700 mb-1">Legend</p>
+          <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>Online Camera</div>
+          <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-slate-400 inline-block"></span>Offline Camera</div>
+          <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-rose-400/40 border border-rose-400 inline-block"></span>High Violations</div>
+          <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-amber-400/30 border border-amber-400 inline-block"></span>Medium Violations</div>
+          <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-emerald-400/20 border border-emerald-400 inline-block"></span>Low Violations</div>
+        </div>
+      </div>
+
+
+      {/* Side Panel */}
+      <div className="space-y-3">
+        {selectedCam ? (
+          <div className="bg-white rounded-2xl shadow-sm border p-4 animate-scale-in">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="font-bold text-slate-800">{selectedCam.id}</h4>
+              <button onClick={() => setSelectedCam(null)} className="p-1 hover:bg-slate-100 rounded-lg"><X className="w-4 h-4 text-slate-400" /></button>
+            </div>
+            <StatusBadge status={selectedCam.status} />
+            <div className="mt-3 space-y-2 text-sm">
+              <div className="flex items-start gap-2"><MapPin className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" /><span className="text-slate-600">{selectedCam.location}</span></div>
+              <div className="flex items-center gap-2"><Activity className="w-4 h-4 text-slate-400" /><span className="text-slate-600">{selectedCam.captures?.toLocaleString()} total captures</span></div>
+              <div className="flex items-center gap-2"><Clock className="w-4 h-4 text-slate-400" /><span className="text-slate-600">Last active: {selectedCam.lastActive}</span></div>
+              <div className="flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-rose-400" /><span className="text-slate-600">{selectedCam.violations} violations recorded</span></div>
+            </div>
+            <div className={`mt-3 rounded-xl p-3 text-xs font-medium ${selectedCam.hotspot ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-slate-50 text-slate-600'}`}>
+              {selectedCam.hotspot ? '🔥 High violation hotspot area' : '✅ Normal violation rate'}
+            </div>
+            <button onClick={() => setActiveSection('devices')} className="w-full mt-3 py-2 text-xs border rounded-xl hover:bg-slate-50 text-violet-600 font-medium">
+              View in Devices →
+            </button>
           </div>
-          <div className="flex gap-2 flex-wrap">
-            {[
-              { id: 'all', label: 'All Cameras' },
-              { id: 'online', label: 'Online' },
-              { id: 'offline', label: 'Offline' },
-              { id: 'hotspot', label: '🔥 Hotspots' },
-            ].map(f => (
-              <button key={f.id} onClick={() => setMapFilter(f.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition border ${mapFilter === f.id ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
-                  }`}>{f.label}</button>
+        ) : (
+          <div className="bg-white rounded-2xl shadow-sm border p-4">
+            <p className="text-sm text-slate-500 text-center py-4">Click a camera marker on the map to see details</p>
+          </div>
+        )}
+
+        {/* Camera list */}
+        <div className="bg-white rounded-2xl shadow-sm border p-4">
+          <h4 className="font-semibold text-sm mb-3 text-slate-700">All Cameras</h4>
+          <div className="space-y-2">
+            {cameras.map(c => (
+              <button key={c.id} onClick={() => setSelectedCam(selectedCam?.id === c.id ? null : c)}
+                className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left transition border ${selectedCam?.id === c.id ? 'border-violet-400 bg-violet-50' : 'border-slate-100 hover:bg-slate-50'}`}>
+                <div className="flex items-center gap-2">
+                  <span className={`w-2.5 h-2.5 rounded-full ${c.status === 'online' ? 'bg-emerald-500' : 'bg-slate-300'}`}></span>
+                  <span className="text-sm font-medium">{c.id}</span>
+                </div>
+                <div className="text-right">
+                  <span className="text-xs text-rose-500 font-semibold">{c.violations} violations</span>
+                  {c.hotspot && <span className="ml-1 text-xs">🔥</span>}
+                </div>
+              </button>
             ))}
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-4">
-          {/* SVG Map */}
-            <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border overflow-hidden" style={{ height: '420px', width: '100%', position: 'relative' }}>
-              <MapContainer
-                center={[10.6970, 122.5644]}
-                zoom={15}
-                style={{ height: '100%', width: '100%' }}
-                scrollWheelZoom={true}
-              >
-                <TileLayer
-                  attribution='&copy; OpenStreetMap contributors'
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                />
-
-                {filtered.map(cam => (
-                  <Marker
-                    key={cam.id}
-                    position={cam.coords}
-                    icon={cameraIcon(cam.status === 'online')}
-                    eventHandlers={{ click: () => setSelectedCam(cam) }}
-                  >
-                    <Popup>
-                      <span>{cam.id} — {cam.location}</span>
-                    </Popup>
-                  </Marker>
-                ))}
-              </MapContainer>
-
-              {/* Legend */}
-              <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur rounded-xl px-3 py-2 shadow text-xs space-y-1 border z-[1000]">
-                <p className="font-semibold text-slate-700 mb-1">Legend</p>
-                <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>Online Camera</div>
-                <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-slate-400 inline-block"></span>Offline Camera</div>
-                <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-rose-400/40 border border-rose-400 inline-block"></span>High Violations</div>
-                <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-amber-400/30 border border-amber-400 inline-block"></span>Medium Violations</div>
-                <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-emerald-400/20 border border-emerald-400 inline-block"></span>Low Violations</div>
+        {/* Hotspot summary */}
+        <div className="bg-gradient-to-br from-rose-50 to-orange-50 rounded-2xl border border-rose-200 p-4">
+          <h4 className="font-semibold text-sm text-rose-700 mb-2 flex items-center gap-2"><AlertTriangle className="w-4 h-4" />Violation Summary</h4>
+          <div className="space-y-1.5 text-xs">
+            {[['Running Red Light', '35%', 'rose'], ['Over Speeding', '28%', 'orange'], ['Illegal Parking', '22%', 'amber'], ['No Helmet', '15%', 'yellow']].map(([type, pct, color]) => (
+              <div key={type} className="flex justify-between items-center">
+                <span className="text-slate-600">{type}</span>
+                <span className={`font-bold text-${color}-600`}>{pct}</span>
               </div>
-            </div>
-          
-
-          {/* Side Panel */}
-          <div className="space-y-3">
-            {selectedCam ? (
-              <div className="bg-white rounded-2xl shadow-sm border p-4 animate-scale-in">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-bold text-slate-800">{selectedCam.id}</h4>
-                  <button onClick={() => setSelectedCam(null)} className="p-1 hover:bg-slate-100 rounded-lg"><X className="w-4 h-4 text-slate-400" /></button>
-                </div>
-                <StatusBadge status={selectedCam.status} />
-                <div className="mt-3 space-y-2 text-sm">
-                  <div className="flex items-start gap-2"><MapPin className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" /><span className="text-slate-600">{selectedCam.location}</span></div>
-                  <div className="flex items-center gap-2"><Activity className="w-4 h-4 text-slate-400" /><span className="text-slate-600">{selectedCam.captures?.toLocaleString()} total captures</span></div>
-                  <div className="flex items-center gap-2"><Clock className="w-4 h-4 text-slate-400" /><span className="text-slate-600">Last active: {selectedCam.lastActive}</span></div>
-                  <div className="flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-rose-400" /><span className="text-slate-600">{selectedCam.violations} violations recorded</span></div>
-                </div>
-                <div className={`mt-3 rounded-xl p-3 text-xs font-medium ${selectedCam.hotspot ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-slate-50 text-slate-600'}`}>
-                  {selectedCam.hotspot ? '🔥 High violation hotspot area' : '✅ Normal violation rate'}
-                </div>
-                <button onClick={() => setActiveSection('devices')} className="w-full mt-3 py-2 text-xs border rounded-xl hover:bg-slate-50 text-violet-600 font-medium">
-                  View in Devices →
-                </button>
-              </div>
-            ) : (
-              <div className="bg-white rounded-2xl shadow-sm border p-4">
-                <p className="text-sm text-slate-500 text-center py-4">Click a camera marker on the map to see details</p>
-              </div>
-            )}
-
-            {/* Camera list */}
-            <div className="bg-white rounded-2xl shadow-sm border p-4">
-              <h4 className="font-semibold text-sm mb-3 text-slate-700">All Cameras</h4>
-              <div className="space-y-2">
-                {cameras.map(c => (
-                  <button key={c.id} onClick={() => setSelectedCam(selectedCam?.id === c.id ? null : c)}
-                    className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left transition border ${selectedCam?.id === c.id ? 'border-violet-400 bg-violet-50' : 'border-slate-100 hover:bg-slate-50'}`}>
-                    <div className="flex items-center gap-2">
-                      <span className={`w-2.5 h-2.5 rounded-full ${c.status === 'online' ? 'bg-emerald-500' : 'bg-slate-300'}`}></span>
-                      <span className="text-sm font-medium">{c.id}</span>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-xs text-rose-500 font-semibold">{c.violations} violations</span>
-                      {c.hotspot && <span className="ml-1 text-xs">🔥</span>}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Hotspot summary */}
-            <div className="bg-gradient-to-br from-rose-50 to-orange-50 rounded-2xl border border-rose-200 p-4">
-              <h4 className="font-semibold text-sm text-rose-700 mb-2 flex items-center gap-2"><AlertTriangle className="w-4 h-4" />Violation Summary</h4>
-              <div className="space-y-1.5 text-xs">
-                {[['Running Red Light', '35%', 'rose'], ['Over Speeding', '28%', 'orange'], ['Illegal Parking', '22%', 'amber'], ['No Helmet', '15%', 'yellow']].map(([type, pct, color]) => (
-                  <div key={type} className="flex justify-between items-center">
-                    <span className="text-slate-600">{type}</span>
-                    <span className={`font-bold text-${color}-600`}>{pct}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </div>
-    );
+    </div>
+  </div>
+);
   };
 
-  // ── REPORT PREVIEW MODAL ──────────────────────────────────────
-  const ReportPreviewModal = ({ report, period, onClose }) => {
-    const [printing, setPrinting] = useState(false);
-    const today = new Date().toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' });
+// ── REPORT PREVIEW MODAL ──────────────────────────────────────
+const ReportPreviewModal = ({ report, period, onClose }) => {
+  const [printing, setPrinting] = useState(false);
+  const today = new Date().toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' });
 
-    const handlePrint = () => {
-      setPrinting(true);
-      setTimeout(() => { setPrinting(false); setToast({ message: `${report.title} printed successfully!`, type: 'success' }); onClose(); }, 1800);
-    };
+  const handlePrint = () => {
+    setPrinting(true);
+    setTimeout(() => { setPrinting(false); setToast({ message: `${report.title} printed successfully!`, type: 'success' }); onClose(); }, 1800);
+  };
 
-    // ── VIOLATIONS REPORT content ──
-    const ViolationsReportBody = () => {
-      const rows = sampleViolations.slice(0, 8);
-      const totalFines = rows.reduce((a, b) => a + b.fine, 0);
-      const paidCount = rows.filter(v => v.status === 'paid').length;
-      const unpaidCount = rows.filter(v => v.status === 'unpaid').length;
-      const disputedCount = rows.filter(v => v.status === 'disputed').length;
-      return (
-        <>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {[
-              { label: 'Total Violations', value: rows.length, color: 'violet' },
-              { label: 'Paid', value: paidCount, color: 'emerald' },
-              { label: 'Unpaid', value: unpaidCount, color: 'rose' },
-              { label: 'Disputed', value: disputedCount, color: 'amber' },
-            ].map(s => (
-              <div key={s.label} className={`bg-${s.color}-50 border border-${s.color}-200 rounded-xl p-3 text-center`}>
-                <p className={`text-xl font-bold text-${s.color}-700`}>{s.value}</p>
-                <p className={`text-xs text-${s.color}-500`}>{s.label}</p>
+  // ── VIOLATIONS REPORT content ──
+  const ViolationsReportBody = () => {
+    const rows = sampleViolations.slice(0, 8);
+    const totalFines = rows.reduce((a, b) => a + b.fine, 0);
+    const paidCount = rows.filter(v => v.status === 'paid').length;
+    const unpaidCount = rows.filter(v => v.status === 'unpaid').length;
+    const disputedCount = rows.filter(v => v.status === 'disputed').length;
+    return (
+      <>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[
+            { label: 'Total Violations', value: rows.length, color: 'violet' },
+            { label: 'Paid', value: paidCount, color: 'emerald' },
+            { label: 'Unpaid', value: unpaidCount, color: 'rose' },
+            { label: 'Disputed', value: disputedCount, color: 'amber' },
+          ].map(s => (
+            <div key={s.label} className={`bg-${s.color}-50 border border-${s.color}-200 rounded-xl p-3 text-center`}>
+              <p className={`text-xl font-bold text-${s.color}-700`}>{s.value}</p>
+              <p className={`text-xs text-${s.color}-500`}>{s.label}</p>
+            </div>
+          ))}
+        </div>
+        <div className="bg-slate-50 rounded-xl p-4 border">
+          <h4 className="font-semibold text-sm mb-3 text-slate-700">Violations by Type</h4>
+          <div className="space-y-2">
+            {[['Running Red Light', 35, 'rose'], ['Over Speeding', 28, 'amber'], ['Illegal Parking', 22, 'blue'], ['No Helmet', 15, 'violet']].map(([type, pct, color]) => (
+              <div key={type} className="flex items-center gap-3">
+                <span className="text-xs text-slate-600 w-36 shrink-0">{type}</span>
+                <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
+                  <div className={`h-full bg-${color}-500 rounded-full`} style={{ width: `${pct}%` }}></div>
+                </div>
+                <span className="text-xs font-semibold text-slate-600 w-8">{pct}%</span>
               </div>
             ))}
           </div>
-          <div className="bg-slate-50 rounded-xl p-4 border">
-            <h4 className="font-semibold text-sm mb-3 text-slate-700">Violations by Type</h4>
-            <div className="space-y-2">
-              {[['Running Red Light', 35, 'rose'], ['Over Speeding', 28, 'amber'], ['Illegal Parking', 22, 'blue'], ['No Helmet', 15, 'violet']].map(([type, pct, color]) => (
-                <div key={type} className="flex items-center gap-3">
-                  <span className="text-xs text-slate-600 w-36 shrink-0">{type}</span>
-                  <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
-                    <div className={`h-full bg-${color}-500 rounded-full`} style={{ width: `${pct}%` }}></div>
+        </div>
+        <div>
+          <h4 className="font-semibold text-sm mb-2 text-slate-700">Violation Records</h4>
+          <div className="overflow-x-auto border rounded-xl">
+            <table className="w-full text-xs">
+              <thead className="bg-slate-50 border-b">
+                <tr>{['ID', 'Type', 'Plate', 'Driver', 'Date', 'Fine', 'Status'].map(h => (
+                  <th key={h} className="px-3 py-2 text-left font-semibold text-slate-600">{h}</th>
+                ))}</tr>
+              </thead>
+              <tbody className="divide-y">
+                {rows.map(v => (
+                  <tr key={v.id} className="hover:bg-slate-50">
+                    <td className="px-3 py-2 font-mono text-slate-500">{v.id}</td>
+                    <td className="px-3 py-2">{v.image} {v.type}</td>
+                    <td className="px-3 py-2 font-medium">{v.plate}</td>
+                    <td className="px-3 py-2">{v.driver}</td>
+                    <td className="px-3 py-2 text-slate-500">{v.date}</td>
+                    <td className="px-3 py-2 font-medium">₱{v.fine.toLocaleString()}</td>
+                    <td className="px-3 py-2"><StatusBadge status={v.status} /></td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot className="bg-slate-50 border-t">
+                <tr>
+                  <td colSpan="5" className="px-3 py-2 text-right font-semibold text-slate-600">Total Fines:</td>
+                  <td className="px-3 py-2 font-bold text-violet-700">₱{totalFines.toLocaleString()}</td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </>
+    );
+  };
+
+  // ── ENFORCER PERFORMANCE content ──
+  const EnforcerPerformanceBody = () => {
+    const enforcers = sampleUsers.filter(u => u.role === 'enforcer');
+    const topEnforcer = [...enforcers].sort((a, b) => b.apprehensions - a.apprehensions)[0];
+    const totalApprehensions = enforcers.reduce((a, b) => a + (b.apprehensions || 0), 0);
+    return (
+      <>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          {[
+            { label: 'Total Enforcers', value: enforcers.length, color: 'blue' },
+            { label: 'Total Apprehensions', value: totalApprehensions.toLocaleString(), color: 'violet' },
+            { label: 'Avg per Enforcer', value: Math.round(totalApprehensions / enforcers.length).toLocaleString(), color: 'emerald' },
+          ].map(s => (
+            <div key={s.label} className={`bg-${s.color}-50 border border-${s.color}-200 rounded-xl p-3 text-center`}>
+              <p className={`text-xl font-bold text-${s.color}-700`}>{s.value}</p>
+              <p className={`text-xs text-${s.color}-500`}>{s.label}</p>
+            </div>
+          ))}
+        </div>
+        {topEnforcer && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center gap-4">
+            <div className="w-12 h-12 bg-amber-200 rounded-full flex items-center justify-center shrink-0">
+              <span className="font-bold text-amber-700 text-lg">{topEnforcer.name.charAt(0)}</span>
+            </div>
+            <div>
+              <p className="text-xs text-amber-600 font-semibold uppercase tracking-wide">Top Performer</p>
+              <p className="font-bold text-amber-800">{topEnforcer.name}</p>
+              <p className="text-xs text-amber-600">{topEnforcer.badge} · {topEnforcer.station} · {topEnforcer.apprehensions} apprehensions</p>
+            </div>
+          </div>
+        )}
+        <div className="bg-slate-50 rounded-xl p-4 border">
+          <h4 className="font-semibold text-sm mb-3 text-slate-700">Apprehensions per Enforcer</h4>
+          <div className="space-y-3">
+            {enforcers.map(e => {
+              const pct = Math.round(((e.apprehensions || 0) / (topEnforcer?.apprehensions || 1)) * 100);
+              return (
+                <div key={e.id} className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
+                    <span className="text-xs font-bold text-blue-600">{e.name.charAt(0)}</span>
                   </div>
-                  <span className="text-xs font-semibold text-slate-600 w-8">{pct}%</span>
+                  <div className="flex-1">
+                    <div className="flex justify-between text-xs mb-1">
+                      <span className="font-medium">{e.name} <span className="text-slate-400">({e.badge})</span></span>
+                      <span className="font-semibold text-blue-600">{e.apprehensions || 0}</span>
+                    </div>
+                    <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+                      <div className="h-full bg-blue-500 rounded-full" style={{ width: `${pct}%` }}></div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        <div>
+          <h4 className="font-semibold text-sm mb-2 text-slate-700">Enforcer Details</h4>
+          <div className="overflow-x-auto border rounded-xl">
+            <table className="w-full text-xs">
+              <thead className="bg-slate-50 border-b">
+                <tr>{['Name', 'Badge', 'Station', 'Apprehensions', 'Status'].map(h => (
+                  <th key={h} className="px-3 py-2 text-left font-semibold text-slate-600">{h}</th>
+                ))}</tr>
+              </thead>
+              <tbody className="divide-y">
+                {enforcers.map(e => (
+                  <tr key={e.id} className="hover:bg-slate-50">
+                    <td className="px-3 py-2 font-medium">{e.name}</td>
+                    <td className="px-3 py-2 font-mono text-slate-500">{e.badge}</td>
+                    <td className="px-3 py-2">{e.station}</td>
+                    <td className="px-3 py-2 text-center font-bold text-blue-600">{e.apprehensions || 0}</td>
+                    <td className="px-3 py-2"><StatusBadge status={e.status} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </>
+    );
+  };
+
+  // ── FINANCIAL SUMMARY content ──
+  const FinancialSummaryBody = () => {
+    const paid = sampleViolations.filter(v => v.status === 'paid');
+    const unpaid = sampleViolations.filter(v => v.status === 'unpaid');
+    const disputed = sampleViolations.filter(v => v.status === 'disputed');
+    const totalCollected = paid.reduce((a, b) => a + (b.paidAmount || b.fine), 0);
+    const totalPending = unpaid.reduce((a, b) => a + b.fine, 0);
+    const totalDisputed = disputed.reduce((a, b) => a + b.fine, 0);
+    const collectionRate = Math.round((paid.length / sampleViolations.length) * 100);
+    const byMethod = paid.reduce((acc, v) => {
+      const m = v.paymentMethod || 'Cash'; acc[m] = (acc[m] || 0) + (v.paidAmount || v.fine); return acc;
+    }, {});
+    return (
+      <>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[
+            { label: 'Total Collected', value: `₱${totalCollected.toLocaleString()}`, color: 'emerald' },
+            { label: 'Pending Collection', value: `₱${totalPending.toLocaleString()}`, color: 'rose' },
+            { label: 'Under Dispute', value: `₱${totalDisputed.toLocaleString()}`, color: 'amber' },
+            { label: 'Collection Rate', value: `${collectionRate}%`, color: 'blue' },
+          ].map(s => (
+            <div key={s.label} className={`bg-${s.color}-50 border border-${s.color}-200 rounded-xl p-3 text-center`}>
+              <p className={`text-lg font-bold text-${s.color}-700`}>{s.value}</p>
+              <p className={`text-xs text-${s.color}-500`}>{s.label}</p>
+            </div>
+          ))}
+        </div>
+        <div className="bg-slate-50 rounded-xl p-4 border">
+          <h4 className="font-semibold text-sm mb-3 text-slate-700">Revenue Breakdown</h4>
+          <div className="space-y-2">
+            {[
+              { label: 'Collected', amount: totalCollected, total: totalCollected + totalPending + totalDisputed, color: 'emerald' },
+              { label: 'Pending', amount: totalPending, total: totalCollected + totalPending + totalDisputed, color: 'rose' },
+              { label: 'Disputed', amount: totalDisputed, total: totalCollected + totalPending + totalDisputed, color: 'amber' },
+            ].map(item => {
+              const pct = Math.round((item.amount / item.total) * 100) || 0;
+              return (
+                <div key={item.label} className="flex items-center gap-3">
+                  <span className="text-xs text-slate-600 w-20 shrink-0">{item.label}</span>
+                  <div className="flex-1 h-3 bg-slate-200 rounded-full overflow-hidden">
+                    <div className={`h-full bg-${item.color}-500 rounded-full`} style={{ width: `${pct}%` }}></div>
+                  </div>
+                  <span className="text-xs font-semibold text-slate-600 w-28 text-right">₱{item.amount.toLocaleString()} ({pct}%)</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        {Object.keys(byMethod).length > 0 && (
+          <div className="bg-slate-50 rounded-xl p-4 border">
+            <h4 className="font-semibold text-sm mb-3 text-slate-700">Payment Methods</h4>
+            <div className="space-y-2">
+              {Object.entries(byMethod).map(([method, amount]) => (
+                <div key={method} className="flex items-center justify-between p-2 bg-white rounded-lg border">
+                  <span className="text-xs font-medium text-slate-700">{method}</span>
+                  <span className="text-xs font-bold text-emerald-600">₱{amount.toLocaleString()}</span>
                 </div>
               ))}
             </div>
           </div>
-          <div>
-            <h4 className="font-semibold text-sm mb-2 text-slate-700">Violation Records</h4>
-            <div className="overflow-x-auto border rounded-xl">
-              <table className="w-full text-xs">
-                <thead className="bg-slate-50 border-b">
-                  <tr>{['ID', 'Type', 'Plate', 'Driver', 'Date', 'Fine', 'Status'].map(h => (
-                    <th key={h} className="px-3 py-2 text-left font-semibold text-slate-600">{h}</th>
-                  ))}</tr>
-                </thead>
-                <tbody className="divide-y">
-                  {rows.map(v => (
-                    <tr key={v.id} className="hover:bg-slate-50">
-                      <td className="px-3 py-2 font-mono text-slate-500">{v.id}</td>
-                      <td className="px-3 py-2">{v.image} {v.type}</td>
-                      <td className="px-3 py-2 font-medium">{v.plate}</td>
-                      <td className="px-3 py-2">{v.driver}</td>
-                      <td className="px-3 py-2 text-slate-500">{v.date}</td>
-                      <td className="px-3 py-2 font-medium">₱{v.fine.toLocaleString()}</td>
-                      <td className="px-3 py-2"><StatusBadge status={v.status} /></td>
-                    </tr>
-                  ))}
-                </tbody>
-                <tfoot className="bg-slate-50 border-t">
-                  <tr>
-                    <td colSpan="5" className="px-3 py-2 text-right font-semibold text-slate-600">Total Fines:</td>
-                    <td className="px-3 py-2 font-bold text-violet-700">₱{totalFines.toLocaleString()}</td>
-                    <td></td>
+        )}
+        <div>
+          <h4 className="font-semibold text-sm mb-2 text-slate-700">Paid Violations</h4>
+          <div className="overflow-x-auto border rounded-xl">
+            <table className="w-full text-xs">
+              <thead className="bg-slate-50 border-b">
+                <tr>{['ID', 'Type', 'Driver', 'Fine', 'Paid Date', 'Method'].map(h => (
+                  <th key={h} className="px-3 py-2 text-left font-semibold text-slate-600">{h}</th>
+                ))}</tr>
+              </thead>
+              <tbody className="divide-y">
+                {paid.map(v => (
+                  <tr key={v.id} className="hover:bg-slate-50">
+                    <td className="px-3 py-2 font-mono text-slate-500">{v.id}</td>
+                    <td className="px-3 py-2">{v.type}</td>
+                    <td className="px-3 py-2 font-medium">{v.driver}</td>
+                    <td className="px-3 py-2 font-bold text-emerald-600">₱{(v.paidAmount || v.fine).toLocaleString()}</td>
+                    <td className="px-3 py-2 text-slate-500">{v.paidDate || '—'}</td>
+                    <td className="px-3 py-2">{v.paymentMethod || 'Cash'}</td>
                   </tr>
-                </tfoot>
-              </table>
-            </div>
-          </div>
-        </>
-      );
-    };
-
-    // ── ENFORCER PERFORMANCE content ──
-    const EnforcerPerformanceBody = () => {
-      const enforcers = sampleUsers.filter(u => u.role === 'enforcer');
-      const topEnforcer = [...enforcers].sort((a, b) => b.apprehensions - a.apprehensions)[0];
-      const totalApprehensions = enforcers.reduce((a, b) => a + (b.apprehensions || 0), 0);
-      return (
-        <>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {[
-              { label: 'Total Enforcers', value: enforcers.length, color: 'blue' },
-              { label: 'Total Apprehensions', value: totalApprehensions.toLocaleString(), color: 'violet' },
-              { label: 'Avg per Enforcer', value: Math.round(totalApprehensions / enforcers.length).toLocaleString(), color: 'emerald' },
-            ].map(s => (
-              <div key={s.label} className={`bg-${s.color}-50 border border-${s.color}-200 rounded-xl p-3 text-center`}>
-                <p className={`text-xl font-bold text-${s.color}-700`}>{s.value}</p>
-                <p className={`text-xs text-${s.color}-500`}>{s.label}</p>
-              </div>
-            ))}
-          </div>
-          {topEnforcer && (
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center gap-4">
-              <div className="w-12 h-12 bg-amber-200 rounded-full flex items-center justify-center shrink-0">
-                <span className="font-bold text-amber-700 text-lg">{topEnforcer.name.charAt(0)}</span>
-              </div>
-              <div>
-                <p className="text-xs text-amber-600 font-semibold uppercase tracking-wide">Top Performer</p>
-                <p className="font-bold text-amber-800">{topEnforcer.name}</p>
-                <p className="text-xs text-amber-600">{topEnforcer.badge} · {topEnforcer.station} · {topEnforcer.apprehensions} apprehensions</p>
-              </div>
-            </div>
-          )}
-          <div className="bg-slate-50 rounded-xl p-4 border">
-            <h4 className="font-semibold text-sm mb-3 text-slate-700">Apprehensions per Enforcer</h4>
-            <div className="space-y-3">
-              {enforcers.map(e => {
-                const pct = Math.round(((e.apprehensions || 0) / (topEnforcer?.apprehensions || 1)) * 100);
-                return (
-                  <div key={e.id} className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
-                      <span className="text-xs font-bold text-blue-600">{e.name.charAt(0)}</span>
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex justify-between text-xs mb-1">
-                        <span className="font-medium">{e.name} <span className="text-slate-400">({e.badge})</span></span>
-                        <span className="font-semibold text-blue-600">{e.apprehensions || 0}</span>
-                      </div>
-                      <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
-                        <div className="h-full bg-blue-500 rounded-full" style={{ width: `${pct}%` }}></div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-          <div>
-            <h4 className="font-semibold text-sm mb-2 text-slate-700">Enforcer Details</h4>
-            <div className="overflow-x-auto border rounded-xl">
-              <table className="w-full text-xs">
-                <thead className="bg-slate-50 border-b">
-                  <tr>{['Name', 'Badge', 'Station', 'Apprehensions', 'Status'].map(h => (
-                    <th key={h} className="px-3 py-2 text-left font-semibold text-slate-600">{h}</th>
-                  ))}</tr>
-                </thead>
-                <tbody className="divide-y">
-                  {enforcers.map(e => (
-                    <tr key={e.id} className="hover:bg-slate-50">
-                      <td className="px-3 py-2 font-medium">{e.name}</td>
-                      <td className="px-3 py-2 font-mono text-slate-500">{e.badge}</td>
-                      <td className="px-3 py-2">{e.station}</td>
-                      <td className="px-3 py-2 text-center font-bold text-blue-600">{e.apprehensions || 0}</td>
-                      <td className="px-3 py-2"><StatusBadge status={e.status} /></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </>
-      );
-    };
-
-    // ── FINANCIAL SUMMARY content ──
-    const FinancialSummaryBody = () => {
-      const paid = sampleViolations.filter(v => v.status === 'paid');
-      const unpaid = sampleViolations.filter(v => v.status === 'unpaid');
-      const disputed = sampleViolations.filter(v => v.status === 'disputed');
-      const totalCollected = paid.reduce((a, b) => a + (b.paidAmount || b.fine), 0);
-      const totalPending = unpaid.reduce((a, b) => a + b.fine, 0);
-      const totalDisputed = disputed.reduce((a, b) => a + b.fine, 0);
-      const collectionRate = Math.round((paid.length / sampleViolations.length) * 100);
-      const byMethod = paid.reduce((acc, v) => {
-        const m = v.paymentMethod || 'Cash'; acc[m] = (acc[m] || 0) + (v.paidAmount || v.fine); return acc;
-      }, {});
-      return (
-        <>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {[
-              { label: 'Total Collected', value: `₱${totalCollected.toLocaleString()}`, color: 'emerald' },
-              { label: 'Pending Collection', value: `₱${totalPending.toLocaleString()}`, color: 'rose' },
-              { label: 'Under Dispute', value: `₱${totalDisputed.toLocaleString()}`, color: 'amber' },
-              { label: 'Collection Rate', value: `${collectionRate}%`, color: 'blue' },
-            ].map(s => (
-              <div key={s.label} className={`bg-${s.color}-50 border border-${s.color}-200 rounded-xl p-3 text-center`}>
-                <p className={`text-lg font-bold text-${s.color}-700`}>{s.value}</p>
-                <p className={`text-xs text-${s.color}-500`}>{s.label}</p>
-              </div>
-            ))}
-          </div>
-          <div className="bg-slate-50 rounded-xl p-4 border">
-            <h4 className="font-semibold text-sm mb-3 text-slate-700">Revenue Breakdown</h4>
-            <div className="space-y-2">
-              {[
-                { label: 'Collected', amount: totalCollected, total: totalCollected + totalPending + totalDisputed, color: 'emerald' },
-                { label: 'Pending', amount: totalPending, total: totalCollected + totalPending + totalDisputed, color: 'rose' },
-                { label: 'Disputed', amount: totalDisputed, total: totalCollected + totalPending + totalDisputed, color: 'amber' },
-              ].map(item => {
-                const pct = Math.round((item.amount / item.total) * 100) || 0;
-                return (
-                  <div key={item.label} className="flex items-center gap-3">
-                    <span className="text-xs text-slate-600 w-20 shrink-0">{item.label}</span>
-                    <div className="flex-1 h-3 bg-slate-200 rounded-full overflow-hidden">
-                      <div className={`h-full bg-${item.color}-500 rounded-full`} style={{ width: `${pct}%` }}></div>
-                    </div>
-                    <span className="text-xs font-semibold text-slate-600 w-28 text-right">₱{item.amount.toLocaleString()} ({pct}%)</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-          {Object.keys(byMethod).length > 0 && (
-            <div className="bg-slate-50 rounded-xl p-4 border">
-              <h4 className="font-semibold text-sm mb-3 text-slate-700">Payment Methods</h4>
-              <div className="space-y-2">
-                {Object.entries(byMethod).map(([method, amount]) => (
-                  <div key={method} className="flex items-center justify-between p-2 bg-white rounded-lg border">
-                    <span className="text-xs font-medium text-slate-700">{method}</span>
-                    <span className="text-xs font-bold text-emerald-600">₱{amount.toLocaleString()}</span>
-                  </div>
                 ))}
-              </div>
-            </div>
-          )}
-          <div>
-            <h4 className="font-semibold text-sm mb-2 text-slate-700">Paid Violations</h4>
-            <div className="overflow-x-auto border rounded-xl">
-              <table className="w-full text-xs">
-                <thead className="bg-slate-50 border-b">
-                  <tr>{['ID', 'Type', 'Driver', 'Fine', 'Paid Date', 'Method'].map(h => (
-                    <th key={h} className="px-3 py-2 text-left font-semibold text-slate-600">{h}</th>
-                  ))}</tr>
-                </thead>
-                <tbody className="divide-y">
-                  {paid.map(v => (
-                    <tr key={v.id} className="hover:bg-slate-50">
-                      <td className="px-3 py-2 font-mono text-slate-500">{v.id}</td>
-                      <td className="px-3 py-2">{v.type}</td>
-                      <td className="px-3 py-2 font-medium">{v.driver}</td>
-                      <td className="px-3 py-2 font-bold text-emerald-600">₱{(v.paidAmount || v.fine).toLocaleString()}</td>
-                      <td className="px-3 py-2 text-slate-500">{v.paidDate || '—'}</td>
-                      <td className="px-3 py-2">{v.paymentMethod || 'Cash'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-                <tfoot className="bg-slate-50 border-t">
-                  <tr>
-                    <td colSpan="3" className="px-3 py-2 text-right font-semibold text-slate-600">Total Collected:</td>
-                    <td className="px-3 py-2 font-bold text-emerald-700">₱{totalCollected.toLocaleString()}</td>
-                    <td colSpan="2"></td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-          </div>
-        </>
-      );
-    };
-
-    const bodyMap = {
-      'Violations Report': <ViolationsReportBody />,
-      'Enforcer Performance': <EnforcerPerformanceBody />,
-
-    };
-
-    return (
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
-        <div className="bg-white rounded-2xl w-full max-w-3xl shadow-2xl animate-scale-in my-4">
-          {/* Modal Header */}
-          <div className="flex items-center justify-between p-4 border-b bg-slate-50 rounded-t-2xl">
-            <div className="flex items-center gap-3">
-              <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-lg flex items-center gap-1 text-sm text-slate-600 font-medium">
-                <ChevronLeft className="w-4 h-4" />Back
-              </button>
-              <h3 className="font-bold text-lg flex items-center gap-2"><FileText className="w-5 h-5 text-violet-600" />Report Preview</h3>
-            </div>
-            <button onClick={handlePrint} disabled={printing}
-              className="px-4 py-2 bg-violet-600 text-white rounded-xl text-sm font-medium hover:bg-violet-700 flex items-center gap-2">
-              {printing ? <><Loader2 className="w-4 h-4 animate-spin" />Printing...</> : <><Printer className="w-4 h-4" />Print / Export</>}
-            </button>
-          </div>
-
-          {/* Report Document */}
-          <div className="p-6 space-y-5 max-h-[75vh] overflow-y-auto">
-            {/* Letterhead */}
-            <div className="text-center border-b pb-4">
-              <div className={`w-14 h-14 ${report.bg} rounded-full flex items-center justify-center mx-auto mb-2`}>
-                <report.icon className={`w-7 h-7 ${report.color}`} />
-              </div>
-              <h1 className="text-xl font-bold text-slate-800">Smart Traffic Violation Monitoring System</h1>
-              <p className="text-sm text-slate-500">City Traffic Management Office</p>
-              <div className="mt-3 inline-block bg-violet-50 border border-violet-200 rounded-xl px-4 py-2">
-                <p className="text-sm font-bold text-violet-700">{report.title}</p>
-                <p className="text-xs text-violet-500">Period: {period} &nbsp;|&nbsp; Generated: {today}</p>
-              </div>
-            </div>
-
-            {/* Report-specific body */}
-            {bodyMap[report.title] || <p className="text-slate-500 text-sm text-center py-8">No preview available for this report type.</p>}
-
-            {/* Footer */}
-            <div className="border-t pt-4 flex items-center justify-between text-xs text-slate-400">
-              <span>STVMS — Confidential Report</span>
-              <span>Generated: {today}</span>
-            </div>
+              </tbody>
+              <tfoot className="bg-slate-50 border-t">
+                <tr>
+                  <td colSpan="3" className="px-3 py-2 text-right font-semibold text-slate-600">Total Collected:</td>
+                  <td className="px-3 py-2 font-bold text-emerald-700">₱{totalCollected.toLocaleString()}</td>
+                  <td colSpan="2"></td>
+                </tr>
+              </tfoot>
+            </table>
           </div>
         </div>
-      </div>
+      </>
     );
   };
 
-  const ReportsContent = () => {
-    const [reportPreview, setReportPreview] = useState(null);
-    const reports = [
-      { title: 'Violations Report', desc: 'Summary of all violations by type, location, and time period', icon: FileWarning, color: 'text-rose-500', bg: 'bg-rose-100' },
-      { title: 'Enforcer Performance', desc: 'Staff activity metrics and apprehension statistics', icon: UserCheck, color: 'text-blue-500', bg: 'bg-blue-100' },
-    ];
-    return (
-      <div className="space-y-4">
-        {reportPreview && (
-          <ReportPreviewModal
-            report={reportPreview.report}
-            period={reportPreview.period}
-            onClose={() => setReportPreview(null)}
-          />
-        )}
-        {loading ? (<div className="grid md:grid-cols-3 gap-4">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-40 rounded-xl" />)}</div>) : (
-          <div className="grid md:grid-cols-3 gap-4">
-            {reports.map((report) => (
-              <div key={report.title} className="bg-white rounded-xl p-6 shadow-sm border hover:shadow-md transition cursor-pointer" onClick={() => setShowReportModal(report)}>
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${report.bg} mb-3`}><report.icon className={`w-5 h-5 ${report.color}`} /></div>
-                <h3 className="font-bold mb-1">{report.title}</h3>
-                <p className="text-sm text-slate-500 mb-4">{report.desc}</p>
-                <button className="text-violet-600 text-sm flex items-center gap-1 hover:underline"><Printer className="w-4 h-4" />Generate Report</button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  };
+  const bodyMap = {
+    'Violations Report': <ViolationsReportBody />,
+    'Enforcer Performance': <EnforcerPerformanceBody />,
 
-  const SettingsContent = () => {
-    const [saving, setSaving] = useState(false);
-    const [selectedCamera, setSelectedCamera] = useState(null);
-    const [cameraSettings, setCameraSettings] = useState({});
-
-    // Initialize camera settings
-    useEffect(() => {
-      const initialSettings = {};
-      sampleDevices.forEach(device => {
-        initialSettings[device.id] = {
-          speedLimit: 60,
-          redLightGrace: 2,
-          confidenceScore: 85,
-          enabled: device.status === 'online'
-        };
-      });
-      setCameraSettings(initialSettings);
-    }, []);
-
-    const handleSave = () => {
-      setSaving(true);
-      setTimeout(() => {
-        setSaving(false);
-        setToast({ message: selectedCamera ? `Settings saved for ${selectedCamera}!` : 'Global settings saved!', type: 'success' });
-      }, 1500);
-    };
-
-    const handleCameraSettingChange = (cameraId, field, value) => {
-      setCameraSettings(prev => ({
-        ...prev,
-        [cameraId]: { ...prev[cameraId], [field]: value }
-      }));
-    };
-
-    return (
-      <div className="space-y-6">
-        {loading ? (<><Skeleton className="h-64 rounded-xl" /><Skeleton className="h-48 rounded-xl" /></>) : (
-          <>
-            {/* Camera Selection */}
-            <div className="bg-white rounded-xl p-6 shadow-sm border">
-              <h3 className="font-bold mb-4 flex items-center gap-2"><Camera className="w-5 h-5 text-violet-600" />Camera Detection Settings</h3>
-              <p className="text-sm text-slate-500 mb-4">Select a camera to configure its detection parameters, or configure global defaults.</p>
-
-              {/* Camera Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-                <button
-                  onClick={() => setSelectedCamera(null)}
-                  className={`p-4 rounded-xl border-2 transition text-left ${selectedCamera === null ? 'border-violet-500 bg-violet-50' : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'}`}
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <Settings className="w-5 h-5 text-violet-600" />
-                    <span className="font-semibold text-sm">Global Default</span>
-                  </div>
-                  <p className="text-xs text-slate-500">Apply to all cameras</p>
-                </button>
-
-                {sampleDevices.map((device) => (
-                  <button
-                    key={device.id}
-                    onClick={() => setSelectedCamera(device.id)}
-                    className={`p-4 rounded-xl border-2 transition text-left ${selectedCamera === device.id ? 'border-violet-500 bg-violet-50' : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'}`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <Camera className={`w-5 h-5 ${device.status === 'online' ? 'text-emerald-600' : 'text-slate-400'}`} />
-                        <span className="font-semibold text-sm">{device.id}</span>
-                      </div>
-                      <span className={`w-2 h-2 rounded-full ${device.status === 'online' ? 'bg-emerald-500' : 'bg-slate-300'}`}></span>
-                    </div>
-                    <p className="text-xs text-slate-500 truncate">{device.location}</p>
-                  </button>
-                ))}
-              </div>
-
-              {/* Settings Form */}
-              <div className="bg-slate-50 rounded-xl p-5 border">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    {selectedCamera ? (
-                      <>
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${sampleDevices.find(d => d.id === selectedCamera)?.status === 'online' ? 'bg-emerald-100' : 'bg-slate-200'}`}>
-                          <Camera className={`w-5 h-5 ${sampleDevices.find(d => d.id === selectedCamera)?.status === 'online' ? 'text-emerald-600' : 'text-slate-400'}`} />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold">{selectedCamera}</h4>
-                          <p className="text-xs text-slate-500">{sampleDevices.find(d => d.id === selectedCamera)?.location}</p>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="w-10 h-10 bg-violet-100 rounded-xl flex items-center justify-center">
-                          <Settings className="w-5 h-5 text-violet-600" />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold">Global Default Settings</h4>
-                          <p className="text-xs text-slate-500">Applied to all cameras without custom settings</p>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                  {selectedCamera && (
-                    <StatusBadge status={sampleDevices.find(d => d.id === selectedCamera)?.status} />
-                  )}
-                </div>
-
-                <div className="space-y-4">
-                  <div className="grid md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-slate-700 mb-1 block">Speed Limit (km/h)</label>
-                      <input
-                        type="number"
-                        value={selectedCamera ? cameraSettings[selectedCamera]?.speedLimit || 60 : 60}
-                        onChange={(e) => selectedCamera && handleCameraSettingChange(selectedCamera, 'speedLimit', parseInt(e.target.value))}
-                        className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-slate-700 mb-1 block">Red Light Grace (sec)</label>
-                      <input
-                        type="number"
-                        value={selectedCamera ? cameraSettings[selectedCamera]?.redLightGrace || 2 : 2}
-                        onChange={(e) => selectedCamera && handleCameraSettingChange(selectedCamera, 'redLightGrace', parseInt(e.target.value))}
-                        className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-slate-700 mb-1 block">Confidence Score (%)</label>
-                      <input
-                        type="number"
-                        value={selectedCamera ? cameraSettings[selectedCamera]?.confidenceScore || 85 : 85}
-                        onChange={(e) => selectedCamera && handleCameraSettingChange(selectedCamera, 'confidenceScore', parseInt(e.target.value))}
-                        className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white"
-                      />
-                    </div>
-                  </div>
-
-                  {selectedCamera && (
-                    <div className="flex items-center justify-between p-3 bg-white rounded-xl border">
-                      <div className="flex items-center gap-3">
-                        <Power className={`w-5 h-5 ${cameraSettings[selectedCamera]?.enabled ? 'text-emerald-600' : 'text-slate-400'}`} />
-                        <div>
-                          <p className="text-sm font-medium">Camera Detection</p>
-                          <p className="text-xs text-slate-500">Enable or disable violation detection for this camera</p>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => handleCameraSettingChange(selectedCamera, 'enabled', !cameraSettings[selectedCamera]?.enabled)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition ${cameraSettings[selectedCamera]?.enabled ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-                      >
-                        {cameraSettings[selectedCamera]?.enabled ? 'Enabled' : 'Disabled'}
-                      </button>
-                    </div>
-                  )}
-
-                  <div className="flex gap-3 pt-2">
-                    <button onClick={handleSave} disabled={saving} className="px-6 py-2.5 bg-violet-600 text-white rounded-xl hover:bg-violet-700 transition flex items-center gap-2">
-                      {saving ? <><Loader2 className="w-4 h-4 animate-spin" />Saving...</> : <><Save className="w-4 h-4" />Save Settings</>}
-                    </button>
-                    {selectedCamera && (
-                      <button
-                        onClick={() => {
-                          handleCameraSettingChange(selectedCamera, 'speedLimit', 60);
-                          handleCameraSettingChange(selectedCamera, 'redLightGrace', 2);
-                          handleCameraSettingChange(selectedCamera, 'confidenceScore', 85);
-                          setToast({ message: 'Reset to default values', type: 'info' });
-                        }}
-                        className="px-6 py-2.5 border rounded-xl hover:bg-white transition flex items-center gap-2"
-                      >
-                        <RotateCcw className="w-4 h-4" />Reset to Default
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Notification Settings */}
-            <div className="bg-white rounded-xl p-6 shadow-sm border max-w-2xl">
-              <h3 className="font-bold mb-4 flex items-center gap-2"><Bell className="w-5 h-5 text-violet-600" />Notification Settings</h3>
-              <div className="space-y-3">
-                {[
-                  { label: 'Email notifications for new disputes', checked: true },
-                  { label: 'SMS alerts for device offline', checked: true },
-                  { label: 'Daily summary reports', checked: false },
-                  { label: 'Payment confirmation alerts', checked: true },
-                  { label: 'Real-time violation alerts', checked: true }
-                ].map((setting) => (
-                  <label key={setting.label} className="flex items-center gap-3 cursor-pointer hover:bg-slate-50 p-2 rounded-lg -mx-2 transition">
-                    <input type="checkbox" defaultChecked={setting.checked} className="w-5 h-5 rounded border-slate-300 text-violet-600 focus:ring-violet-500" />
-                    <span className="text-sm">{setting.label}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            {/* LTO Database Integration */}
-            <div className="bg-white rounded-xl p-6 shadow-sm border max-w-2xl">
-              <h3 className="font-bold mb-1 flex items-center gap-2"><Database className="w-5 h-5 text-violet-600" />LTO Database Integration</h3>
-              <p className="text-sm text-slate-500 mb-4">Driver records are automatically synced from the Land Transportation Office (LTO) database. Manual addition of drivers is disabled.</p>
-              <div className="flex items-center gap-3 p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
-                <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center"><Database className="w-4 h-4 text-emerald-600" /></div>
-                <div>
-                  <p className="text-sm font-medium text-emerald-700">LTO Database Connected</p>
-                  <p className="text-xs text-emerald-600">Last synced: Today at 6:00 AM</p>
-                </div>
-                <button onClick={() => setToast({ message: 'Database sync triggered!', type: 'info' })} className="ml-auto text-xs text-emerald-700 border border-emerald-300 px-3 py-1 rounded-lg hover:bg-emerald-100 transition flex items-center gap-1">
-                  <RefreshCw className="w-3 h-3" />Sync Now
-                </button>
-              </div>
-            </div>
-          </>
-        )}
-      </div>
-    );
-  };
-  const renderContent = () => {
-    switch (activeSection) {
-      case 'dashboard': return <DashboardContent />;
-      case 'violations': return <ViolationsContent />;
-      case 'disputes': return <DisputesContent />;
-      case 'users': return <UsersContent />;
-      case 'devices': return <DevicesContent />;
-      case 'map': return <MapContent />;
-      case 'reports': return <ReportsContent />;
-      case 'settings': return <SettingsContent />;
-      default: return <DashboardContent />;
-    }
   };
 
   return (
-    <div className="min-h-screen bg-slate-100">
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
-      {showConfirm && <ConfirmModal {...showConfirm} onCancel={() => setShowConfirm(null)} />}
-      {showFilter && <FilterModal onClose={() => setShowFilter(false)} onApply={(f) => setToast({ message: 'Filters applied!', type: 'info' })} />}
-      {showExport && <ExportModal onClose={() => setShowExport(false)} onExport={(fmt) => setToast({ message: `Exported as ${fmt.toUpperCase()} successfully!`, type: 'success' })} />}
-      {showReportModal && <ReportModal report={showReportModal} onClose={() => setShowReportModal(null)} onGenerate={(title, period) => { setShowReportModal(null); setShowReportPreview({ report: showReportModal, period }); }} />}
-      {showReportPreview && <ReportPreviewModal report={showReportPreview.report} period={showReportPreview.period} onClose={() => setShowReportPreview(null)} />}
-      {showNotif && <NotificationPanel onClose={() => setShowNotif(false)} />}
-      {showViolationDetails && selectedViolation && (
-        <ViolationDetailsModal violation={selectedViolation} userType="supervisor" onClose={() => setShowViolationDetails(false)}
-          onApprove={() => { setShowViolationDetails(false); setToast({ message: 'Violation approved!', type: 'success' }); }}
-          onReject={() => { setShowViolationDetails(false); setToast({ message: 'Violation rejected.', type: 'warning' }); }} />
-      )}
-      {showDisputeDetails && selectedDispute && (
-        <DisputeDetailsModal dispute={selectedDispute} userType="supervisor" onClose={() => setShowDisputeDetails(false)}
-          onApprove={() => { setShowDisputeDetails(false); setToast({ message: 'Dispute approved!', type: 'success' }); }}
-          onReject={() => { setShowDisputeDetails(false); setToast({ message: 'Dispute rejected.', type: 'warning' }); }} />
-      )}
-      {showUserDetails && selectedUser && (
-        <UserDetailsModal user={selectedUser} onClose={() => setShowUserDetails(false)}
-          onSuspend={(u) => { setShowUserDetails(false); setShowConfirm({ title: 'Suspend Account', message: `Suspend ${u.name}'s account? They will lose access to the portal.`, confirmText: 'Suspend', confirmColor: 'bg-rose-500 hover:bg-rose-600', onConfirm: () => { setShowConfirm(null); setToast({ message: `${u.name}'s account suspended.`, type: 'warning' }); } }); }}
-          onActivate={(u) => { setShowUserDetails(false); setShowConfirm({ title: 'Reactivate Account', message: `Reactivate ${u.name}'s account?`, confirmText: 'Reactivate', onConfirm: () => { setShowConfirm(null); setToast({ message: `${u.name}'s account reactivated.`, type: 'success' }); } }); }} />
-      )}
-      {showDeviceDetails && selectedDevice && (
-        <DeviceDetailsModal device={selectedDevice} onClose={() => setShowDeviceDetails(false)}
-          onDiagnostic={(d) => setToast({ message: `${d.id} diagnostic complete — all systems normal.`, type: 'info' })}
-          onRestart={(d) => setToast({ message: `${d.id} restarted successfully!`, type: 'success' })} />
-      )}
-      <Sidebar />
-      {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)}></div>}
-      <div className="lg:pl-64">
-        <header className="bg-white border-b sticky top-0 z-30">
-          <div className="flex items-center justify-between px-4 py-3">
-            <div className="flex items-center gap-3">
-              <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 hover:bg-slate-100 rounded-lg transition"><Menu className="w-5 h-5" /></button>
-              <h2 className="font-bold text-lg capitalize">{activeSection}</h2>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+      <div className="bg-white rounded-2xl w-full max-w-3xl shadow-2xl animate-scale-in my-4">
+        {/* Modal Header */}
+        <div className="flex items-center justify-between p-4 border-b bg-slate-50 rounded-t-2xl">
+          <div className="flex items-center gap-3">
+            <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-lg flex items-center gap-1 text-sm text-slate-600 font-medium">
+              <ChevronLeft className="w-4 h-4" />Back
+            </button>
+            <h3 className="font-bold text-lg flex items-center gap-2"><FileText className="w-5 h-5 text-violet-600" />Report Preview</h3>
+          </div>
+          <button onClick={handlePrint} disabled={printing}
+            className="px-4 py-2 bg-violet-600 text-white rounded-xl text-sm font-medium hover:bg-violet-700 flex items-center gap-2">
+            {printing ? <><Loader2 className="w-4 h-4 animate-spin" />Printing...</> : <><Printer className="w-4 h-4" />Print / Export</>}
+          </button>
+        </div>
+
+        {/* Report Document */}
+        <div className="p-6 space-y-5 max-h-[75vh] overflow-y-auto">
+          {/* Letterhead */}
+          <div className="text-center border-b pb-4">
+            <div className={`w-14 h-14 ${report.bg} rounded-full flex items-center justify-center mx-auto mb-2`}>
+              <report.icon className={`w-7 h-7 ${report.color}`} />
             </div>
-            <div className="flex items-center gap-3">
-              <button onClick={() => setShowNotif(!showNotif)} className="relative p-2 hover:bg-slate-100 rounded-lg transition">
-                <Bell className="w-5 h-5" /><span className="absolute top-1 right-1 w-2 h-2 bg-rose-500 rounded-full"></span>
-              </button>
-              <div className="w-8 h-8 bg-violet-100 rounded-full flex items-center justify-center"><span className="text-sm font-medium text-violet-600">TC</span></div>
+            <h1 className="text-xl font-bold text-slate-800">Smart Traffic Violation Monitoring System</h1>
+            <p className="text-sm text-slate-500">City Traffic Management Office</p>
+            <div className="mt-3 inline-block bg-violet-50 border border-violet-200 rounded-xl px-4 py-2">
+              <p className="text-sm font-bold text-violet-700">{report.title}</p>
+              <p className="text-xs text-violet-500">Period: {period} &nbsp;|&nbsp; Generated: {today}</p>
             </div>
           </div>
-        </header>
-        <main className="p-4 lg:p-6">{renderContent()}</main>
+
+          {/* Report-specific body */}
+          {bodyMap[report.title] || <p className="text-slate-500 text-sm text-center py-8">No preview available for this report type.</p>}
+
+          {/* Footer */}
+          <div className="border-t pt-4 flex items-center justify-between text-xs text-slate-400">
+            <span>STVMS — Confidential Report</span>
+            <span>Generated: {today}</span>
+          </div>
+        </div>
       </div>
-      <style jsx global>{`
+    </div>
+  );
+};
+
+const ReportsContent = () => {
+  const [reportPreview, setReportPreview] = useState(null);
+  const reports = [
+    { title: 'Violations Report', desc: 'Summary of all violations by type, location, and time period', icon: FileWarning, color: 'text-rose-500', bg: 'bg-rose-100' },
+    { title: 'Enforcer Performance', desc: 'Staff activity metrics and apprehension statistics', icon: UserCheck, color: 'text-blue-500', bg: 'bg-blue-100' },
+  ];
+  return (
+    <div className="space-y-4">
+      {reportPreview && (
+        <ReportPreviewModal
+          report={reportPreview.report}
+          period={reportPreview.period}
+          onClose={() => setReportPreview(null)}
+        />
+      )}
+      {loading ? (<div className="grid md:grid-cols-3 gap-4">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-40 rounded-xl" />)}</div>) : (
+        <div className="grid md:grid-cols-3 gap-4">
+          {reports.map((report) => (
+            <div key={report.title} className="bg-white rounded-xl p-6 shadow-sm border hover:shadow-md transition cursor-pointer" onClick={() => setShowReportModal(report)}>
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${report.bg} mb-3`}><report.icon className={`w-5 h-5 ${report.color}`} /></div>
+              <h3 className="font-bold mb-1">{report.title}</h3>
+              <p className="text-sm text-slate-500 mb-4">{report.desc}</p>
+              <button className="text-violet-600 text-sm flex items-center gap-1 hover:underline"><Printer className="w-4 h-4" />Generate Report</button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const SettingsContent = () => {
+  const [saving, setSaving] = useState(false);
+  const [selectedCamera, setSelectedCamera] = useState(null);
+  const [cameraSettings, setCameraSettings] = useState({});
+
+  // Initialize camera settings
+  useEffect(() => {
+    const initialSettings = {};
+    sampleDevices.forEach(device => {
+      initialSettings[device.id] = {
+        speedLimit: 60,
+        redLightGrace: 2,
+        confidenceScore: 85,
+        enabled: device.status === 'online'
+      };
+    });
+    setCameraSettings(initialSettings);
+  }, []);
+
+  const handleSave = () => {
+    setSaving(true);
+    setTimeout(() => {
+      setSaving(false);
+      setToast({ message: selectedCamera ? `Settings saved for ${selectedCamera}!` : 'Global settings saved!', type: 'success' });
+    }, 1500);
+  };
+
+  const handleCameraSettingChange = (cameraId, field, value) => {
+    setCameraSettings(prev => ({
+      ...prev,
+      [cameraId]: { ...prev[cameraId], [field]: value }
+    }));
+  };
+
+  return (
+    <div className="space-y-6">
+      {loading ? (<><Skeleton className="h-64 rounded-xl" /><Skeleton className="h-48 rounded-xl" /></>) : (
+        <>
+          {/* Camera Selection */}
+          <div className="bg-white rounded-xl p-6 shadow-sm border">
+            <h3 className="font-bold mb-4 flex items-center gap-2"><Camera className="w-5 h-5 text-violet-600" />Camera Detection Settings</h3>
+            <p className="text-sm text-slate-500 mb-4">Select a camera to configure its detection parameters, or configure global defaults.</p>
+
+            {/* Camera Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+              <button
+                onClick={() => setSelectedCamera(null)}
+                className={`p-4 rounded-xl border-2 transition text-left ${selectedCamera === null ? 'border-violet-500 bg-violet-50' : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'}`}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <Settings className="w-5 h-5 text-violet-600" />
+                  <span className="font-semibold text-sm">Global Default</span>
+                </div>
+                <p className="text-xs text-slate-500">Apply to all cameras</p>
+              </button>
+
+              {sampleDevices.map((device) => (
+                <button
+                  key={device.id}
+                  onClick={() => setSelectedCamera(device.id)}
+                  className={`p-4 rounded-xl border-2 transition text-left ${selectedCamera === device.id ? 'border-violet-500 bg-violet-50' : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'}`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <Camera className={`w-5 h-5 ${device.status === 'online' ? 'text-emerald-600' : 'text-slate-400'}`} />
+                      <span className="font-semibold text-sm">{device.id}</span>
+                    </div>
+                    <span className={`w-2 h-2 rounded-full ${device.status === 'online' ? 'bg-emerald-500' : 'bg-slate-300'}`}></span>
+                  </div>
+                  <p className="text-xs text-slate-500 truncate">{device.location}</p>
+                </button>
+              ))}
+            </div>
+
+            {/* Settings Form */}
+            <div className="bg-slate-50 rounded-xl p-5 border">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  {selectedCamera ? (
+                    <>
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${sampleDevices.find(d => d.id === selectedCamera)?.status === 'online' ? 'bg-emerald-100' : 'bg-slate-200'}`}>
+                        <Camera className={`w-5 h-5 ${sampleDevices.find(d => d.id === selectedCamera)?.status === 'online' ? 'text-emerald-600' : 'text-slate-400'}`} />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold">{selectedCamera}</h4>
+                        <p className="text-xs text-slate-500">{sampleDevices.find(d => d.id === selectedCamera)?.location}</p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="w-10 h-10 bg-violet-100 rounded-xl flex items-center justify-center">
+                        <Settings className="w-5 h-5 text-violet-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold">Global Default Settings</h4>
+                        <p className="text-xs text-slate-500">Applied to all cameras without custom settings</p>
+                      </div>
+                    </>
+                  )}
+                </div>
+                {selectedCamera && (
+                  <StatusBadge status={sampleDevices.find(d => d.id === selectedCamera)?.status} />
+                )}
+              </div>
+
+              <div className="space-y-4">
+                <div className="grid md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-slate-700 mb-1 block">Speed Limit (km/h)</label>
+                    <input
+                      type="number"
+                      value={selectedCamera ? cameraSettings[selectedCamera]?.speedLimit || 60 : 60}
+                      onChange={(e) => selectedCamera && handleCameraSettingChange(selectedCamera, 'speedLimit', parseInt(e.target.value))}
+                      className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-slate-700 mb-1 block">Red Light Grace (sec)</label>
+                    <input
+                      type="number"
+                      value={selectedCamera ? cameraSettings[selectedCamera]?.redLightGrace || 2 : 2}
+                      onChange={(e) => selectedCamera && handleCameraSettingChange(selectedCamera, 'redLightGrace', parseInt(e.target.value))}
+                      className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-slate-700 mb-1 block">Confidence Score (%)</label>
+                    <input
+                      type="number"
+                      value={selectedCamera ? cameraSettings[selectedCamera]?.confidenceScore || 85 : 85}
+                      onChange={(e) => selectedCamera && handleCameraSettingChange(selectedCamera, 'confidenceScore', parseInt(e.target.value))}
+                      className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white"
+                    />
+                  </div>
+                </div>
+
+                {selectedCamera && (
+                  <div className="flex items-center justify-between p-3 bg-white rounded-xl border">
+                    <div className="flex items-center gap-3">
+                      <Power className={`w-5 h-5 ${cameraSettings[selectedCamera]?.enabled ? 'text-emerald-600' : 'text-slate-400'}`} />
+                      <div>
+                        <p className="text-sm font-medium">Camera Detection</p>
+                        <p className="text-xs text-slate-500">Enable or disable violation detection for this camera</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleCameraSettingChange(selectedCamera, 'enabled', !cameraSettings[selectedCamera]?.enabled)}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition ${cameraSettings[selectedCamera]?.enabled ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                    >
+                      {cameraSettings[selectedCamera]?.enabled ? 'Enabled' : 'Disabled'}
+                    </button>
+                  </div>
+                )}
+
+                <div className="flex gap-3 pt-2">
+                  <button onClick={handleSave} disabled={saving} className="px-6 py-2.5 bg-violet-600 text-white rounded-xl hover:bg-violet-700 transition flex items-center gap-2">
+                    {saving ? <><Loader2 className="w-4 h-4 animate-spin" />Saving...</> : <><Save className="w-4 h-4" />Save Settings</>}
+                  </button>
+                  {selectedCamera && (
+                    <button
+                      onClick={() => {
+                        handleCameraSettingChange(selectedCamera, 'speedLimit', 60);
+                        handleCameraSettingChange(selectedCamera, 'redLightGrace', 2);
+                        handleCameraSettingChange(selectedCamera, 'confidenceScore', 85);
+                        setToast({ message: 'Reset to default values', type: 'info' });
+                      }}
+                      className="px-6 py-2.5 border rounded-xl hover:bg-white transition flex items-center gap-2"
+                    >
+                      <RotateCcw className="w-4 h-4" />Reset to Default
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Notification Settings */}
+          <div className="bg-white rounded-xl p-6 shadow-sm border max-w-2xl">
+            <h3 className="font-bold mb-4 flex items-center gap-2"><Bell className="w-5 h-5 text-violet-600" />Notification Settings</h3>
+            <div className="space-y-3">
+              {[
+                { label: 'Email notifications for new disputes', checked: true },
+                { label: 'SMS alerts for device offline', checked: true },
+                { label: 'Daily summary reports', checked: false },
+                { label: 'Payment confirmation alerts', checked: true },
+                { label: 'Real-time violation alerts', checked: true }
+              ].map((setting) => (
+                <label key={setting.label} className="flex items-center gap-3 cursor-pointer hover:bg-slate-50 p-2 rounded-lg -mx-2 transition">
+                  <input type="checkbox" defaultChecked={setting.checked} className="w-5 h-5 rounded border-slate-300 text-violet-600 focus:ring-violet-500" />
+                  <span className="text-sm">{setting.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* LTO Database Integration */}
+          <div className="bg-white rounded-xl p-6 shadow-sm border max-w-2xl">
+            <h3 className="font-bold mb-1 flex items-center gap-2"><Database className="w-5 h-5 text-violet-600" />LTO Database Integration</h3>
+            <p className="text-sm text-slate-500 mb-4">Driver records are automatically synced from the Land Transportation Office (LTO) database. Manual addition of drivers is disabled.</p>
+            <div className="flex items-center gap-3 p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+              <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center"><Database className="w-4 h-4 text-emerald-600" /></div>
+              <div>
+                <p className="text-sm font-medium text-emerald-700">LTO Database Connected</p>
+                <p className="text-xs text-emerald-600">Last synced: Today at 6:00 AM</p>
+              </div>
+              <button onClick={() => setToast({ message: 'Database sync triggered!', type: 'info' })} className="ml-auto text-xs text-emerald-700 border border-emerald-300 px-3 py-1 rounded-lg hover:bg-emerald-100 transition flex items-center gap-1">
+                <RefreshCw className="w-3 h-3" />Sync Now
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+const renderContent = () => {
+  switch (activeSection) {
+    case 'dashboard': return <DashboardContent />;
+    case 'violations': return <ViolationsContent />;
+    case 'disputes': return <DisputesContent />;
+    case 'users': return <UsersContent />;
+    case 'devices': return <DevicesContent />;
+    case 'map': return <MapContent />;
+    case 'reports': return <ReportsContent />;
+    case 'settings': return <SettingsContent />;
+    default: return <DashboardContent />;
+  }
+};
+
+return (
+  <div className="min-h-screen bg-slate-100">
+    {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+    {showConfirm && <ConfirmModal {...showConfirm} onCancel={() => setShowConfirm(null)} />}
+    {showFilter && <FilterModal onClose={() => setShowFilter(false)} onApply={(f) => setToast({ message: 'Filters applied!', type: 'info' })} />}
+    {showExport && <ExportModal onClose={() => setShowExport(false)} onExport={(fmt) => setToast({ message: `Exported as ${fmt.toUpperCase()} successfully!`, type: 'success' })} />}
+    {showReportModal && <ReportModal report={showReportModal} onClose={() => setShowReportModal(null)} onGenerate={(title, period) => { setShowReportModal(null); setShowReportPreview({ report: showReportModal, period }); }} />}
+    {showReportPreview && <ReportPreviewModal report={showReportPreview.report} period={showReportPreview.period} onClose={() => setShowReportPreview(null)} />}
+    {showNotif && <NotificationPanel onClose={() => setShowNotif(false)} />}
+    {showViolationDetails && selectedViolation && (
+      <ViolationDetailsModal violation={selectedViolation} userType="supervisor" onClose={() => setShowViolationDetails(false)}
+        onApprove={() => { setShowViolationDetails(false); setToast({ message: 'Violation approved!', type: 'success' }); }}
+        onReject={() => { setShowViolationDetails(false); setToast({ message: 'Violation rejected.', type: 'warning' }); }} />
+    )}
+    {showDisputeDetails && selectedDispute && (
+      <DisputeDetailsModal dispute={selectedDispute} userType="supervisor" onClose={() => setShowDisputeDetails(false)}
+        onApprove={() => { setShowDisputeDetails(false); setToast({ message: 'Dispute approved!', type: 'success' }); }}
+        onReject={() => { setShowDisputeDetails(false); setToast({ message: 'Dispute rejected.', type: 'warning' }); }} />
+    )}
+    {showUserDetails && selectedUser && (
+      <UserDetailsModal user={selectedUser} onClose={() => setShowUserDetails(false)}
+        onSuspend={(u) => { setShowUserDetails(false); setShowConfirm({ title: 'Suspend Account', message: `Suspend ${u.name}'s account? They will lose access to the portal.`, confirmText: 'Suspend', confirmColor: 'bg-rose-500 hover:bg-rose-600', onConfirm: () => { setShowConfirm(null); setToast({ message: `${u.name}'s account suspended.`, type: 'warning' }); } }); }}
+        onActivate={(u) => { setShowUserDetails(false); setShowConfirm({ title: 'Reactivate Account', message: `Reactivate ${u.name}'s account?`, confirmText: 'Reactivate', onConfirm: () => { setShowConfirm(null); setToast({ message: `${u.name}'s account reactivated.`, type: 'success' }); } }); }} />
+    )}
+    {showDeviceDetails && selectedDevice && (
+      <DeviceDetailsModal device={selectedDevice} onClose={() => setShowDeviceDetails(false)}
+        onDiagnostic={(d) => setToast({ message: `${d.id} diagnostic complete — all systems normal.`, type: 'info' })}
+        onRestart={(d) => setToast({ message: `${d.id} restarted successfully!`, type: 'success' })} />
+    )}
+    <Sidebar />
+    {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)}></div>}
+    <div className="lg:pl-64">
+      <header className="bg-white border-b sticky top-0 z-30">
+        <div className="flex items-center justify-between px-4 py-3">
+          <div className="flex items-center gap-3">
+            <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 hover:bg-slate-100 rounded-lg transition"><Menu className="w-5 h-5" /></button>
+            <h2 className="font-bold text-lg capitalize">{activeSection}</h2>
+          </div>
+          <div className="flex items-center gap-3">
+            <button onClick={() => setShowNotif(!showNotif)} className="relative p-2 hover:bg-slate-100 rounded-lg transition">
+              <Bell className="w-5 h-5" /><span className="absolute top-1 right-1 w-2 h-2 bg-rose-500 rounded-full"></span>
+            </button>
+            <div className="w-8 h-8 bg-violet-100 rounded-full flex items-center justify-center"><span className="text-sm font-medium text-violet-600">TC</span></div>
+          </div>
+        </div>
+      </header>
+      <main className="p-4 lg:p-6">{renderContent()}</main>
+    </div>
+    <style jsx global>{`
         @keyframes scale-in { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         @keyframes slide-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .animate-scale-in { animation: scale-in 0.2s ease-out; }
         .animate-slide-up { animation: slide-up 0.3s ease-out; }
       `}</style>
-    </div>
-  );
+  </div>
+);
 };
 
 export default SupervisorDashboard;

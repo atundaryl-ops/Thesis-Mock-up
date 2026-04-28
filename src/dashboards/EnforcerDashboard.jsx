@@ -39,7 +39,7 @@ const EnforcerDashboard = ({ onLogout }) => {
       ? [...violationForm.type.filter(t => t !== 'Other'), violationForm.otherType].filter(Boolean)
       : violationForm.type;
     const typeLabel = types.join(', ');
-    if (!plate || types.length === 0 || !location) {
+    if (!plate || types.length === 0 || !violationForm.location) {
       setToast({ message: 'Please fill in all required fields.', type: 'warning' });
       return;
     }
@@ -67,7 +67,7 @@ const EnforcerDashboard = ({ onLogout }) => {
         id: `VIO-${Date.now()}`,
         plate,
         type: typeLabel,
-        location,
+        location: violationForm.location,
         date: new Date().toISOString().split('T')[0],
         time: new Date().toTimeString().slice(0, 5),
         fine: Math.max(...types.map(t => fineMap[t] || 1000)),
@@ -115,7 +115,7 @@ const EnforcerDashboard = ({ onLogout }) => {
             <button onClick={() => {
               setShowRecordModal(false);
               setSelectedDriverForViolation(null);
-              setViolationForm({ plate: '', license: '', type: '', otherType: '', location: '', notes: '' });
+              setViolationForm({ plate: '', license: '', type: [], otherType: '', location: '', notes: '' });
               setModalStep(1);
               setDriverSearch('');
             }} className="p-2 hover:bg-slate-100 rounded-lg">
@@ -405,7 +405,7 @@ const EnforcerDashboard = ({ onLogout }) => {
               </div>
               <div className="col-span-2">
                 <p className="text-[10px] text-slate-400 uppercase">Place of Apprehension</p>
-                <p className="font-semibold">{issuedCitation?.location}</p>
+                <p className="font-semibold">{String(issuedCitation?.location ?? '')}</p>
               </div>
             </div>
           </div>
@@ -535,8 +535,7 @@ const EnforcerDashboard = ({ onLogout }) => {
                       <div className="flex items-center gap-3">
                         <span className="text-xl">{v.image}</span>
                         <div>
-                          <p className="font-medium text-sm">{v.type}</p>
-                          <p className="text-xs text-slate-500">{v.date} • {v.location}</p>
+                          <p className="font-medium text-sm">{Array.isArray(v.type) ? v.type.join(', ') : v.type}</p>                     
                         </div>
                       </div>
                       <div className="text-right">
@@ -708,7 +707,7 @@ const EnforcerDashboard = ({ onLogout }) => {
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">{v.image}</span>
                   <div>
-                    <p className="font-semibold">{v.type}</p>
+                    <p className="font-semibold">{Array.isArray(v.type) ? v.type.join(', ') : v.type}</p>
                     <p className="text-xs text-slate-400 font-mono">{v.id}</p>
                   </div>
                 </div>

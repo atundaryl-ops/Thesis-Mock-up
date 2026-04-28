@@ -27,10 +27,13 @@ export const sampleUsers = [
 ];
 
 export const sampleDevices = [
-  { id: 'CAM-001', location: 'Rizal Ave & Main St', status: 'online', captures: 1245, lastActive: '2 mins ago', ipAddress: '192.168.1.101', installDate: '2023-06-15' },
-  { id: 'CAM-002', location: 'Highway 54 KM 12', status: 'online', captures: 892, lastActive: '1 min ago', ipAddress: '192.168.1.102', installDate: '2023-07-20' },
-  { id: 'CAM-003', location: 'EDSA Northbound', status: 'offline', captures: 2341, lastActive: '2 hours ago', ipAddress: '192.168.1.103', installDate: '2023-05-10' },
-  { id: 'CAM-004', location: 'Quezon Blvd Junction', status: 'online', captures: 567, lastActive: '30 secs ago', ipAddress: '192.168.1.104', installDate: '2023-08-01' },
+  { id: 'CAM-001', location: 'Iznart St & Quezon St, Iloilo City',     status: 'online',  captures: 1245, lastActive: '2 mins ago',   ipAddress: '192.168.1.101', installDate: '2023-06-15' },
+  { id: 'CAM-002', location: 'Jaro Church, Iloilo City',               status: 'online',  captures: 892,  lastActive: '1 min ago',    ipAddress: '192.168.1.102', installDate: '2023-07-20' },
+  { id: 'CAM-003', location: 'SM City Iloilo, Benigno Aquino Ave',     status: 'offline', captures: 2341, lastActive: '2 hours ago',  ipAddress: '192.168.1.103', installDate: '2023-05-10' },
+  { id: 'CAM-004', location: 'Molo Church, Molo Iloilo City',          status: 'online',  captures: 567,  lastActive: '30 secs ago',  ipAddress: '192.168.1.104', installDate: '2023-08-01' },
+  { id: 'CAM-005', location: 'Mandurriao, Iloilo City',                status: 'online',  captures: 743,  lastActive: '5 mins ago',   ipAddress: '192.168.1.105', installDate: '2023-09-15' },
+  { id: 'CAM-006', location: 'Diversion Road, Iloilo City',            status: 'online',  captures: 1102, lastActive: '1 min ago',    ipAddress: '192.168.1.106', installDate: '2023-10-01' },
+  { id: 'CAM-007', location: 'Dungon, Iloilo City',                    status: 'offline', captures: 412,  lastActive: '3 hours ago',  ipAddress: '192.168.1.107', installDate: '2024-01-10' },
 ];
 
 export const sampleDrivers = [
