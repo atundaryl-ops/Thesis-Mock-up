@@ -229,63 +229,180 @@ const SupervisorDashboard = ({ onLogout }) => {
   );
 
   const DisputesContent = () => {
-    const [disputeFilter, setDisputeFilter] = useState('all');
-    const filteredDisputes = sampleDisputes.filter(d =>
-      disputeFilter === 'all' ? true : d.status === disputeFilter
-    );
-    return (
-      <div className="space-y-4">
-        {/* Filter bar */}
-        <div className="flex gap-2 flex-wrap">
-          {[
-            { id: 'all', label: 'All', count: sampleDisputes.length },
-            { id: 'pending', label: 'Pending', count: sampleDisputes.filter(d => d.status === 'pending').length },
-            { id: 'approved', label: 'Approved', count: sampleDisputes.filter(d => d.status === 'approved').length },
-            { id: 'rejected', label: 'Rejected', count: sampleDisputes.filter(d => d.status === 'rejected').length },
-          ].map(f => (
-            <button key={f.id} onClick={() => setDisputeFilter(f.id)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 ${disputeFilter === f.id
-                ? f.id === 'pending' ? 'bg-amber-500 text-white'
-                  : f.id === 'approved' ? 'bg-emerald-500 text-white'
-                    : f.id === 'rejected' ? 'bg-rose-500 text-white'
-                      : 'bg-violet-600 text-white'
-                : 'bg-white border hover:bg-slate-50'
-                }`}>
-              <Filter className="w-3.5 h-3.5" />{f.label}
-              <span className={`px-1.5 py-0.5 rounded-full text-xs ${disputeFilter === f.id ? 'bg-white/20' : 'bg-slate-100'}`}>{f.count}</span>
-            </button>
-          ))}
-        </div>
-        {loading ? (<div className="grid md:grid-cols-3 gap-4">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-48 rounded-xl" />)}</div>) : (
-          filteredDisputes.length === 0 ? (
-            <div className="text-center py-16 bg-white rounded-xl border shadow-sm">
-              <Gavel className="w-12 h-12 mx-auto text-slate-200 mb-3" />
-              <p className="text-slate-500">No {disputeFilter !== 'all' ? disputeFilter : ''} disputes found</p>
-            </div>
-          ) : (
-            <div className="grid md:grid-cols-3 gap-4">
-              {filteredDisputes.map((d) => (
-                <div key={d.id} className="bg-white rounded-xl p-4 shadow-sm border hover:shadow-md transition">
-                  <div className="flex justify-between items-start mb-3"><div><p className="font-semibold">{d.id}</p><p className="text-sm text-slate-500">{d.driver}</p></div><StatusBadge status={d.status} /></div>
-                  <p className="text-sm text-slate-600 mb-3 line-clamp-2">{d.reason}</p>
-                  <p className="text-xs text-slate-400 mb-3">For: {d.violationId}</p>
-                  <button onClick={() => { setSelectedDispute(d); setShowDisputeDetails(true); }} className="w-full py-2 text-sm border rounded-lg hover:bg-slate-50 transition">View Details</button>
-                  {d.status === 'pending' && (
-                    <div className="flex gap-2 mt-2">
-                      <button onClick={() => setShowConfirm({ title: 'Approve Dispute', message: `Approve ${d.id} and dismiss the related violation?`, onConfirm: () => { setShowConfirm(null); setToast({ message: 'Dispute approved! Violation dismissed.', type: 'success' }); } })}
-                        className="flex-1 py-2 text-sm bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition">Approve</button>
-                      <button onClick={() => setShowConfirm({ title: 'Reject Dispute', message: `Reject ${d.id}? The driver will be notified.`, confirmText: 'Reject', confirmColor: 'bg-rose-500 hover:bg-rose-600', onConfirm: () => { setShowConfirm(null); setToast({ message: 'Dispute rejected. Driver notified.', type: 'warning' }); } })}
-                        className="flex-1 py-2 text-sm bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition">Reject</button>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )
-        )}
-      </div>
-    );
+  const [disputeFilter, setDisputeFilter] = useState('all');
+  const [disputes, setDisputes] = useState(sampleDisputes);
+
+  const filteredDisputes = disputes.filter(d =>
+    disputeFilter === 'all' ? true : d.status === disputeFilter
+  );
+
+  const handleApprove = (d) => {
+    setShowConfirm({
+      title: 'Approve Dispute',
+      message: `Approve ${d.id} and dismiss the related violation?`,
+      onConfirm: () => {
+        setDisputes(prev => prev.map(x => x.id === d.id ? { ...x, status: 'approved', reviewedBy: 'Supervisor Admin', reviewDate: new Date().toISOString().split('T')[0] } : x));
+        setShowConfirm(null);
+        setToast({ message: 'Dispute approved! Violation dismissed.', type: 'success' });
+      }
+    });
   };
+
+  const handleReject = (d) => {
+    setShowConfirm({
+      title: 'Reject Dispute',
+      message: `Reject ${d.id}? The driver will be notified.`,
+      confirmText: 'Reject',
+      confirmColor: 'bg-rose-500 hover:bg-rose-600',
+      onConfirm: () => {
+        setDisputes(prev => prev.map(x => x.id === d.id ? { ...x, status: 'rejected', reviewedBy: 'Supervisor Admin', reviewDate: new Date().toISOString().split('T')[0] } : x));
+        setShowConfirm(null);
+        setToast({ message: 'Dispute rejected. Driver notified.', type: 'warning' });
+      }
+    });
+  };
+
+  const counts = {
+    all: disputes.length,
+    pending: disputes.filter(d => d.status === 'pending').length,
+    approved: disputes.filter(d => d.status === 'approved').length,
+    rejected: disputes.filter(d => d.status === 'rejected').length,
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Filter bar */}
+      <div className="flex gap-2 flex-wrap">
+        {[
+          { id: 'all',      label: 'All',      color: 'bg-violet-600' },
+          { id: 'pending',  label: 'Pending',  color: 'bg-amber-500' },
+          { id: 'approved', label: 'Approved', color: 'bg-emerald-500' },
+          { id: 'rejected', label: 'Rejected', color: 'bg-rose-500' },
+        ].map(f => (
+          <button key={f.id} onClick={() => setDisputeFilter(f.id)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 ${
+              disputeFilter === f.id ? `${f.color} text-white` : 'bg-white border hover:bg-slate-50'
+            }`}>
+            {f.label}
+            <span className={`px-1.5 py-0.5 rounded-full text-xs font-bold ${
+              disputeFilter === f.id ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
+            }`}>{counts[f.id]}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* List */}
+      {loading ? (
+        <div className="space-y-3">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}</div>
+      ) : filteredDisputes.length === 0 ? (
+        <div className="text-center py-16 bg-white rounded-xl border shadow-sm">
+          <Gavel className="w-12 h-12 mx-auto text-slate-200 mb-3" />
+          <p className="text-slate-500">No {disputeFilter !== 'all' ? disputeFilter : ''} disputes found</p>
+        </div>
+      ) : (
+        <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
+          {/* Table header */}
+          <div className="grid grid-cols-12 gap-3 px-4 py-3 bg-slate-50 border-b text-xs font-semibold text-slate-500 uppercase tracking-wide">
+            <div className="col-span-2">Dispute ID</div>
+            <div className="col-span-2">Driver</div>
+            <div className="col-span-2">Violation</div>
+            <div className="col-span-3">Reason</div>
+            <div className="col-span-1">Evidence</div>
+            <div className="col-span-1">Status</div>
+            <div className="col-span-1">Actions</div>
+          </div>
+
+          {/* Rows */}
+          <div className="divide-y">
+            {filteredDisputes.map((d) => {
+              const violation = sampleViolations.find(v => v.id === d.violationId);
+              return (
+                <div key={d.id} className="grid grid-cols-12 gap-3 px-4 py-3 items-center hover:bg-slate-50 transition text-sm">
+                  
+                  {/* Dispute ID + date */}
+                  <div className="col-span-2">
+                    <p className="font-mono font-semibold text-xs">{d.id}</p>
+                    <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />{d.date}
+                    </p>
+                  </div>
+
+                  {/* Driver */}
+                  <div className="col-span-2">
+                    <p className="font-medium">{d.driver}</p>
+                    <p className="text-xs text-slate-400">{d.phone}</p>
+                  </div>
+
+                  {/* Violation */}
+                  <div className="col-span-2">
+                    <p className="font-mono text-xs text-slate-500">{d.violationId}</p>
+                    {violation && (
+                      <>
+                        <p className="text-xs font-medium text-slate-700">{violation.type}</p>
+                        <p className="text-xs text-rose-500 font-semibold">₱{violation.fine.toLocaleString()}</p>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Reason */}
+                  <div className="col-span-3">
+                    <p className="text-xs text-slate-600 line-clamp-2">{d.reason}</p>
+                    {d.reviewNotes && (
+                      <p className="text-xs text-slate-400 mt-1 italic line-clamp-1">
+                        Note: {d.reviewNotes}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Evidence */}
+                  <div className="col-span-1">
+                    {d.attachment ? (
+                      <span className="inline-flex items-center gap-1 text-xs text-violet-600 bg-violet-50 px-2 py-1 rounded-lg">
+                        <FileText className="w-3 h-3" />File
+                      </span>
+                    ) : (
+                      <span className="text-xs text-slate-300">None</span>
+                    )}
+                  </div>
+
+                  {/* Status */}
+                  <div className="col-span-1">
+                    <StatusBadge status={d.status} />
+                    {d.reviewedBy && (
+                      <p className="text-[10px] text-slate-400 mt-1">{d.reviewDate}</p>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="col-span-1 flex flex-col gap-1.5">
+                    <button
+                      onClick={() => { setSelectedDispute(d); setShowDisputeDetails(true); }}
+                      className="text-xs px-2 py-1 border rounded-lg hover:bg-slate-100 transition text-slate-600">
+                      View
+                    </button>
+                    {d.status === 'pending' && (
+                      <>
+                        <button onClick={() => handleApprove(d)}
+                          className="text-xs px-2 py-1 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition">
+                          Approve
+                        </button>
+                        <button onClick={() => handleReject(d)}
+                          className="text-xs px-2 py-1 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition">
+                          Reject
+                        </button>
+                      </>
+                    )}
+                  </div>
+
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
   // USERS: Drivers synced from LTO, Enforcers can be added manually
   const UsersContent = () => {
@@ -941,19 +1058,12 @@ const SupervisorDashboard = ({ onLogout }) => {
       attribution='&copy; OpenStreetMap contributors'
       url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
     />
-    {violationHotspots.map((h, i) => (
-      <Circle
-        key={i}
-        center={h.coords}
-        radius={h.radius * 20}
-        pathOptions={{ color: h.border, fillColor: h.border, fillOpacity: 0.2 }}
-      />
-    ))}
+    
     {filtered.map(cam => (
       <Marker
         key={cam.id}
         position={cam.coords}
-        icon={cameraIcon(cam.status === 'online')}
+        icon={cameraIcon(cam.status === 'online')}z
         eventHandlers={{ click: () => setSelectedCam(cam) }}
       >
         <Popup>{cam.id} — {cam.location}</Popup>
