@@ -229,180 +229,178 @@ const SupervisorDashboard = ({ onLogout }) => {
   );
 
   const DisputesContent = () => {
-  const [disputeFilter, setDisputeFilter] = useState('all');
-  const [disputes, setDisputes] = useState(sampleDisputes);
+    const [disputeFilter, setDisputeFilter] = useState('all');
+    const [disputes, setDisputes] = useState(sampleDisputes);
 
-  const filteredDisputes = disputes.filter(d =>
-    disputeFilter === 'all' ? true : d.status === disputeFilter
-  );
+    const filteredDisputes = disputes.filter(d =>
+      disputeFilter === 'all' ? true : d.status === disputeFilter
+    );
 
-  const handleApprove = (d) => {
-    setShowConfirm({
-      title: 'Approve Dispute',
-      message: `Approve ${d.id} and dismiss the related violation?`,
-      onConfirm: () => {
-        setDisputes(prev => prev.map(x => x.id === d.id ? { ...x, status: 'approved', reviewedBy: 'Supervisor Admin', reviewDate: new Date().toISOString().split('T')[0] } : x));
-        setShowConfirm(null);
-        setToast({ message: 'Dispute approved! Violation dismissed.', type: 'success' });
-      }
-    });
-  };
+    const handleApprove = (d) => {
+      setShowConfirm({
+        title: 'Approve Dispute',
+        message: `Approve ${d.id} and dismiss the related violation?`,
+        onConfirm: () => {
+          setDisputes(prev => prev.map(x => x.id === d.id ? { ...x, status: 'approved', reviewedBy: 'Supervisor Admin', reviewDate: new Date().toISOString().split('T')[0] } : x));
+          setShowConfirm(null);
+          setToast({ message: 'Dispute approved! Violation dismissed.', type: 'success' });
+        }
+      });
+    };
 
-  const handleReject = (d) => {
-    setShowConfirm({
-      title: 'Reject Dispute',
-      message: `Reject ${d.id}? The driver will be notified.`,
-      confirmText: 'Reject',
-      confirmColor: 'bg-rose-500 hover:bg-rose-600',
-      onConfirm: () => {
-        setDisputes(prev => prev.map(x => x.id === d.id ? { ...x, status: 'rejected', reviewedBy: 'Supervisor Admin', reviewDate: new Date().toISOString().split('T')[0] } : x));
-        setShowConfirm(null);
-        setToast({ message: 'Dispute rejected. Driver notified.', type: 'warning' });
-      }
-    });
-  };
+    const handleReject = (d) => {
+      setShowConfirm({
+        title: 'Reject Dispute',
+        message: `Reject ${d.id}? The driver will be notified.`,
+        confirmText: 'Reject',
+        confirmColor: 'bg-rose-500 hover:bg-rose-600',
+        onConfirm: () => {
+          setDisputes(prev => prev.map(x => x.id === d.id ? { ...x, status: 'rejected', reviewedBy: 'Supervisor Admin', reviewDate: new Date().toISOString().split('T')[0] } : x));
+          setShowConfirm(null);
+          setToast({ message: 'Dispute rejected. Driver notified.', type: 'warning' });
+        }
+      });
+    };
 
-  const counts = {
-    all: disputes.length,
-    pending: disputes.filter(d => d.status === 'pending').length,
-    approved: disputes.filter(d => d.status === 'approved').length,
-    rejected: disputes.filter(d => d.status === 'rejected').length,
-  };
+    const counts = {
+      all: disputes.length,
+      pending: disputes.filter(d => d.status === 'pending').length,
+      approved: disputes.filter(d => d.status === 'approved').length,
+      rejected: disputes.filter(d => d.status === 'rejected').length,
+    };
 
-  return (
-    <div className="space-y-4">
-      {/* Filter bar */}
-      <div className="flex gap-2 flex-wrap">
-        {[
-          { id: 'all',      label: 'All',      color: 'bg-violet-600' },
-          { id: 'pending',  label: 'Pending',  color: 'bg-amber-500' },
-          { id: 'approved', label: 'Approved', color: 'bg-emerald-500' },
-          { id: 'rejected', label: 'Rejected', color: 'bg-rose-500' },
-        ].map(f => (
-          <button key={f.id} onClick={() => setDisputeFilter(f.id)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 ${
-              disputeFilter === f.id ? `${f.color} text-white` : 'bg-white border hover:bg-slate-50'
-            }`}>
-            {f.label}
-            <span className={`px-1.5 py-0.5 rounded-full text-xs font-bold ${
-              disputeFilter === f.id ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
-            }`}>{counts[f.id]}</span>
-          </button>
-        ))}
-      </div>
-
-      {/* List */}
-      {loading ? (
-        <div className="space-y-3">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}</div>
-      ) : filteredDisputes.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-xl border shadow-sm">
-          <Gavel className="w-12 h-12 mx-auto text-slate-200 mb-3" />
-          <p className="text-slate-500">No {disputeFilter !== 'all' ? disputeFilter : ''} disputes found</p>
+    return (
+      <div className="space-y-4">
+        {/* Filter bar */}
+        <div className="flex gap-2 flex-wrap">
+          {[
+            { id: 'all', label: 'All', color: 'bg-violet-600' },
+            { id: 'pending', label: 'Pending', color: 'bg-amber-500' },
+            { id: 'approved', label: 'Approved', color: 'bg-emerald-500' },
+            { id: 'rejected', label: 'Rejected', color: 'bg-rose-500' },
+          ].map(f => (
+            <button key={f.id} onClick={() => setDisputeFilter(f.id)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 ${disputeFilter === f.id ? `${f.color} text-white` : 'bg-white border hover:bg-slate-50'
+                }`}>
+              {f.label}
+              <span className={`px-1.5 py-0.5 rounded-full text-xs font-bold ${disputeFilter === f.id ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
+                }`}>{counts[f.id]}</span>
+            </button>
+          ))}
         </div>
-      ) : (
-        <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
-          {/* Table header */}
-          <div className="grid grid-cols-12 gap-3 px-4 py-3 bg-slate-50 border-b text-xs font-semibold text-slate-500 uppercase tracking-wide">
-            <div className="col-span-2">Dispute ID</div>
-            <div className="col-span-2">Driver</div>
-            <div className="col-span-2">Violation</div>
-            <div className="col-span-3">Reason</div>
-            <div className="col-span-1">Evidence</div>
-            <div className="col-span-1">Status</div>
-            <div className="col-span-1">Actions</div>
+
+        {/* List */}
+        {loading ? (
+          <div className="space-y-3">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}</div>
+        ) : filteredDisputes.length === 0 ? (
+          <div className="text-center py-16 bg-white rounded-xl border shadow-sm">
+            <Gavel className="w-12 h-12 mx-auto text-slate-200 mb-3" />
+            <p className="text-slate-500">No {disputeFilter !== 'all' ? disputeFilter : ''} disputes found</p>
           </div>
+        ) : (
+          <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
+            {/* Table header */}
+            <div className="grid grid-cols-12 gap-3 px-4 py-3 bg-slate-50 border-b text-xs font-semibold text-slate-500 uppercase tracking-wide">
+              <div className="col-span-2">Dispute ID</div>
+              <div className="col-span-2">Driver</div>
+              <div className="col-span-2">Violation</div>
+              <div className="col-span-3">Reason</div>
+              <div className="col-span-1">Evidence</div>
+              <div className="col-span-1">Status</div>
+              <div className="col-span-1">Actions</div>
+            </div>
 
-          {/* Rows */}
-          <div className="divide-y">
-            {filteredDisputes.map((d) => {
-              const violation = sampleViolations.find(v => v.id === d.violationId);
-              return (
-                <div key={d.id} className="grid grid-cols-12 gap-3 px-4 py-3 items-center hover:bg-slate-50 transition text-sm">
-                  
-                  {/* Dispute ID + date */}
-                  <div className="col-span-2">
-                    <p className="font-mono font-semibold text-xs">{d.id}</p>
-                    <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />{d.date}
-                    </p>
-                  </div>
+            {/* Rows */}
+            <div className="divide-y">
+              {filteredDisputes.map((d) => {
+                const violation = sampleViolations.find(v => v.id === d.violationId);
+                return (
+                  <div key={d.id} className="grid grid-cols-12 gap-3 px-4 py-3 items-center hover:bg-slate-50 transition text-sm">
 
-                  {/* Driver */}
-                  <div className="col-span-2">
-                    <p className="font-medium">{d.driver}</p>
-                    <p className="text-xs text-slate-400">{d.phone}</p>
-                  </div>
-
-                  {/* Violation */}
-                  <div className="col-span-2">
-                    <p className="font-mono text-xs text-slate-500">{d.violationId}</p>
-                    {violation && (
-                      <>
-                        <p className="text-xs font-medium text-slate-700">{violation.type}</p>
-                        <p className="text-xs text-rose-500 font-semibold">₱{violation.fine.toLocaleString()}</p>
-                      </>
-                    )}
-                  </div>
-
-                  {/* Reason */}
-                  <div className="col-span-3">
-                    <p className="text-xs text-slate-600 line-clamp-2">{d.reason}</p>
-                    {d.reviewNotes && (
-                      <p className="text-xs text-slate-400 mt-1 italic line-clamp-1">
-                        Note: {d.reviewNotes}
+                    {/* Dispute ID + date */}
+                    <div className="col-span-2">
+                      <p className="font-mono font-semibold text-xs">{d.id}</p>
+                      <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />{d.date}
                       </p>
-                    )}
-                  </div>
+                    </div>
 
-                  {/* Evidence */}
-                  <div className="col-span-1">
-                    {d.attachment ? (
-                      <span className="inline-flex items-center gap-1 text-xs text-violet-600 bg-violet-50 px-2 py-1 rounded-lg">
-                        <FileText className="w-3 h-3" />File
-                      </span>
-                    ) : (
-                      <span className="text-xs text-slate-300">None</span>
-                    )}
-                  </div>
+                    {/* Driver */}
+                    <div className="col-span-2">
+                      <p className="font-medium">{d.driver}</p>
+                      <p className="text-xs text-slate-400">{d.phone}</p>
+                    </div>
 
-                  {/* Status */}
-                  <div className="col-span-1">
-                    <StatusBadge status={d.status} />
-                    {d.reviewedBy && (
-                      <p className="text-[10px] text-slate-400 mt-1">{d.reviewDate}</p>
-                    )}
-                  </div>
+                    {/* Violation */}
+                    <div className="col-span-2">
+                      <p className="font-mono text-xs text-slate-500">{d.violationId}</p>
+                      {violation && (
+                        <>
+                          <p className="text-xs font-medium text-slate-700">{violation.type}</p>
+                          <p className="text-xs text-rose-500 font-semibold">₱{violation.fine.toLocaleString()}</p>
+                        </>
+                      )}
+                    </div>
 
-                  {/* Actions */}
-                  <div className="col-span-1 flex flex-col gap-1.5">
-                    <button
-                      onClick={() => { setSelectedDispute(d); setShowDisputeDetails(true); }}
-                      className="text-xs px-2 py-1 border rounded-lg hover:bg-slate-100 transition text-slate-600">
-                      View
-                    </button>
-                    {d.status === 'pending' && (
-                      <>
-                        <button onClick={() => handleApprove(d)}
-                          className="text-xs px-2 py-1 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition">
-                          Approve
-                        </button>
-                        <button onClick={() => handleReject(d)}
-                          className="text-xs px-2 py-1 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition">
-                          Reject
-                        </button>
-                      </>
-                    )}
-                  </div>
+                    {/* Reason */}
+                    <div className="col-span-3">
+                      <p className="text-xs text-slate-600 line-clamp-2">{d.reason}</p>
+                      {d.reviewNotes && (
+                        <p className="text-xs text-slate-400 mt-1 italic line-clamp-1">
+                          Note: {d.reviewNotes}
+                        </p>
+                      )}
+                    </div>
 
-                </div>
-              );
-            })}
+                    {/* Evidence */}
+                    <div className="col-span-1">
+                      {d.attachment ? (
+                        <span className="inline-flex items-center gap-1 text-xs text-violet-600 bg-violet-50 px-2 py-1 rounded-lg">
+                          <FileText className="w-3 h-3" />File
+                        </span>
+                      ) : (
+                        <span className="text-xs text-slate-300">None</span>
+                      )}
+                    </div>
+
+                    {/* Status */}
+                    <div className="col-span-1">
+                      <StatusBadge status={d.status} />
+                      {d.reviewedBy && (
+                        <p className="text-[10px] text-slate-400 mt-1">{d.reviewDate}</p>
+                      )}
+                    </div>
+
+                    {/* Actions */}
+                    <div className="col-span-1 flex flex-col gap-1.5">
+                      <button
+                        onClick={() => { setSelectedDispute(d); setShowDisputeDetails(true); }}
+                        className="text-xs px-2 py-1 border rounded-lg hover:bg-slate-100 transition text-slate-600">
+                        View
+                      </button>
+                      {d.status === 'pending' && (
+                        <>
+                          <button onClick={() => handleApprove(d)}
+                            className="text-xs px-2 py-1 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition">
+                            Approve
+                          </button>
+                          <button onClick={() => handleReject(d)}
+                            className="text-xs px-2 py-1 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition">
+                            Reject
+                          </button>
+                        </>
+                      )}
+                    </div>
+
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      )}
-    </div>
-  );
-};
+        )}
+      </div>
+    );
+  };
 
   // USERS: Drivers synced from LTO, Enforcers can be added manually
   const UsersContent = () => {
@@ -1048,40 +1046,42 @@ const SupervisorDashboard = ({ onLogout }) => {
           {/* SVG Map */}
           <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border overflow-hidden" style={{ height: '420px', width: '100%' }}>
             <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border overflow-hidden" style={{ height: '420px', width: '100%', position: 'relative' }}>
-  <MapContainer
-    center={[10.6970, 122.5644]}
-    zoom={15}
-    style={{ height: '100%', width: '100%' }}
-    scrollWheelZoom={true}
-  >
-    <TileLayer
-      attribution='&copy; OpenStreetMap contributors'
-      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-    />
-    
-    {filtered.map(cam => (
-      <Marker
-        key={cam.id}
-        position={cam.coords}
-        icon={cameraIcon(cam.status === 'online')}z
-        eventHandlers={{ click: () => setSelectedCam(cam) }}
-      >
-        <Popup>{cam.id} — {cam.location}</Popup>
-      </Marker>
-    ))}
-  </MapContainer>
+              <MapContainer
+                center={[10.6970, 122.5644]}
+                zoom={15}
+                style={{ height: '100%', width: '100%' }}
+                scrollWheelZoom={true}
+              >
+                <TileLayer
+                  attribution='&copy; OpenStreetMap contributors'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
 
-  {/* Legend */}
-  <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur rounded-xl px-3 py-2 shadow text-xs space-y-1 border z-[1000]">
-    <p className="font-semibold text-slate-700 mb-1">Legend</p>
-    <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>Online Camera</div>
-    <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-slate-400 inline-block"></span>Offline Camera</div>
-    <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-rose-400/40 border border-rose-400 inline-block"></span>High Violations</div>
-    <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-amber-400/30 border border-amber-400 inline-block"></span>Medium Violations</div>
-    <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-emerald-400/20 border border-emerald-400 inline-block"></span>Low Violations</div>
-  </div>
-</div>
-</div>
+                {filtered.map(cam => (
+                  <Marker
+                    key={cam.id}
+                    position={cam.coords}
+                    icon={cameraIcon(cam.status === 'online')} z
+                    eventHandlers={{ click: () => setSelectedCam(cam) }}
+                  >
+                    <Popup>
+                      <span>{cam.id} — {cam.location}</span>
+                    </Popup>
+                  </Marker>
+                ))}
+              </MapContainer>
+
+              {/* Legend */}
+              <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur rounded-xl px-3 py-2 shadow text-xs space-y-1 border z-[1000]">
+                <p className="font-semibold text-slate-700 mb-1">Legend</p>
+                <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>Online Camera</div>
+                <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-slate-400 inline-block"></span>Offline Camera</div>
+                <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-rose-400/40 border border-rose-400 inline-block"></span>High Violations</div>
+                <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-amber-400/30 border border-amber-400 inline-block"></span>Medium Violations</div>
+                <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-emerald-400/20 border border-emerald-400 inline-block"></span>Low Violations</div>
+              </div>
+            </div>
+          </div>
 
           {/* Side Panel */}
           <div className="space-y-3">
