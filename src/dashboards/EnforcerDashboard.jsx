@@ -386,7 +386,14 @@ const EnforcerDashboard = ({ onLogout }) => {
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div className="col-span-2">
                 <p className="text-[10px] text-slate-400 uppercase">Violation</p>
-                <p className="font-bold text-red-700">{issuedCitation?.type}</p>
+                <div className="flex flex-wrap gap-1 mt-0.5">
+                  {(Array.isArray(issuedCitation?.type)
+                    ? issuedCitation.type
+                    : issuedCitation?.type?.split(', ') ?? []
+                  ).map((t, i) => (
+                    <span key={i} className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-lg font-semibold">{t}</span>
+                  ))}
+                </div>
               </div>
               <div>
                 <p className="text-[10px] text-slate-400 uppercase">Date</p>
@@ -430,7 +437,11 @@ const EnforcerDashboard = ({ onLogout }) => {
           <div className="flex items-center justify-between bg-red-50 border border-red-200 rounded-xl px-4 py-3">
             <div>
               <p className="text-[10px] text-red-400 uppercase font-bold">Total Fine Amount</p>
-              <p className="text-xs text-red-500">Payable within 15 days</p>
+              <p className="text-xs text-red-500">
+                {Array.isArray(issuedCitation?.type) && issuedCitation.type.length > 1
+                  ? `${issuedCitation.type.length} violations combined`
+                  : 'Payable within 15 days'}
+              </p>
             </div>
             <p className="text-2xl font-bold text-red-600">₱{issuedCitation?.fine.toLocaleString()}</p>
           </div>
