@@ -82,9 +82,9 @@ const EnforcerDashboard = ({ onLogout }) => {
       sampleViolations.unshift(newViolation);
       setRecordLoading(false);
       setModalStep(1);
-      setDriverSearch('');;
+      setDriverSearch('');
       setSelectedDriverForViolation(null);
-      setViolationForm({ plate: '', license: '', type: '', otherType: '', location: '', notes: '' });
+      setViolationForm({ plate: '', license: '', type: [], otherType: '', location: '', notes: '' });
       setIssuedCitation(newViolation);
       setShowCitationModal(true);
     }, 2000);
