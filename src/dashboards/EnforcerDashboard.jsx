@@ -19,7 +19,7 @@ const EnforcerDashboard = ({ onLogout }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDriverForViolation, setSelectedDriverForViolation] = useState(null);
   const [myApprehensions, setMyApprehensions] = useState([]);
-  const [violationForm, setViolationForm] = useState({ plate: '', license: '', type: '', otherType: '', location: '', notes: '' });
+  const [violationForm, setViolationForm] = useState({ plate: '', license: '', type: [], otherType: '', location: '', notes: '' });
   const [selectedDriver, setSelectedDriver] = useState(null);
   const [showDriverDetails, setShowDriverDetails] = useState(false);
   const [modalStep, setModalStep] = useState(1); // 1 = search, 2 = form
@@ -35,9 +35,11 @@ const EnforcerDashboard = ({ onLogout }) => {
   // Handle recording violation
   const handleRecordViolation = () => {
     const plate = selectedDriverForViolation ? selectedDriverForViolation.plate : violationForm.plate;
-    const type = violationForm.type === 'Other' ? (violationForm.otherType || 'Other') : violationForm.type;
-    const location = violationForm.location;
-    if (!plate || !type || !location) {
+    const types = violationForm.type.includes('Other')
+      ? [...violationForm.type.filter(t => t !== 'Other'), violationForm.otherType].filter(Boolean)
+      : violationForm.type;
+    const typeLabel = types.join(', ');
+    if (!plate || types.length === 0 || !location) {
       setToast({ message: 'Please fill in all required fields.', type: 'warning' });
       return;
     }
@@ -64,13 +66,13 @@ const EnforcerDashboard = ({ onLogout }) => {
       const newViolation = {
         id: `VIO-${Date.now()}`,
         plate,
-        type,
+        type: typeLabel,
         location,
         date: new Date().toISOString().split('T')[0],
         time: new Date().toTimeString().slice(0, 5),
-        fine: fineMap[type] || 1000,
+        fine: Math.max(...types.map(t => fineMap[t] || 1000)),
         status: 'unpaid',
-        image: imageMap[type] || '⚠️',
+        image: imageMap[types[0]] || '⚠️',
         driver: selectedDriverForViolation ? selectedDriverForViolation.name : plate,
         driverId: selectedDriverForViolation ? selectedDriverForViolation.id : null,
         capturedBy: 'ENF-001',
@@ -82,7 +84,7 @@ const EnforcerDashboard = ({ onLogout }) => {
       setModalStep(1);
       setDriverSearch('');;
       setSelectedDriverForViolation(null);
-      setViolationForm({ plate: '', license: '', type: '',otherType: '', location: '', notes: '' });
+      setViolationForm({ plate: '', license: '', type: '', otherType: '', location: '', notes: '' });
       setIssuedCitation(newViolation);
       setShowCitationModal(true);
     }, 2000);
@@ -208,27 +210,64 @@ const EnforcerDashboard = ({ onLogout }) => {
               )}
 
               <div>
-                <label className="text-sm font-medium text-slate-700 mb-1 block">Violation Type *</label>
-                <select value={violationForm.type} onChange={e => setViolationForm(f => ({ ...f, type: e.target.value, otherType: '' }))}
-                  className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500">
-                  <option value="">Select violation type</option>
-                  <optgroup label="Speed & Movement">
-                    {['Over Speeding', 'Running Red Light', 'Counterflow', 'Improper Overtaking', 'Failure to Yield', 'Illegal U-Turn', 'Reckless Driving'].map(v => <option key={v}>{v}</option>)}
-                  </optgroup>
-                  <optgroup label="Documents & Registration">
-                    {['No License', 'Expired Registration', 'No OR/CR', 'Driving Without Plate', 'Colorum'].map(v => <option key={v}>{v}</option>)}
-                  </optgroup>
-                  <optgroup label="Safety">
-                    {['No Helmet', 'No Seatbelt', 'Defective Accessories', 'Smoke Belching'].map(v => <option key={v}>{v}</option>)}
-                  </optgroup>
-                  <optgroup label="Parking & Loading">
-                    {['Illegal Parking', 'Obstruction', 'Illegal Loading/Unloading'].map(v => <option key={v}>{v}</option>)}
-                  </optgroup>
-                  <optgroup label="Other">
-                    <option>Other</option>
-                  </optgroup>
-                </select>
-                {violationForm.type === 'Other' && (
+                <label className="text-sm font-medium text-slate-700 mb-1 block">
+                  Violation Type *
+                  {violationForm.type.length > 0 && (
+                    <span className="ml-2 text-xs text-orange-500 font-normal">
+                      {violationForm.type.length} selected
+                    </span>
+                  )}
+                </label>
+
+                {/* Selected tags */}
+                {violationForm.type.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {violationForm.type.map(v => (
+                      <span key={v} className="inline-flex items-center gap-1 bg-orange-100 text-orange-700 text-xs px-2 py-1 rounded-lg">
+                        {v}
+                        <button type="button" onClick={() => setViolationForm(f => ({ ...f, type: f.type.filter(t => t !== v) }))}>
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Grouped checkboxes */}
+                <div className="border rounded-xl overflow-hidden divide-y max-h-56 overflow-y-auto">
+                  {[
+                    { label: 'Speed & Movement', items: ['Over Speeding', 'Running Red Light', 'Counterflow', 'Improper Overtaking', 'Failure to Yield', 'Illegal U-Turn', 'Reckless Driving'] },
+                    { label: 'Documents & Registration', items: ['No License', 'Expired Registration', 'No OR/CR', 'Driving Without Plate', 'Colorum'] },
+                    { label: 'Safety', items: ['No Helmet', 'No Seatbelt', 'Defective Accessories', 'Smoke Belching'] },
+                    { label: 'Parking & Loading', items: ['Illegal Parking', 'Obstruction', 'Illegal Loading/Unloading'] },
+                    { label: 'Other', items: ['Other'] },
+                  ].map(group => (
+                    <div key={group.label}>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 bg-slate-50 px-3 py-1.5">{group.label}</p>
+                      {group.items.map(v => (
+                        <label key={v} className="flex items-center gap-3 px-3 py-2 hover:bg-orange-50 cursor-pointer transition">
+                          <input
+                            type="checkbox"
+                            checked={violationForm.type.includes(v)}
+                            onChange={e => {
+                              setViolationForm(f => ({
+                                ...f,
+                                type: e.target.checked
+                                  ? [...f.type, v]
+                                  : f.type.filter(t => t !== v),
+                                otherType: v === 'Other' && !e.target.checked ? '' : f.otherType
+                              }));
+                            }}
+                            className="accent-orange-500 w-4 h-4"
+                          />
+                          <span className="text-sm">{v}</span>
+                        </label>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+
+                {violationForm.type.includes('Other') && (
                   <input type="text" value={violationForm.otherType || ''}
                     onChange={e => setViolationForm(f => ({ ...f, otherType: e.target.value }))}
                     placeholder="Specify violation..."
