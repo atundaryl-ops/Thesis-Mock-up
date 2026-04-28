@@ -11,13 +11,7 @@ import { ViolationDetailsModal, DisputeDetailsModal, UserDetailsModal, DeviceDet
 import { sampleViolations, sampleDisputes, sampleUsers, sampleDevices, sampleDrivers } from '../data/sampleData';
 import { MapContainer, TileLayer, Circle, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
-});
+
 
 // ─────────────────────────────────────────────────────────────
 // SUPERVISOR / ADMIN DASHBOARD
